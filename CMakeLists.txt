@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(VM VERSION 1.0.0 DESCRIPTION "Virtual machine for running java byte code")
+project(VM VERSION 1.0.0 DESCRIPTION "Virtual machine for running bytecode")
 
 file(GLOB_RECURSE ALL_CXX_SOURCE_FILES *.cpp *.h)
 
@@ -20,10 +20,10 @@ set(CMAKE_CXX_CLANG_TIDY
 
 add_subdirectory(VM)
 
-if (ADD_TESTING)
+if (ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
-if (ADD_BENCHMARK)
+if (ENABLE_BENCHMARK)
     add_subdirectory(benchmark)
 endif()
