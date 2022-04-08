@@ -4,7 +4,7 @@
 #include <vector>
 
 template<typename TYPE>
-struct Tree : std::vector<Tree<TYPE>>
+struct Tree : public std::vector<Tree<TYPE>>
 {
     TYPE value;
 
