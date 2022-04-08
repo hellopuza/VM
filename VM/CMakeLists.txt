@@ -1,17 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
 
-set(EXEC_NAME VM)
-
 file(GLOB_RECURSE VM_SOURCES *.cpp)
 set(VM_SOURCES ${VM_SOURCES} PARENT_SCOPE)
 
 set(VM_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 
-if(ENABLE_TESTS OR ENABLE_BENCHMARK)
-    list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
-    set(VM_SOURCES ${VM_SOURCES} PARENT_SCOPE)
-else()
-    add_executable(${EXEC_NAME} ${VM_SOURCES})
+function(add_exec EXEC_NAME)
+    add_executable(${EXEC_NAME} EXCLUDE_FROM_ALL ${VM_SOURCES})
     target_include_directories(${EXEC_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
     target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align -Wconversion
@@ -27,10 +22,17 @@ else()
         target_compile_options(${EXEC_NAME} PUBLIC -fsanitize=address -g)
         set_target_properties(${EXEC_NAME} PROPERTIES LINK_FLAGS "-fsanitize=address")
     endif()
+endfunction()
 
-    add_custom_target(run_${EXEC_NAME} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXEC_NAME})
-    add_dependencies(run_${EXEC_NAME} ${EXEC_NAME})
+list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
+list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_main.cpp)
+set(VM_SOURCES ${VM_SOURCES} PARENT_SCOPE)
 
-    add_custom_target(run_valgrind_${EXEC_NAME} COMMAND valgrind ./${EXEC_NAME})
-    add_dependencies(run_valgrind_${EXEC_NAME} ${EXEC_NAME})
+if(NOT ENABLE_TESTS AND NOT ENABLE_BENCHMARK)
+    list(APPEND VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
+    add_exec(vm)
+
+    list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
+    list(APPEND VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_main.cpp)
+    add_exec(compiler)
 endif()

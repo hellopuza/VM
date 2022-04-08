@@ -1,10 +1,11 @@
-#include <gtest/gtest.h>
+#include "compiler_test.h"
+#include "pkm_vm_initargs_test.h"
+#include "pkm_vm_test.h"
+#include "pni_env_test.h"
+#include "pni_test.h"
+#include "vm_test.h"
 
-TEST(TestTest, Test)
-{
-    EXPECT_TRUE(true);
-    EXPECT_FALSE(false);
-}
+#include <gtest/gtest.h>
 
 int main(int argc, char* argv[])
 {
