@@ -5,33 +5,86 @@
 
 #include <fstream>
 
-template<typename TYPE>
-Tree<TYPE>::Tree(const TYPE& value_) : value(value_) {}
+template<typename T>
+Tree<T>::Tree(const T& value) : value_(value) {}
 
-template<typename TYPE>
-Tree<TYPE>::Tree(const Tree& obj) : value(obj.value), std::vector<Tree<TYPE>>(obj) {}
+template<typename T>
+Tree<T>::Tree(const Tree& obj) : value_(obj.value_), branches_(obj.branches_) {}
 
-template<typename TYPE>
-Tree<TYPE>::Tree(Tree&& obj) noexcept : value(std::move(obj.value)), std::vector<Tree<TYPE>>(std::move(obj)) {}
+template<typename T>
+Tree<T>::Tree(Tree&& obj) noexcept : value_(std::move(obj.value_)), branches_(std::move(obj.branches_)) {}
 
-template<typename TYPE>
-Tree<TYPE>& Tree<TYPE>::operator=(const Tree& obj)
+template<typename T>
+Tree<T>& Tree<T>::operator=(const Tree& obj)
 {
-    value = obj.value;
-    std::vector<Tree<TYPE>>::operator=(obj);
+    value_ = obj.value_;
+    branches_ = obj.branches_;
     return *this;
 }
 
-template<typename TYPE>
-Tree<TYPE>& Tree<TYPE>::operator=(Tree&& obj) noexcept
+template<typename T>
+Tree<T>& Tree<T>::operator=(Tree&& obj) noexcept
 {
-    value = std::move(obj.value);
-    std::vector<Tree<TYPE>>::operator=(std::move(obj));
+    value_ = std::move(obj.value_);
+    branches_ = std::move(obj.branches_);
     return *this;
 }
 
-template<typename TYPE>
-int Tree<TYPE>::dump(const char* dump_name) const
+template<typename T>
+Tree<T>& Tree<T>::operator[](size_t branch_ind)
+{
+    return branches_[branch_ind];
+}
+
+template<typename T>
+size_t Tree<T>::size() const
+{
+    size_t size = 1;
+    for (const auto& node : branches_)
+    {
+        size += node.size();
+    }
+    return size;
+}
+
+template<typename T>
+size_t Tree<T>::branches_num() const
+{
+    return branches_.size();
+}
+
+template<typename T>
+void Tree<T>::clear_branches()
+{
+    branches_.clear();
+}
+
+template<typename T>
+void Tree<T>::push_branch(const Tree& tree)
+{
+    branches_.push_back(tree);
+}
+
+template<typename T>
+void Tree<T>::pop_branch()
+{
+    branches_.pop_back();
+}
+
+template<typename T>
+T& Tree<T>::value()
+{
+    return value_;
+}
+
+template<typename T>
+const T& Tree<T>::value() const
+{
+    return value_;
+}
+
+template<typename T>
+int Tree<T>::dot_dump(const char* dump_name) const
 {
     const char* dot_file_name = "graph.dot";
 
@@ -45,7 +98,7 @@ int Tree<TYPE>::dump(const char* dump_name) const
                  " rankdir = HR;\n"
                  " node[shape=box];\n";
 
-    dump(dump_file);
+    dot_dump(dump_file);
 
     dump_file << "\tlabelloc=\"t\";"
                  "\tlabel=\""
@@ -58,20 +111,20 @@ int Tree<TYPE>::dump(const char* dump_name) const
     return system(command);
 }
 
-template<typename TYPE>
-void Tree<TYPE>::dump(std::ofstream& dump_file) const
+template<typename T>
+void Tree<T>::dot_dump(std::ofstream& dump_file) const
 {
     dump_file << "\t\"" << this << "\"[shape = box, style = filled, color = black, fillcolor = lightskyblue, label = \""
-              << value << "\"]\n";
+              << value_ << "\"]\n";
 
-    for (const auto& node : *this)
+    for (const auto& node : branches_)
     {
         dump_file << "\t\"" << this << "\" -> \"" << &node << "\"\n";
     }
 
-    for (const auto& node : *this)
+    for (const auto& node : branches_)
     {
-        node.dump(dump_file);
+        node.dot_dump(dump_file);
     }
 }
 
