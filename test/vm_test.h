@@ -1,6 +1,6 @@
 #include "VM/VM.h"
 
-#include <gtest/gtest.h>
+#include <gtest/gtest.h> // NOLINT
 
 TEST(VMTest, RunVm)
 {
