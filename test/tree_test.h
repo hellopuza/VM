@@ -1,15 +1,15 @@
 #include "Common/Tree/Tree-impl.h"
 
-#include <gtest/gtest.h>
+#include <gtest/gtest.h> // NOLINT
 
-TEST(TreeTest, DefaultConstructor)
+TEST(TreeTest, DefaultConstructor) // NOLINT
 {
     Tree<int> tree;
     EXPECT_TRUE(tree.size() == 1);
     EXPECT_TRUE(tree.branches_num() == 0);
 }
 
-TEST(TreeTest, ValueConstructor)
+TEST(TreeTest, ValueConstructor) // NOLINT
 {
     Tree<int> tree(1);
     EXPECT_TRUE(tree.value() == 1);
@@ -17,7 +17,7 @@ TEST(TreeTest, ValueConstructor)
     EXPECT_TRUE(tree.branches_num() == 0);
 }
 
-TEST(TreeTest, CopyConstructor)
+TEST(TreeTest, CopyConstructor) // NOLINT
 {
     Tree<int> tree1(0);
     tree1.push_branch(Tree<int>(1));
@@ -35,7 +35,7 @@ TEST(TreeTest, CopyConstructor)
     EXPECT_TRUE(tree1.branches_num() == tree2.branches_num());
 }
 
-TEST(TreeTest, MoveConstructor)
+TEST(TreeTest, MoveConstructor) // NOLINT
 {
     Tree<int> tree1(0);
     tree1.push_branch(Tree<int>(1));
@@ -56,7 +56,7 @@ TEST(TreeTest, MoveConstructor)
     EXPECT_TRUE(tree2.branches_num() == branches_num);
 }
 
-TEST(TreeTest, CopyOp)
+TEST(TreeTest, CopyOp) // NOLINT
 {
     Tree<int> tree1(0);
     tree1.push_branch(Tree<int>(1));
@@ -75,7 +75,7 @@ TEST(TreeTest, CopyOp)
     EXPECT_TRUE(tree1.branches_num() == tree2.branches_num());
 }
 
-TEST(TreeTest, MoveOp)
+TEST(TreeTest, MoveOp) // NOLINT
 {
     Tree<int> tree1(0);
     tree1.push_branch(Tree<int>(1));
@@ -97,7 +97,7 @@ TEST(TreeTest, MoveOp)
     EXPECT_TRUE(tree2.branches_num() == branches_num);
 }
 
-TEST(TreeTest, AccessOperator)
+TEST(TreeTest, AccessOperator) // NOLINT
 {
     Tree<int> tree(0);
     tree.push_branch(Tree<int>(1));
@@ -112,7 +112,7 @@ TEST(TreeTest, AccessOperator)
     EXPECT_TRUE(tree[0][1].value() == 4);
 }
 
-TEST(TreeTest, Size)
+TEST(TreeTest, Size) // NOLINT
 {
     Tree<int> tree(0);
     EXPECT_TRUE(tree.size() == 1);
@@ -126,7 +126,7 @@ TEST(TreeTest, Size)
     EXPECT_TRUE(tree.size() == 1);
 }
 
-TEST(TreeTest, BranchesNum)
+TEST(TreeTest, BranchesNum) // NOLINT
 {
     Tree<int> tree(0);
     for (size_t i = 0; i < 100; i++)
@@ -140,7 +140,7 @@ TEST(TreeTest, BranchesNum)
     }
 }
 
-TEST(TreeTest, ClearBranches)
+TEST(TreeTest, ClearBranches) // NOLINT
 {
     Tree<int> tree(0);
     for (size_t i = 0; i < 100; i++)
@@ -152,7 +152,7 @@ TEST(TreeTest, ClearBranches)
     EXPECT_TRUE(tree.size() == 1);
 }
 
-TEST(TreeTest, PushBranch)
+TEST(TreeTest, PushBranch) // NOLINT
 {
     Tree<int> tree(0);
     for (size_t i = 0; i < 100; i++)
@@ -162,7 +162,7 @@ TEST(TreeTest, PushBranch)
     }
 }
 
-TEST(TreeTest, PopBranch)
+TEST(TreeTest, PopBranch) // NOLINT
 {
     Tree<int> tree(0);
     for (size_t i = 0; i < 100; i++)
@@ -175,7 +175,7 @@ TEST(TreeTest, PopBranch)
     }
 }
 
-TEST(TreeTest, DotDump)
+TEST(TreeTest, DotDump) // NOLINT
 {
     Tree<int> tree(0);
     tree.push_branch(Tree<int>(1));
