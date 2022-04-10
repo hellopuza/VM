@@ -1,19 +1,19 @@
 #include "Compiler/Compiler.h"
 
-#include <gtest/gtest.h>
+#include <gtest/gtest.h> // NOLINT
 
-TEST(CompilerTest, DefaultConstructor)
+TEST(CompilerTest, DefaultConstructor) // NOLINT
 {
     Compiler comp;
 }
 
-TEST(CompilerTest, Load)
+TEST(CompilerTest, Load) // NOLINT
 {
     Compiler comp;
     EXPECT_FALSE(comp.load(""));
 }
 
-TEST(CompilerTest, Compile)
+TEST(CompilerTest, Compile) // NOLINT
 {
     Compiler comp;
     EXPECT_FALSE(comp.compile(""));

@@ -1,8 +1,8 @@
 #include "VM/PNI.h"
 
-#include <gtest/gtest.h>
+#include <gtest/gtest.h> // NOLINT
 
-TEST(PNITest, CreateVm)
+TEST(PNITest, CreateVm) // NOLINT
 {
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;

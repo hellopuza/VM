@@ -1,23 +1,23 @@
 
-name: Test VM
+name: TestVM
 
-on: 
-  pull_request
+on: pull_request
 
 jobs:
-  Test VM:  
-  
-  runs-on:
-    ubuntu-latest
+  TestVM:  
 
-  steps:
+    runs-on: ubuntu-latest
 
-  - uses: actions/checkout@v3
-    with:
-      ref: ${{ github.event.pull_request.head.ref }}
+    steps:
 
-    run: |
-      mkdir build &&
-      cd build &&
-      cmake .. -DENABLE_TESTS=ON &&
-      make run_vm_test
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Run tests
+      run: |
+        mkdir build &&
+        cd build &&
+        cmake .. -DENABLE_TESTS=ON &&
+        make run_vm_test  
+         

@@ -12,11 +12,13 @@ add_custom_target(
     ${ALL_CXX_SOURCE_FILES}
 )
 
-set(CMAKE_CXX_CLANG_TIDY
-    clang-tidy;
-    --format-style=file;
-    --header-filter=*.h;
-)
+if (ADD_CLANG_TIDY)
+    set(CMAKE_CXX_CLANG_TIDY
+        clang-tidy;
+        --format-style=file;
+        --header-filter=*.h;
+    )
+endif()
 
 add_subdirectory(VM)
 
