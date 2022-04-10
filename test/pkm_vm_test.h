@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h> // NOLINT
 
-TEST(PkmVMTest, ArgsCtor) // NOLINT
+TEST(PkmVMTest, ArgsCtor) // NOLINT and no ... :3 :3 :3
 {
     PkmVM pvm(PkmVMInitArgs());
 }
