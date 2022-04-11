@@ -46,6 +46,7 @@ add_executable(${EXEC_NAME} ${VM_TEST_SOURCES} ${VM_SOURCES})
 target_include_directories(${EXEC_NAME}
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../VM/include
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../VM/include/Common
+    PUBLIC ${CMAKE_SOURCE_DIR}/lib
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )
 

@@ -26,6 +26,7 @@ function(add_exec EXEC_NAME)
     target_include_directories(${EXEC_NAME}
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/Common
+        PUBLIC ${CMAKE_SOURCE_DIR}/lib
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
     )
 
