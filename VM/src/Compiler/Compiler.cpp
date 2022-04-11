@@ -1,3 +1,4 @@
+#include "Compiler/AST/ASTMaker.h"
 #include "Compiler/Compiler.h"
 
 #include <fstream>
@@ -7,13 +8,8 @@ bool Compiler::load(const std::string& input_name)
     std::ifstream file(input_name);
     if (file.is_open())
     {
-        tokens_.clear();
-        std::string token;
-        while (!file.eof())
-        {
-            file >> token;
-            tokens_.push_back(token);
-        }
+        ASTMaker ast_maker(&file);
+        ast_maker.make(&ast_);
     }
     else
     {
@@ -23,19 +19,19 @@ bool Compiler::load(const std::string& input_name)
     return true;
 }
 
-bool Compiler::compile(const std::string& output_name)
+bool Compiler::compile(const std::string& code_ext)
 {
-    std::ofstream file(output_name, std::ofstream::out);
-    if (file.is_open())
+    for (size_t i = 0; i < ast_.branches_num(); i++)
     {
-        for (const auto& token : tokens_)
+        std::ofstream file(static_cast<ClassNode*>(ast_[i].value().get())->name + code_ext, std::ofstream::out);
+        if (file.is_open())
         {
-            file << token;
+            file << static_cast<ClassNode*>(ast_[i].value().get())->name;
         }
-    }
-    else
-    {
-        return false;
+        else
+        {
+            return false;
+        }
     }
 
     return true;

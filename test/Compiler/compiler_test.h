@@ -12,9 +12,3 @@ TEST(CompilerTest, Load)
     Compiler comp;
     EXPECT_FALSE(comp.load(""));
 }
-
-TEST(CompilerTest, Compile)
-{
-    Compiler comp;
-    EXPECT_FALSE(comp.compile(""));
-}

@@ -1,7 +1,7 @@
 #ifndef VM_PKMVM_H
 #define VM_PKMVM_H
 
-#include "PkmVMInitArgs.h"
+#include "VM/PkmVMInitArgs.h"
 
 class PkmVM
 {

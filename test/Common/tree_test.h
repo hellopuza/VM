@@ -1,4 +1,4 @@
-#include "Common/Tree/Tree-impl.h"
+#include "Tree/Tree-impl.h"
 
 #include <gtest/gtest.h>
 
@@ -173,15 +173,4 @@ TEST(TreeTest, PopBranch)
         EXPECT_TRUE(tree.branches_num() == i);
         tree.push_branch(Tree<int>(0));
     }
-}
-
-TEST(TreeTest, DotDump)
-{
-    Tree<int> tree(0);
-    tree.push_branch(Tree<int>(1));
-    tree.push_branch(Tree<int>(2));
-    tree[0].push_branch(Tree<int>(3));
-    tree[0].push_branch(Tree<int>(4));
-
-    EXPECT_TRUE(tree.dot_dump("tree_dump") == 0);
 }

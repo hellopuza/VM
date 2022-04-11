@@ -16,6 +16,7 @@ set(CMAKE_CXX_CLANG_TIDY
     clang-tidy;
     --format-style=file;
     --header-filter=*.h;
+    --line-filter=[{"name":"*.c","lines":[[9999,9999]]},{"name":".h"},{"name":".cpp"}]
 )
 
 add_subdirectory(VM)
