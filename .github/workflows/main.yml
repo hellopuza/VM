@@ -55,6 +55,7 @@ jobs:
 
     - name: Run tests with asan
       run: |
+        cd build &&
         cmake .. -DENABLE_TESTS=ON -DENABLE_ASAN=ON &&
         make run_vm_test
         
