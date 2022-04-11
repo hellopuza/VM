@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h> // NOLINT
 
-TEST(PkmVMInitArgsTest, DefaultCtor)
+TEST(PkmVMInitArgsTest, DefaultCtor) // NOLINT
 {
     PkmVMInitArgs initargs;
 }
