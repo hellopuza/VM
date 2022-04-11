@@ -1,10 +1,10 @@
 
-name: _TestVM
+name: TestVM
 
 on: pull_request
 
 jobs:
-  Test VM:  
+  TestVM:  
 
     runs-on: ubuntu-latest
 
