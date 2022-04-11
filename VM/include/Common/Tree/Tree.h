@@ -1,6 +1,7 @@
-#ifndef COMMON_TREE_TREE_H
-#define COMMON_TREE_TREE_H
+#ifndef TREE_TREE_H
+#define TREE_TREE_H
 
+#include <fstream>
 #include <vector>
 
 template<typename T>
@@ -9,9 +10,10 @@ class Tree
 public:
     Tree() = default;
     explicit Tree(const T& value);
+    explicit Tree(T&& value);
     Tree(const Tree& obj);
     Tree(Tree&& obj) noexcept;
-    ~Tree() = default;
+    virtual ~Tree() = default;
 
     Tree& operator=(const Tree& obj);
     Tree& operator=(Tree&& obj) noexcept;
@@ -22,6 +24,9 @@ public:
     void clear_branches();
 
     void push_branch(const Tree& tree);
+    void emplace_branch(Tree&& tree);
+    void push_branch(const T& value);
+    void emplace_branch(T&& value);
     void pop_branch();
 
     T& value();
@@ -30,10 +35,10 @@ public:
     int dot_dump(const char* dump_name) const;
 
 private:
-    void dot_dump(std::ofstream& dump_file) const;
+    virtual void dot_dump(std::ofstream& dump_file) const;
 
-    std::vector<Tree<T>> branches_;
     T value_;
+    std::vector<Tree<T>> branches_;
 };
 
-#endif // COMMON_TREE_TREE_H
+#endif // TREE_TREE_H

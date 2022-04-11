@@ -25,4 +25,37 @@ jobs:
         cd build &&
         cmake .. -DENABLE_TESTS=ON &&
         make run_vm_test  
-         
+  
+  TestVMwithSanitizers:  
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Install dot
+      run: |
+        sudo apt-get update &&
+        sudo apt-get install graphviz
+
+    - name: Install valdrind
+      run: |
+        sudo apt-get update &&
+        sudo apt-get install valgrind
+
+    - name: Run tests with valgrind
+      run: |
+        mkdir build &&
+        cd build &&
+        cmake .. -DENABLE_TESTS=ON &&
+        make run_valgrind_vm_test
+
+    - name: Run tests with asan
+      run: |
+        cd build &&
+        cmake .. -DENABLE_TESTS=ON -DENABLE_ASAN=ON &&
+        make run_vm_test
+        

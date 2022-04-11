@@ -1,4 +1,4 @@
-public class String {
+class String {
     private char[] str;
 
     public String(char c) {

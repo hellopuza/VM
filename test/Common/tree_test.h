@@ -1,4 +1,4 @@
-#include "Common/Tree/Tree-impl.h"
+#include "Tree/Tree-impl.h"
 
 #include <gtest/gtest.h> // NOLINT
 

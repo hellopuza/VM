@@ -12,9 +12,3 @@ TEST(CompilerTest, Load) // NOLINT
     Compiler comp;
     EXPECT_FALSE(comp.load(""));
 }
-
-TEST(CompilerTest, Compile) // NOLINT
-{
-    Compiler comp;
-    EXPECT_FALSE(comp.compile(""));
-}

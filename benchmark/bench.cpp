@@ -2,7 +2,7 @@
 
 static void Benchmark(benchmark::State& state)
 {
-    long long a = 0;
+    uint64_t a = 0;
     for (auto _ : state)
     {
         a++;
