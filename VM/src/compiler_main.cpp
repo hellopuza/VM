@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
         {
             PRINT_ERROR("File not found: " + filename);
         }
-        if (!comp.compile(path.parent_path().string() + path.stem().string() + CODE_EXTENSION))
+        if (!comp.compile(CODE_EXTENSION))
         {
             PRINT_ERROR("File not compiled: " + filename);
         }

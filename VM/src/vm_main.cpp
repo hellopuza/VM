@@ -1,4 +1,4 @@
-#include "VM/VM.h"
+#include "VM/PNI.h"
 
 #include <filesystem>
 #include <fstream>
@@ -10,6 +10,8 @@
     return -1;
 
 const char* const BIN_FOLDER = "./pkm/bin";
+
+void runVM(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
@@ -23,4 +25,19 @@ int main(int argc, char* argv[])
     }
 
     return 0;
+}
+
+void runVM(int argc, char* argv[])
+{
+    PkmVM* pvm = nullptr;
+    PNIEnv* env = nullptr;
+    PkmVMInitArgs init_args;
+    init_args.files_num = argc;
+    init_args.files = argv;
+
+    PNI_createVM(&pvm, &env, &init_args);
+
+    pvm->destroyVM();
+    delete pvm;
+    delete env;
 }
