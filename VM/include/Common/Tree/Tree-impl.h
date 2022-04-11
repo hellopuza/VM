@@ -1,12 +1,13 @@
-#ifndef COMMON_TREE_TREE_IMPL_H
-#define COMMON_TREE_TREE_IMPL_H
+#ifndef TREE_TREE_IMPL_H
+#define TREE_TREE_IMPL_H
 
-#include "Common/Tree/Tree.h"
-
-#include <fstream>
+#include "Tree/Tree.h"
 
 template<typename T>
 Tree<T>::Tree(const T& value) : value_(value) {}
+
+template<typename T>
+Tree<T>::Tree(T&& value) : value_(std::move(value)) {}
 
 template<typename T>
 Tree<T>::Tree(const Tree& obj) : value_(obj.value_), branches_(obj.branches_) {}
@@ -63,6 +64,24 @@ template<typename T>
 void Tree<T>::push_branch(const Tree& tree)
 {
     branches_.push_back(tree);
+}
+
+template<typename T>
+void Tree<T>::emplace_branch(Tree&& tree)
+{
+    branches_.emplace_back(tree);
+}
+
+template<typename T>
+void Tree<T>::push_branch(const T& value)
+{
+    branches_.emplace_back(Tree<T>(value));
+}
+
+template<typename T>
+void Tree<T>::emplace_branch(T&& value)
+{
+    branches_.emplace_back(Tree<T>(std::move(value)));
 }
 
 template<typename T>
@@ -128,4 +147,4 @@ void Tree<T>::dot_dump(std::ofstream& dump_file) const
     }
 }
 
-#endif // COMMON_TREE_TREE_IMPL_H
+#endif // TREE_TREE_IMPL_H

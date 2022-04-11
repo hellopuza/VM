@@ -1,7 +1,7 @@
-#ifndef COMMON_OPCODES_H
-#define COMMON_OPCODES_H
+#ifndef OPCODES_H
+#define OPCODES_H
 
-enum Opcodes
+enum class Opcode
 {
 	NOP            = 0x00,
 	LDC            = 0x01,
@@ -121,4 +121,4 @@ enum Opcodes
 	ARRAYLENGTH    = 0x73,
 }
 
-#endif // COMMON_OPCODES_H
+#endif // OPCODES_H

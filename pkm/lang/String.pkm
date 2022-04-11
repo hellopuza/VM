@@ -1,4 +1,4 @@
-public class String {
+class String {
     private char[] str;
 
     public String(char c) {
@@ -9,7 +9,7 @@ public class String {
     public String(char[] strArr) {
         this.str = new char[strArr.length];
 
-        for(int i = 0; i < strArr.length; ++i) {
+        for(int i = 0; i < strArr.length; i = i + 1) {
             this.str[i] = strArr[i];
         }
     }
