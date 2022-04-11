@@ -1,5 +1,5 @@
 
-name: TestVM
+name: _TestVM
 
 on: pull_request
 
