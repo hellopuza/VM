@@ -75,9 +75,9 @@ enum class ControlType
 
 struct ASNode
 {
-    NodeType type = NodeType::ROOT;
+    NodeType type;
 
-    ASNode(NodeType type_);
+    ASNode(NodeType type_ = NodeType::ROOT);
     virtual ~ASNode() = default;
 };
 

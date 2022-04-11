@@ -101,7 +101,7 @@ parser::token_type yylex(parser::semantic_type* yylval, yy::parser::location_typ
 
 %%
 
-program: CLASS_DECLS                             {}
+program: CLASS_DECLS                             { maker->ast()->value() = std::make_unique<ASNode>(ASNode()); }
 
 CLASS_DECLS: CLASS_DECL CLASS_DECLS              { $$ = $2; maker->ast()->emplace_branch(std::move($1->value())); delete $1; }
            | %empty                              { $$ = nullptr; }

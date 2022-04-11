@@ -6,7 +6,7 @@
 #include "parser.hh"
 
 #if !defined(yyFlexLexerOnce)
-#include <FlexLexer.h>
+#include "FlexLexer.h"
 #endif
 
 #include <fstream>
