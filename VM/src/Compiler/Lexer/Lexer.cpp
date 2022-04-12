@@ -1,5 +1,7 @@
 #include "Compiler/Lexer/Lexer.h"
 
+Lexer::Lexer(std::ifstream* file) : yyFlexLexer(file) {}
+
 void Lexer::setLocation()
 {
     location.begin.line = location.end.line = lineno();

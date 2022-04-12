@@ -34,8 +34,8 @@ public:
 
     int dot_dump(const char* dump_name) const;
 
-private:
-    virtual void dot_dump(std::ofstream& dump_file) const;
+protected:
+    void dot_dump(std::ofstream& dump_file) const;
 
     T value_;
     std::vector<Tree<T>> branches_;

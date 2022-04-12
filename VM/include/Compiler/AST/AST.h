@@ -6,11 +6,16 @@
 
 #include <memory>
 
-class AST : public Tree<std::unique_ptr<ASNode>>
+class AST : public Tree<std::shared_ptr<ASNode>>
 {
 public:
     AST() = default;
-    explicit AST(std::unique_ptr<ASNode> value);
+    explicit AST(std::shared_ptr<ASNode> value);
+
+    int dot_dump(const char* dump_name) const;
+
+private:
+    void dot_dump(std::ofstream& dump_file) const;
 };
 
 #endif // COMPILER_AST_AST_H
