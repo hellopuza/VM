@@ -2,6 +2,7 @@
 #define VM_PKMVM_H
 
 #include "VM/PkmVMInitArgs.h"
+#include "VM/Interpreter.h"
 
 class PkmVM
 {
@@ -11,6 +12,7 @@ public:
 
 private:
     PkmVMInitArgs args_;
+    Interpreter interpreter_;
 };
 
 #endif // VM_PNI_H

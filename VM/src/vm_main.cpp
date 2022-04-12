@@ -29,11 +29,12 @@ int main(int argc, char* argv[])
 
 void runVM(int argc, char* argv[])
 {
-    PkmVM* pvm = nullptr;
+    PkmVM*  pvm = nullptr;
     PNIEnv* env = nullptr;
+
     PkmVMInitArgs init_args;
     init_args.files_num = argc;
-    init_args.files = argv;
+    init_args.files     = argv;
 
     PNI_createVM(&pvm, &env, &init_args);
 
