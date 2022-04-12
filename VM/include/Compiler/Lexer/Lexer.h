@@ -7,10 +7,12 @@
 
 #include "location.hh"
 
+#include <fstream>
+
 class Lexer : public yyFlexLexer
 {
 public:
-    Lexer() = default;
+    Lexer(std::ifstream* file);
 
     void setLocation();
     yy::location getLocation() const;

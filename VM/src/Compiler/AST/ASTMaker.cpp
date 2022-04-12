@@ -1,14 +1,15 @@
 #include "Compiler/AST/ASTMaker.h"
 
-ASTMaker::ASTMaker(std::ifstream* file) : lexer_(new Lexer)
+ASTMaker::ASTMaker(std::ifstream* file) : lexer_(new Lexer(file))
 {
-    lexer_->switch_streams(*file, std::cout);
     while (*file)
     {
         std::string line;
         std::getline(*file, line);
         program_.push_back(line);
     }
+    file->clear();
+    file->seekg(0);
 }
 
 void ASTMaker::make(AST* ast)
@@ -34,6 +35,9 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
         break;
     case yy::parser::token_type::PUBLIC:
         yylval->build<AccessType>() = AccessType::PUBLIC;
+        break;
+    case yy::parser::token_type::NSTATIC:
+        yylval->build<MethodType>() = MethodType::NONSTATIC;
         break;
     case yy::parser::token_type::STATIC:
         yylval->build<MethodType>() = MethodType::STATIC;

@@ -79,17 +79,16 @@ struct ASNode
 
     ASNode(NodeType type_ = NodeType::ROOT);
     virtual ~ASNode() = default;
+    virtual std::string print() const;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<ASNode>&);
 
 struct ClassNode : public ASNode
 {
     std::string name;
-    ClassNode(std::string name_);
-};
 
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<ClassNode>& node);
+    ClassNode(std::string name_);
+    std::string print() const override;
+};
 
 struct FieldNode : public ASNode
 {
@@ -98,9 +97,8 @@ struct FieldNode : public ASNode
     VariableType var_type;
 
     FieldNode(std::string name_, AccessType access_type_, VariableType var_type_);
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<FieldNode>& node);
 
 struct MethodNode : public ASNode
 {
@@ -110,9 +108,8 @@ struct MethodNode : public ASNode
     VariableType ret_type;
 
     MethodNode(std::string name_, AccessType access_type_, MethodType modifier_, VariableType ret_type_);
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<MethodNode>& node);
 
 struct MethodParameterNode : public ASNode
 {
@@ -120,33 +117,29 @@ struct MethodParameterNode : public ASNode
     VariableType var_type;
 
     MethodParameterNode(std::string name_, VariableType var_type_);
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<MethodParameterNode>& node);
 
 struct ScopeNode : public ASNode
 {
     ScopeNode();
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<ScopeNode>&);
 
 struct OperationNode : public ASNode
 {
     OperationType op_type;
 
     OperationNode(OperationType op_type_);
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<OperationNode>& node);
 
 struct ControlNode : public ASNode
 {
     ControlType control_type;
 
     ControlNode(ControlType control_type_);
+    std::string print() const override;
 };
-
-std::ostream& operator<<(std::ostream& os, const std::unique_ptr<ControlNode>& node);
 
 #endif // COMPILER_AST_ASNODE_H
