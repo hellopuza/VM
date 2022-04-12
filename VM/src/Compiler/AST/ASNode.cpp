@@ -85,7 +85,7 @@ std::string MethodNode::print() const
 }
 
 MethodParameterNode::MethodParameterNode(std::string name_, VariableType var_type_) :
-    ASNode(NodeType::METHODPARAMETER), name(std::move(name_)), var_type(var_type_)
+    ASNode(NodeType::MET_PAR), name(std::move(name_)), var_type(var_type_)
 {}
 
 std::string MethodParameterNode::print() const
@@ -112,4 +112,84 @@ ControlNode::ControlNode(ControlType control_type_) : ASNode(NodeType::CONTROL),
 std::string ControlNode::print() const
 {
     return CONTROL[static_cast<int>(control_type)];
+}
+
+VariableDeclarationNode::VariableDeclarationNode(std::string name_, VariableType var_type_) :
+    ASNode(NodeType::VAR_DECL), name(std::move(name_)), var_type(var_type_)
+{}
+
+std::string VariableDeclarationNode::print() const
+{
+    return VARIABLE[static_cast<int>(var_type)] + " " + name;
+}
+
+VariableNode::VariableNode(std::string name_) : ASNode(NodeType::VAR), name(std::move(name_)) {}
+
+std::string VariableNode::print() const
+{
+    return name;
+}
+
+NumberNode::NumberNode(VariableType type_, bool num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.bl = num;
+}
+
+NumberNode::NumberNode(VariableType type_, int8_t num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.b = num;
+}
+
+NumberNode::NumberNode(VariableType type_, char num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.c = num;
+}
+
+NumberNode::NumberNode(VariableType type_, int16_t num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.s = num;
+}
+
+NumberNode::NumberNode(VariableType type_, int32_t num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.i = num;
+}
+
+NumberNode::NumberNode(VariableType type_, int64_t num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.l = num;
+}
+
+NumberNode::NumberNode(VariableType type_, float num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.f = num;
+}
+
+NumberNode::NumberNode(VariableType type_, double num) :
+    ASNode(NodeType::NUMBER), type(type_)
+{
+    number.d = num;
+}
+
+std::string NumberNode::print() const
+{
+    switch (type)
+    {
+    case VariableType::BOOLEAN: return std::to_string(static_cast<int>(number.bl));
+    case VariableType::BYTE:    return std::to_string(number.b);
+    case VariableType::CHAR:    return std::to_string(number.c);
+    case VariableType::SHORT:   return std::to_string(number.s);
+    case VariableType::INT:     return std::to_string(number.i);
+    case VariableType::LONG:    return std::to_string(number.l);
+    case VariableType::FLOAT:   return std::to_string(number.f);
+    case VariableType::DOUBLE:  return std::to_string(number.d);
+    }
+    return "err";
 }

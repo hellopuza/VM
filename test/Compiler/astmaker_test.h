@@ -118,12 +118,12 @@ TEST(ASTMakerTest, ClassOneMethod) // NOLINT
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][0].value().get())->modifier == MethodType::STATIC);
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][0].value().get())->ret_type == VariableType::VOID);
 
-    EXPECT_TRUE(ast[0][0][0].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][0][0].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][0][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][0].value().get())->name == "a");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][0].value().get())->var_type == VariableType::INT);
 
-    EXPECT_TRUE(ast[0][0][1].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][0][1].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][0][1].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][1].value().get())->name == "b");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][1].value().get())->var_type == VariableType::FLOAT);
@@ -148,12 +148,12 @@ TEST(ASTMakerTest, ClassManyMethods) // NOLINT
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][0].value().get())->modifier == MethodType::STATIC);
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][0].value().get())->ret_type == VariableType::INT);
 
-    EXPECT_TRUE(ast[0][0][0].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][0][0].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][0][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][0].value().get())->name == "a");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][0].value().get())->var_type == VariableType::INT);
 
-    EXPECT_TRUE(ast[0][0][1].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][0][1].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][0][1].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][1].value().get())->name == "b");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][0][1].value().get())->var_type == VariableType::FLOAT);
@@ -168,7 +168,7 @@ TEST(ASTMakerTest, ClassManyMethods) // NOLINT
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][1].value().get())->modifier == MethodType::NATIVE);
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][1].value().get())->ret_type == VariableType::VOID);
 
-    EXPECT_TRUE(ast[0][1][0].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][1][0].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][1][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][1][0].value().get())->name == "c");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][1][0].value().get())->var_type == VariableType::LONG);
@@ -188,7 +188,6 @@ TEST(ASTMakerTest, ClassManyFieldsMethods) // NOLINT
         "}\n"
     )
 
-    ast.dot_dump("graph");
     EXPECT_TRUE(ast[0][0].value().get()->type == NodeType::FIELD);
     EXPECT_TRUE(ast[0][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<FieldNode*>(ast[0][0].value().get())->name == "a");
@@ -208,12 +207,12 @@ TEST(ASTMakerTest, ClassManyFieldsMethods) // NOLINT
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][2].value().get())->modifier == MethodType::STATIC);
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][2].value().get())->ret_type == VariableType::INT);
 
-    EXPECT_TRUE(ast[0][2][0].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][2][0].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][2][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][2][0].value().get())->name == "a");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][2][0].value().get())->var_type == VariableType::INT);
 
-    EXPECT_TRUE(ast[0][2][1].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][2][1].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][2][1].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][2][1].value().get())->name == "b");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][2][1].value().get())->var_type == VariableType::FLOAT);
@@ -228,11 +227,35 @@ TEST(ASTMakerTest, ClassManyFieldsMethods) // NOLINT
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][3].value().get())->modifier == MethodType::NATIVE);
     EXPECT_TRUE(static_cast<MethodNode*>(ast[0][3].value().get())->ret_type == VariableType::VOID);
 
-    EXPECT_TRUE(ast[0][3][0].value().get()->type == NodeType::METHODPARAMETER);
+    EXPECT_TRUE(ast[0][3][0].value().get()->type == NodeType::MET_PAR);
     EXPECT_TRUE(ast[0][3][0].branches_num() == 0);
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][3][0].value().get())->name == "c");
     EXPECT_TRUE(static_cast<MethodParameterNode*>(ast[0][3][0].value().get())->var_type == VariableType::LONG);
 
     EXPECT_TRUE(ast[0][3][1].value().get()->type == NodeType::SCOPE);
     EXPECT_TRUE(ast[0][3][1].branches_num() == 0);
+}
+
+TEST(ASTMakerTest, MethodScopeOperators) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Some {\n"
+        "   public int a;\n"
+        "   private static int sum(int left, int rigth) {\n"
+        "       return left + right;\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][1][2][0].value().get()->type == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][0].value().get())->op_type == OperationType::RETURN);
+
+    EXPECT_TRUE(ast[0][1][2][0][0].value().get()->type == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][0][0].value().get())->op_type == OperationType::ADD);
+
+    EXPECT_TRUE(ast[0][1][2][0][0][0].value().get()->type == NodeType::VAR);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][0].value().get())->name == "left");
+
+    EXPECT_TRUE(ast[0][1][2][0][0][1].value().get()->type == NodeType::VAR);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][1].value().get())->name == "right");
 }
