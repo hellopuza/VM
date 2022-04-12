@@ -171,6 +171,8 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::SCOLON:
     case yy::parser::token_type::ERROR:
         break;
+    default:
+        break;
     }
 
     return tt;

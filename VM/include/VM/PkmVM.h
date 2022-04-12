@@ -4,10 +4,12 @@
 #include "VM/PkmVMInitArgs.h"
 #include "VM/Interpreter.h"
 
+#include <string>
+
 class PkmVM
 {
 public:
-    explicit PkmVM(PkmVMInitArgs args);
+    explicit PkmVM(const PkmVMInitArgs args);
     void destroyVM();
 
 private:

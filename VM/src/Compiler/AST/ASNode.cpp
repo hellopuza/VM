@@ -190,6 +190,7 @@ std::string NumberNode::print() const
     case VariableType::LONG:    return std::to_string(number.l);
     case VariableType::FLOAT:   return std::to_string(number.f);
     case VariableType::DOUBLE:  return std::to_string(number.d);
+    default: return "err";
     }
     return "err";
 }

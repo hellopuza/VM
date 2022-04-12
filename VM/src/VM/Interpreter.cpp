@@ -1,9 +1,11 @@
 #include "VM/PkmVM.h"
 #include "Opcodes.h"
 
+#include <fstream>
+
 Interpreter::Interpreter(std::string& byte_code_path) : byte_code_path_(byte_code_path)
 {
-    file_buffer_ = read_file(byte_code_path_);
+    read_file(byte_code_path_, &byte_code_buffer_);
 }
 
 int Interpreter::interpret_goto()
@@ -12,22 +14,19 @@ int Interpreter::interpret_goto()
 
     static void* dispatch_table[] = {
         &&NOP, 
-    }
+    };
 
-    #define DISPATCH() goto *dispatch_table[file_buffer_[pc++]];
+    #define DISPATCH() goto *dispatch_table[byte_code_buffer_[pc++]]
 
     while (true)
     {
         NOP:
             DISPATCH();
-        default:
-            return -1;
     }
 }
 
-std::string Interpreter::read_file(std::string& filename)
+void Interpreter::read_file(const std::string& filename, std::string* out_buffer)
 {
-    std::string buffer;
     std::ifstream file(filename);
 
     if (!file.is_open())
@@ -35,7 +34,5 @@ std::string Interpreter::read_file(std::string& filename)
         std::cout << "Error, can't open " << filename << " file" << std::endl;
         return;
     }
-    std::getline(file, *buffer, '\0');
-
-    return buffer;
+    std::getline(file, *out_buffer, '\0');
 }
