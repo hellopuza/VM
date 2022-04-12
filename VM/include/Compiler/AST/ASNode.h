@@ -11,10 +11,13 @@ enum class NodeType
     CLASS,
     FIELD,
     METHOD,
-    METHODPARAMETER,
+    MET_PAR,
     SCOPE,
     OPERATION,
     CONTROL,
+    VAR_DECL,
+    VAR,
+    NUMBER,
 };
 
 enum class AccessType
@@ -139,6 +142,48 @@ struct ControlNode : public ASNode
     ControlType control_type;
 
     ControlNode(ControlType control_type_);
+    std::string print() const override;
+};
+
+struct VariableDeclarationNode : public ASNode
+{
+    std::string name;
+    VariableType var_type;
+
+    VariableDeclarationNode(std::string name_, VariableType var_type_);
+    std::string print() const override;
+};
+
+struct VariableNode : public ASNode
+{
+    std::string name;
+
+    VariableNode(std::string name_);
+    std::string print() const override;
+};
+
+struct NumberNode : public ASNode
+{
+    VariableType type;
+    union Num {
+        bool bl;
+        int8_t b;
+        char c;
+        int16_t s;
+        int32_t i;
+        int64_t l;
+        float f;
+        double d;
+    } number;
+
+    NumberNode(VariableType type_, bool num);
+    NumberNode(VariableType type_, int8_t num);
+    NumberNode(VariableType type_, char num);
+    NumberNode(VariableType type_, int16_t num);
+    NumberNode(VariableType type_, int32_t num);
+    NumberNode(VariableType type_, int64_t num);
+    NumberNode(VariableType type_, float num);
+    NumberNode(VariableType type_, double num);
     std::string print() const override;
 };
 

@@ -151,10 +151,10 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
         yylval->build<std::string>() = lexer_->YYText();
         break;
     case yy::parser::token_type::INTNUMBER:
-        yylval->build<int64_t>() = std::stoll(lexer_->YYText());
+        yylval->build<int32_t>() = std::stoi(lexer_->YYText());
         break;
     case yy::parser::token_type::FLOATNUMBER:
-        yylval->build<double>() = std::stod(lexer_->YYText());
+        yylval->build<float>() = std::stof(lexer_->YYText());
         break;
     case yy::parser::token_type::STRING:
         yylval->build<std::string>() = lexer_->YYText();
