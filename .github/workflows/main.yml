@@ -41,7 +41,7 @@ jobs:
         sudo apt-get update &&
         sudo apt-get install graphviz
 
-    - name: Install valdrind
+    - name: Install valgrind
       run: |
         sudo apt-get update &&
         sudo apt-get install valgrind
