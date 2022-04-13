@@ -4,7 +4,9 @@
 struct PkmVMInitArgs
 {
     int files_num;
-    char** files;
+    int flags_num;
+    char* files_path;
+    char** flags;
 };
 
 #endif // VM_PKMVMINITARGS_H
