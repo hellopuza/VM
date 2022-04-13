@@ -6,5 +6,5 @@ PkmVM::PkmVM(PkmVMInitArgs args) : args_(args) {}
 
 void PkmVM::destroyVM()
 {
-    args_.files = nullptr;
+    delete [] files_path;
 }
