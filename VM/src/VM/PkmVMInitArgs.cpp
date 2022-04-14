@@ -1,9 +1,5 @@
 #include "VM/PkmVMInitArgs.h"
 
-int parseFilesNum(int argc, char* argv[]);
-char** parseFiles(int files_num, char* argv[]);
-void parseCmd(PkmVMInitArgs& init_args);
-
 void parseCmd(int argc, char* argv[], PkmVMInitArgs& init_args)
 {
     init_args->files_num = parseFilesNum(argc, argv);
