@@ -1,6 +1,6 @@
 #include "VM/PkmVMInitArgs.h"
 
-void parseCmd(int argc, char* argv[], PkmVMInitArgs& init_args)
+void parseCmd(int argc, const char* argv[], PkmVMInitArgs& init_args)
 {
     init_args->files_num = parseFilesNum(argc, argv);
     init_args->flags_num = argc - init_args->files_num - 1;
@@ -8,7 +8,7 @@ void parseCmd(int argc, char* argv[], PkmVMInitArgs& init_args)
     init_args->flags = argv + init_args->files_num;
 }
 
-int parseFilesNum(int argc, char* argv[])
+int parseFilesNum(int argc, const char* argv[])
 {
     int num = 0;
     for(int i = 1; i < argc; i++)
@@ -22,7 +22,7 @@ int parseFilesNum(int argc, char* argv[])
     return num;
 }
 
-char** parseFiles(int files_num, char* argv[])
+const char** parseFiles(int files_num, const char* argv[])
 {
     char** files = new char*[files_num];
     for(int i = 0; i < files_num; i++)

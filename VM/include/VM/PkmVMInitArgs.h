@@ -9,8 +9,8 @@ struct PkmVMInitArgs
     char** flags;
 };
 
-int parseFilesNum(int argc, char* argv[]);
-char** parseFiles(int files_num, char* argv[]);
-void parseCmd(PkmVMInitArgs& init_args);
+int parseFilesNum(int argc, const char* argv[]);
+const char** parseFiles(int files_num, const char* argv[]);
+void parseCmd(int argc, const char* argv[], PkmVMInitArgs& init_args);
 
 #endif // VM_PKMVMINITARGS_H
