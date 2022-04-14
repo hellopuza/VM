@@ -1,7 +1,7 @@
 #include "VM/PNI.h"
 #include "VM/VM.h"
 
-void runVM(int argc, char* argv[])
+void runVM(int argc, const char* argv[])
 {
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;

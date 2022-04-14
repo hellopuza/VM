@@ -9,15 +9,15 @@
     std::cout << (message) << "\n"; \
     return -1;
 
-void runVM(int argc, char* argv[]);
+void runVM(int argc, const char* argv[]);
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     runVM(argc, argv);
     return 0;
 }
 
-void runVM(int argc, char* argv[])
+void runVM(int argc, const char* argv[])
 {
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;
