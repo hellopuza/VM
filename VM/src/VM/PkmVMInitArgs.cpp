@@ -2,10 +2,10 @@
 
 void parseCmd(int argc, const char* argv[], PkmVMInitArgs& init_args)
 {
-    init_args->files_num = parseFilesNum(argc, argv);
-    init_args->flags_num = argc - init_args->files_num - 1;
-    init_args->files_path = parseFiles(init_args->files_num, argv);
-    init_args->flags = argv + init_args->files_num;
+    init_args.files_num = parseFilesNum(argc, argv);
+    init_args.flags_num = argc - init_args.files_num - 1;
+    init_args.files_path = parseFiles(init_args.files_num, argv);
+    init_args.flags = argv + init_args.files_num;
 }
 
 int parseFilesNum(int argc, const char* argv[])
