@@ -16,9 +16,10 @@ public:
         const char* file2 = "string_second.klass";
         const char* app = "MyApp";
         const char* key = "-p";
-        int arg_n_ = 4;
 
-        const char** arg_s_ = new const char* [arg_n_];
+        arg_n_ = 4;
+        arg_s_ = new const char* [arg_n_];
+        
         arg_s_[0] = app;
         arg_s_[1] = file1;
         arg_s_[2] = file2;
