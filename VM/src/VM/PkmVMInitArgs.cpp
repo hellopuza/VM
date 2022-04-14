@@ -24,7 +24,7 @@ int parseFilesNum(int argc, const char* argv[])
 
 const char** parseFiles(int files_num, const char* argv[])
 {
-    const char** files = new char*[files_num];
+    const char** files = new const char*[files_num];
     for(int i = 0; i < files_num; i++)
     {
         files[i] = argv[i + 1];
