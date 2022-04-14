@@ -30,7 +30,7 @@ public:
     };
     const char** arg_s_;
     int arg_n_;
-}
+};
 
 TEST_F(MainParser, ParseFilesNum)
 {
@@ -38,5 +38,5 @@ TEST_F(MainParser, ParseFilesNum)
 
     EXPECT_EQ(arg_n_, result);
 
-    delete [] args;
+    delete [] arg_s_;
 }
