@@ -7,7 +7,7 @@ TEST(PkmVMInitArgsTest, DefaultCtor) // NOLINT
     PkmVMInitArgs initargs;
 }
 
-class MainParser : public ::testing::Test
+class MainParser
 {
 public:
     MainParser()
@@ -32,9 +32,10 @@ public:
     int arg_n_;
 };
 
-TEST_F(MainParser, ParseFilesNum)
+TEST(MainParser, ParseFilesNum)
 {
-    int result = parseFilesNum(arg_n_, arg_s_);
+    MainParser pars;
+    int result = parseFilesNum(pars.arg_n_, pars.arg_s_);
 
-    EXPECT_EQ(arg_n_, result);
+    EXPECT_EQ(2, result);
 }
