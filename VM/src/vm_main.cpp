@@ -9,31 +9,20 @@
     std::cout << (message) << "\n"; \
     return -1;
 
-const char* const BIN_FOLDER = "./pkm/bin";
+void runVM(int argc, const char* argv[]);
 
-void runVM(int argc, char* argv[]);
-
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
-    for (const auto& entry : std::filesystem::directory_iterator(BIN_FOLDER))
-    {
-        std::cout << entry.path() << "\n";
-    }
-    for (int i = 1; i < argc; i++)
-    {
-        std::cout << argv[i] << "\n";
-    }
-
+    runVM(argc, argv);
     return 0;
 }
 
-void runVM(int argc, char* argv[])
+void runVM(int argc, const char* argv[])
 {
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;
     PkmVMInitArgs init_args;
-    init_args.files_num = argc;
-    init_args.files = argv;
+    parseCmd(argc, argv, init_args);
 
     PNI_createVM(&pvm, &env, &init_args);
 
