@@ -5,8 +5,8 @@ struct PkmVMInitArgs
 {
     int files_num;
     int flags_num;
-    char* files_path;
-    char** flags;
+    const char** files_path;
+    const char** flags;
 };
 
 int parseFilesNum(int argc, const char* argv[]);
