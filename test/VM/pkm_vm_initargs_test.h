@@ -37,6 +37,4 @@ TEST_F(MainParser, ParseFilesNum)
     int result = parseFilesNum(arg_n_, arg_s_);
 
     EXPECT_EQ(arg_n_, result);
-
-    delete [] arg_s_;
 }
