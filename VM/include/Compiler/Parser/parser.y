@@ -134,6 +134,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <AST*> OP_COMP
     <AST*> OP_ADD
     <AST*> OP_MUL
+    <AST*> OP_DOT
     <AST*> CHECK_ASS
     <AST*> CHECK_OR
     <AST*> CHECK_AND
@@ -141,6 +142,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <AST*> CHECK_COMP
     <AST*> CHECK_ADD
     <AST*> CHECK_MUL
+    <AST*> CHECK_DOT
     <AST*> OBJ
     <AST*> EXPRINBR
     <AST*> VAR_DECL
@@ -267,7 +269,13 @@ OP_MUL: MUL CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
       | %empty                                   { $$ = nullptr; }
 ;
 
-CHECK_MUL: OBJ                                   { $$ = $1; }
+CHECK_MUL: CHECK_DOT OP_DOT                      { $$ = bindNodes($1, $2); }
+
+OP_DOT: DOT CHECK_DOT OP_DOT                     { $$ = bindNodes($1, $2, $3); }
+      | %empty                                   { $$ = nullptr; }
+;
+
+CHECK_DOT: OBJ                                   { $$ = $1; }
          | ADD OBJ                               { $$ = bindNodes($1, $2, nullptr); }
          | SUB OBJ                               { $$ = bindNodes($1, $2, nullptr); }
 ;
@@ -314,16 +322,19 @@ AST* bindNodes(OperationType op, AST* lhs, AST* rhs)
 {
     AST* node = new AST(std::make_shared<OperationNode>(OperationNode(op)));
 
-    if (lhs)
-    {
-        node->emplace_branch(std::move(*lhs));
-        delete lhs;
-    }
-
     if (rhs)
     {
         node->emplace_branch(std::move(*rhs));
         delete rhs;
+
+        (*node)[0].emplace_branch(std::move((*node)[0][0]));
+        (*node)[0][0] = std::move(*lhs);
+        delete lhs;
+    }
+    else
+    {
+        node->emplace_branch(std::move(*lhs));
+        delete lhs;
     }
 
     return node;

@@ -14,8 +14,9 @@ WS           [ \t\n\v]+
 DIGIT        [0-9]
 DIGIT1       [1-9]
 WORD         [_a-zA-Z]+{DIGIT}*
-INTNUMBER    {DIGIT1}{DIGIT}*|0
 WRONGNUMBER  0+{DIGIT}+
+INTNUMBER    {DIGIT1}{DIGIT}*|0
+FLOATNUMBER  {INTNUMBER}"."{WRONGNUMBER}
 QUOTES       ["]
 QUOTE        [']
 
@@ -75,7 +76,7 @@ QUOTE        [']
 {WS}
 {WORD}                      { return yy::parser::token_type::WORD;        }
 {INTNUMBER}                 { return yy::parser::token_type::INTNUMBER;   }
-{INTNUMBER}"."{WRONGNUMBER} { return yy::parser::token_type::FLOATNUMBER; }
+{FLOATNUMBER}               { return yy::parser::token_type::FLOATNUMBER; }
 {QUOTES}.*{QUOTES}          { return yy::parser::token_type::STRING;      }
 {QUOTE}.{QUOTE}             { return yy::parser::token_type::SYMBOL;      }
 {DIGIT}+{WORD}              { return yy::parser::token_type::ERROR;       }

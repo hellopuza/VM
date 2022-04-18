@@ -119,6 +119,6 @@ enum class Opcode
 	ANEWARRAY      = 0x71,
 	AMULTINEWARRAY = 0x72,
 	ARRAYLENGTH    = 0x73,
-}
+};
 
 #endif // OPCODES_H
