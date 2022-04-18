@@ -6,8 +6,15 @@
 class Compiler
 {
 public:
+    enum Errors
+    {
+        OK,
+        FILE_NOT_LOAD,
+        FILE_NOT_FOUND,
+    };
+
     Compiler() = default;
-    bool load(const std::string& input_name);
+    int load(const std::string& input_name);
     bool compile(const std::string& code_ext);
 
 private:
