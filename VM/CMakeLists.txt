@@ -31,7 +31,7 @@ function(add_exec EXEC_NAME)
     )
 
     target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align -Wconversion
-        -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wsign-conversion -Wnon-virtual-dtor
+        -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wnon-virtual-dtor
         -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread)
 
     set_target_properties(${EXEC_NAME} PROPERTIES

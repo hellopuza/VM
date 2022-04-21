@@ -10,11 +10,6 @@ class PkmVM
 public:
     PkmVM() = default;
     static void destroyVM();
-
-    void loadClasses(PkmClasses* pclasses);
-
-private:
-    PkmClasses classes_;
 };
 
 #endif // VM_PNI_H
