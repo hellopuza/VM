@@ -23,7 +23,7 @@ int main(int argc, const char* argv[])
     CHECK_ERROR(err, "Klass file not loaded: " + argv[err] + "\n");
 
     ClassLinker cl;
-    cl.link(&kl.klasses);
+    cl.link(kl.klasses);
 
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;

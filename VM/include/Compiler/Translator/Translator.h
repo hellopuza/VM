@@ -16,12 +16,21 @@ public:
 
 private:
     void writeConstantPool(std::ofstream* file);
-    void writeFields(AST* class_node, std::stringstream* ss);
-    void writeMethods(AST* class_node, std::stringstream* ss);
-    static void writeMethodParams(AST* method_node, std::stringstream* ss);
+    void writeFields(AST* class_node, std::stringstream* class_content);
+    void writeMethods(AST* class_node, std::stringstream* class_content, std::stringstream* instructions);
+    void writeMethodParams(AST* method_node, std::stringstream* class_content);
+
+    void appendLocal(VariableDeclarationNode* var_decl_node);
+    uint32_t writeInstructions(AST* scope_node, std::stringstream* instructions);
+    void writeOperation(AST* op_node, std::stringstream* instructions);
+
+    void writeNumber(NumberNode* num_node, std::stringstream* instructions);
+    void writeStore(const std::string& name, std::stringstream* instructions);
+    void writeLoad(const std::string& name, std::stringstream* instructions);
 
     AST* ast_;
     ConstantPool const_pool_;
+    std::unordered_map<std::string, std::pair<uint16_t, VariableType>> locals_;
 };
 
 #endif // COMPILER_TRANSLATOR_TRANSLATOR_H

@@ -25,7 +25,7 @@
     ss << ifile.rdbuf();         \
     Klasses kls = {ss.str()};    \
     ClassLinker cl;              \
-    cl.link(&kls); //
+    cl.link(kls); //
 
 TEST(TranslatorTest, EmptyClass) // NOLINT
 {
@@ -88,6 +88,18 @@ TEST(TranslatorTest, ClassMethods) // NOLINT
     EXPECT_TRUE(cl.classes["Main"].methods["print"].ret_type == VariableType::VOID);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params.size() == 1);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::LONG);
+}
+
+TEST(TranslatorTest, MethodScope) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int test() {\n"
+        "       int a = 0;\n"
+        "   }\n"
+        "}\n"
+    )
+    ast.dot_dump("graph");
 }
 
 #undef CONSTRUCT_FILE

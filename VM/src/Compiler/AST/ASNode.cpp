@@ -176,44 +176,19 @@ std::string VariableNode::print() const
     return name;
 }
 
-NumberNode::NumberNode(VariableType type_, bool num) : num_type(type_)
+NumberNode::NumberNode(bool num) : num_type(VariableType::BOOLEAN)
 {
-    number.bl = num;
+    number.i = static_cast<int32_t>(num);
 }
 
-NumberNode::NumberNode(VariableType type_, int8_t num) : num_type(type_)
-{
-    number.b = num;
-}
-
-NumberNode::NumberNode(VariableType type_, char num) : num_type(type_)
-{
-    number.c = num;
-}
-
-NumberNode::NumberNode(VariableType type_, int16_t num) : num_type(type_)
-{
-    number.s = num;
-}
-
-NumberNode::NumberNode(VariableType type_, int32_t num) : num_type(type_)
+NumberNode::NumberNode(int32_t num) : num_type(VariableType::INT)
 {
     number.i = num;
 }
 
-NumberNode::NumberNode(VariableType type_, int64_t num) : num_type(type_)
-{
-    number.l = num;
-}
-
-NumberNode::NumberNode(VariableType type_, float num) : num_type(type_)
+NumberNode::NumberNode(float num) : num_type(VariableType::FLOAT)
 {
     number.f = num;
-}
-
-NumberNode::NumberNode(VariableType type_, double num) : num_type(type_)
-{
-    number.d = num;
 }
 
 NodeType NumberNode::type() const
@@ -225,15 +200,14 @@ std::string NumberNode::print() const
 {
     switch (num_type)
     {
-    case VariableType::BOOLEAN: return std::to_string(static_cast<int>(number.bl));
-    case VariableType::BYTE:    return std::to_string(number.b);
-    case VariableType::CHAR:    return std::to_string(number.c);
-    case VariableType::SHORT:   return std::to_string(number.s);
-    case VariableType::INT:     return std::to_string(number.i);
-    case VariableType::LONG:    return std::to_string(number.l);
-    case VariableType::FLOAT:   return std::to_string(number.f);
-    case VariableType::DOUBLE:  return std::to_string(number.d);
-    default: break;
+    case VariableType::BOOLEAN:
+        return number.i ? "true" : "false";
+    case VariableType::INT:
+        return std::to_string(number.i);
+    case VariableType::FLOAT:
+        return std::to_string(number.f);
+    default:
+        break;
     }
     return "err";
 }

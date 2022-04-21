@@ -1,6 +1,8 @@
 #include "Compiler/Translator/Translator.h"
 #include "Opcodes.h"
 
+#include <iostream>
+
 Translator::Translator(AST* ast) : ast_(ast) {}
 
 void Translator::translate(std::ofstream* file)
@@ -9,13 +11,15 @@ void Translator::translate(std::ofstream* file)
     std::string class_name = static_cast<ClassNode*>(class_node->value().get())->name;
     file->write(class_name.c_str(), class_name.length() + 1);
 
-    std::stringstream ss;
-    writeFields(class_node, &ss);
-    writeMethods(class_node, &ss);
-    //writeInstructions
+    std::stringstream class_content;
+    writeFields(class_node, &class_content);
+
+    std::stringstream instructions;
+    writeMethods(class_node, &class_content, &instructions);
 
     writeConstantPool(file);
-    *file << ss.str();
+    *file << class_content.str();
+    *file << instructions.str();
 }
 
 void Translator::writeConstantPool(std::ofstream* file)
@@ -62,7 +66,7 @@ void Translator::writeConstantPool(std::ofstream* file)
     }
 }
 
-void Translator::writeFields(AST* class_node, std::stringstream* ss)
+void Translator::writeFields(AST* class_node, std::stringstream* class_content)
 {
     uint8_t fields_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
@@ -72,24 +76,24 @@ void Translator::writeFields(AST* class_node, std::stringstream* ss)
             fields_num++;
         }
     }
-    ss->write(reinterpret_cast<char*>(&fields_num), sizeof(fields_num));
+    class_content->write(reinterpret_cast<char*>(&fields_num), sizeof(fields_num));
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
         if ((*class_node)[i].value()->type() == NodeType::FIELD)
         {
             auto* field_node = static_cast<FieldNode*>((*class_node)[i].value().get());
-            ss->write(reinterpret_cast<char*>(&field_node->access_type), 1);
-            ss->write(reinterpret_cast<char*>(&field_node->var_type), 1);
+            class_content->write(reinterpret_cast<char*>(&field_node->access_type), 1);
+            class_content->write(reinterpret_cast<char*>(&field_node->var_type), 1);
 
             auto cp_size = static_cast<uint16_t>(const_pool_.size());
-            ss->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+            class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
             const_pool_[std::make_unique<StringType>(StringType(field_node->name))] = cp_size;
         }
     }
 }
 
-void Translator::writeMethods(AST* class_node, std::stringstream* ss)
+void Translator::writeMethods(AST* class_node, std::stringstream* class_content, std::stringstream* instructions)
 {
     uint8_t methods_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
@@ -99,27 +103,32 @@ void Translator::writeMethods(AST* class_node, std::stringstream* ss)
             methods_num++;
         }
     }
-    ss->write(reinterpret_cast<char*>(&methods_num), sizeof(methods_num));
+    class_content->write(reinterpret_cast<char*>(&methods_num), sizeof(methods_num));
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
         if ((*class_node)[i].value()->type() == NodeType::METHOD)
         {
             auto* method_node = static_cast<MethodNode*>((*class_node)[i].value().get());
-            ss->write(reinterpret_cast<char*>(&method_node->access_type), 1);
-            ss->write(reinterpret_cast<char*>(&method_node->modifier), 1);
-            ss->write(reinterpret_cast<char*>(&method_node->ret_type), 1);
+            class_content->write(reinterpret_cast<char*>(&method_node->access_type), 1);
+            class_content->write(reinterpret_cast<char*>(&method_node->modifier), 1);
+            class_content->write(reinterpret_cast<char*>(&method_node->ret_type), 1);
 
             auto cp_size = static_cast<uint16_t>(const_pool_.size());
-            ss->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+            class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
             const_pool_[std::make_unique<StringType>(StringType(method_node->name))] = cp_size;
+            
+            locals_.clear();
+            writeMethodParams(static_cast<AST*>(&((*class_node)[i])), class_content);
 
-            writeMethodParams(static_cast<AST*>(&((*class_node)[i])), ss);
+            auto* scope_node = static_cast<AST*>(&(*class_node)[i][(*class_node)[i].branches_num() - 1]);
+            uint32_t offset = writeInstructions(scope_node, instructions);
+            class_content->write(reinterpret_cast<char*>(&offset), sizeof(offset));
         }
     }
 }
 
-void Translator::writeMethodParams(AST* method_node, std::stringstream* ss)
+void Translator::writeMethodParams(AST* method_node, std::stringstream* class_content)
 {
     uint8_t mps_num = 0;
     for (size_t i = 0; i < method_node->branches_num(); i++)
@@ -129,14 +138,179 @@ void Translator::writeMethodParams(AST* method_node, std::stringstream* ss)
             mps_num++;
         }
     }
-    ss->write(reinterpret_cast<char*>(&mps_num), sizeof(mps_num));
+    class_content->write(reinterpret_cast<char*>(&mps_num), sizeof(mps_num));
 
     for (size_t i = 0; i < method_node->branches_num(); i++)
     {
         if ((*method_node)[i].value()->type() == NodeType::MET_PAR)
         {
             auto* mp_node = static_cast<MethodParameterNode*>((*method_node)[i].value().get());
-            ss->write(reinterpret_cast<char*>(&mp_node->var_type), 1);
+            class_content->write(reinterpret_cast<char*>(&mp_node->var_type), 1);
+
+            auto locals_size = static_cast<uint16_t>(locals_.size());
+            locals_[mp_node->name] = std::make_pair(locals_size, mp_node->var_type);
         }
     }
+}
+
+void Translator::appendLocal(VariableDeclarationNode* var_decl_node)
+{
+    auto locals_size = static_cast<uint16_t>(locals_.size());
+    locals_[var_decl_node->name] = std::make_pair(locals_size, var_decl_node->var_type);
+}
+
+uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instructions)
+{
+    uint32_t offset = instructions->tellg();
+    for (size_t i = 0; i < scope_node->branches_num(); i++)
+    {
+        switch ((*scope_node)[i].value()->type())
+        {
+        case NodeType::SCOPE:
+            writeInstructions(static_cast<AST*>(&(*scope_node)[i]), instructions);
+            break;
+        case NodeType::OPERATION:
+            writeOperation(static_cast<AST*>(&(*scope_node)[i]), instructions);
+            break;
+        case NodeType::VAR_DECL:
+            appendLocal(static_cast<VariableDeclarationNode*>((*scope_node)[i].value().get()));
+            break;
+        default:
+            break;
+        }
+    }
+    return offset;
+}
+
+void Translator::writeOperation(AST* op_node, std::stringstream* instructions)
+{
+    switch (static_cast<OperationNode*>(op_node->value().get())->op_type)
+    {
+    case OperationType::ASSOP:
+    {
+        auto* lhs = &(*op_node)[0];
+        auto* rhs = &(*op_node)[1];
+
+        switch (rhs->value()->type())
+        {
+        case NodeType::OPERATION:
+            writeOperation(static_cast<AST*>(rhs), instructions);
+            break;
+        case NodeType::VAR:
+            writeLoad(static_cast<VariableNode*>(rhs->value().get())->name, instructions);
+            break;
+        case NodeType::NUMBER:
+            writeNumber(static_cast<NumberNode*>(rhs->value().get()), instructions);
+            break;
+        default:
+            break;
+        }
+
+        switch (lhs->value()->type())
+        {
+        case NodeType::VAR_DECL:
+        {
+            auto* var_decl_node = static_cast<VariableDeclarationNode*>(lhs->value().get());
+            appendLocal(var_decl_node);
+            writeStore(var_decl_node->name, instructions);
+            break;
+        }
+        case NodeType::VAR:
+        {
+            auto* var_node = static_cast<VariableNode*>(lhs->value().get());
+            writeStore(var_node->name, instructions);
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+void Translator::writeNumber(NumberNode* num_node, std::stringstream* instructions)
+{
+    uint8_t null = 0;
+    auto op_code = static_cast<uint8_t>(Opcode::LDC);
+    auto cp_size = static_cast<uint16_t>(const_pool_.size());
+    switch (num_node->num_type)
+    {
+    case VariableType::BOOLEAN:
+    case VariableType::INT:
+        const_pool_[std::make_unique<IntegerType>(IntegerType(num_node->number.i))] = cp_size;
+        break;
+    case VariableType::FLOAT:
+        const_pool_[std::make_unique<FloatType>(FloatType(num_node->number.f))] = cp_size;
+        break;
+    default:
+        break;
+    }
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 1);
+    instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+}
+
+void Translator::writeStore(const std::string& name, std::stringstream* instructions)
+{
+    uint8_t null = 0;
+    uint8_t op_code = 0;
+    uint16_t index = locals_[name].first;
+    switch (locals_[name].second)
+    {
+    case VariableType::BOOLEAN:
+    case VariableType::BYTE:
+    case VariableType::CHAR:
+    case VariableType::SHORT:
+    case VariableType::INT:
+        op_code = static_cast<uint8_t>(Opcode::ISTORE);
+        break;
+    case VariableType::LONG:
+        op_code = static_cast<uint8_t>(Opcode::LSTORE);
+        break;
+    case VariableType::FLOAT:
+        op_code = static_cast<uint8_t>(Opcode::FSTORE);
+        break;
+    case VariableType::DOUBLE:
+        op_code = static_cast<uint8_t>(Opcode::DSTORE);
+        break;
+    default:
+        break;
+    }
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 1);
+    instructions->write(reinterpret_cast<char*>(&index), sizeof(index));
+}
+
+void Translator::writeLoad(const std::string& name, std::stringstream* instructions)
+{
+    uint8_t null = 0;
+    uint8_t op_code = 0;
+    uint16_t index = locals_[name].first;
+    switch (locals_[name].second)
+    {
+    case VariableType::BOOLEAN:
+    case VariableType::BYTE:
+    case VariableType::CHAR:
+    case VariableType::SHORT:
+    case VariableType::INT:
+        op_code = static_cast<uint8_t>(Opcode::ILOAD);
+        break;
+    case VariableType::LONG:
+        op_code = static_cast<uint8_t>(Opcode::LLOAD);
+        break;
+    case VariableType::FLOAT:
+        op_code = static_cast<uint8_t>(Opcode::FLOAD);
+        break;
+    case VariableType::DOUBLE:
+        op_code = static_cast<uint8_t>(Opcode::DLOAD);
+        break;
+    default:
+        break;
+    }
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 1);
+    instructions->write(reinterpret_cast<char*>(&index), sizeof(index));
 }

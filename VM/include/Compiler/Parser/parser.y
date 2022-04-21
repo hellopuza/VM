@@ -296,8 +296,10 @@ VAR_DECL: TYPE WORD                              { $$ = new AST(std::make_shared
 
 VAR: WORD                                        { $$ = new AST(std::make_shared<VariableNode>(VariableNode($1))); }
 
-NUM: INTNUMBER                                   { $$ = new AST(std::make_shared<NumberNode>(NumberNode(VariableType::INT, $1))); }
-   | FLOATNUMBER                                 { $$ = new AST(std::make_shared<NumberNode>(NumberNode(VariableType::FLOAT,$1))); }
+NUM: INTNUMBER                                   { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
+   | FLOATNUMBER                                 { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
+   | FALSE                                       { $$ = new AST(std::make_shared<NumberNode>(NumberNode(false))); }
+   | TRUE                                        { $$ = new AST(std::make_shared<NumberNode>(NumberNode(true))); }
 ;
 
 %%

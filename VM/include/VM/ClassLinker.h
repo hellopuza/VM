@@ -10,12 +10,12 @@ class ClassLinker
 {
 public:
     ClassLinker() = default;
-    void link(Klasses* klasses);
+    void link(const Klasses& klasses);
 
     PkmClasses classes;
 
 private:
-    void appendClass(std::string* klass);
+    void appendClass(const std::string& klass);
     static std::string getString(const std::string& klass, size_t* pos);
     void getConstantPool(ConstantPool* const_pool, const std::string& klass, size_t* pos);
     void getFields(PkmFields* fields, const std::string& klass, size_t* pos);
