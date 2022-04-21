@@ -36,8 +36,8 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::PUBLIC:
         yylval->build<AccessType>() = AccessType::PUBLIC;
         break;
-    case yy::parser::token_type::NSTATIC:
-        yylval->build<MethodType>() = MethodType::NONSTATIC;
+    case yy::parser::token_type::INSTANCE:
+        yylval->build<MethodType>() = MethodType::INSTANCE;
         break;
     case yy::parser::token_type::STATIC:
         yylval->build<MethodType>() = MethodType::STATIC;
@@ -170,6 +170,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::CSBRACKET:
     case yy::parser::token_type::SCOLON:
     case yy::parser::token_type::ERROR:
+    default:
         break;
     }
 

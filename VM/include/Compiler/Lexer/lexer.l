@@ -22,30 +22,31 @@ QUOTE        [']
 
 %%
 
-"boolean"                   { return yy::parser::token_type::BOOLEAN; }
-"byte"                      { return yy::parser::token_type::BYTE;    }
-"char"                      { return yy::parser::token_type::CHAR;    }
-"class"                     { return yy::parser::token_type::CLASS;   }
-"double"                    { return yy::parser::token_type::DOUBLE;  }
-"else"                      { return yy::parser::token_type::ELSE;    }
-"false"                     { return yy::parser::token_type::FALSE;   }
-"float"                     { return yy::parser::token_type::FLOAT;   }
-"for"                       { return yy::parser::token_type::FOR;     }
-"if"                        { return yy::parser::token_type::IF;      }
-"int"                       { return yy::parser::token_type::INT;     }
-"long"                      { return yy::parser::token_type::LONG;    }
-"native"                    { return yy::parser::token_type::NATIVE;  }
-"new"                       { return yy::parser::token_type::NEW;     }
-"null"                      { return yy::parser::token_type::NUL;     }
-"private"                   { return yy::parser::token_type::PRIVATE; }
-"public"                    { return yy::parser::token_type::PUBLIC;  }
-"return"                    { return yy::parser::token_type::RETURN;  }
-"short"                     { return yy::parser::token_type::SHORT;   }
-"static"                    { return yy::parser::token_type::STATIC;  }
-"this"                      { return yy::parser::token_type::THIS;    }
-"true"                      { return yy::parser::token_type::TRUE;    }
-"void"                      { return yy::parser::token_type::VOID;    }
-"while"                     { return yy::parser::token_type::WHILE;   }
+"boolean"                   { return yy::parser::token_type::BOOLEAN;  }
+"byte"                      { return yy::parser::token_type::BYTE;     }
+"char"                      { return yy::parser::token_type::CHAR;     }
+"class"                     { return yy::parser::token_type::CLASS;    }
+"double"                    { return yy::parser::token_type::DOUBLE;   }
+"else"                      { return yy::parser::token_type::ELSE;     }
+"false"                     { return yy::parser::token_type::FALSE;    }
+"float"                     { return yy::parser::token_type::FLOAT;    }
+"for"                       { return yy::parser::token_type::FOR;      }
+"if"                        { return yy::parser::token_type::IF;       }
+"int"                       { return yy::parser::token_type::INT;      }
+"instance"                  { return yy::parser::token_type::INSTANCE; }
+"long"                      { return yy::parser::token_type::LONG;     }
+"native"                    { return yy::parser::token_type::NATIVE;   }
+"new"                       { return yy::parser::token_type::NEW;      }
+"null"                      { return yy::parser::token_type::NUL;      }
+"private"                   { return yy::parser::token_type::PRIVATE;  }
+"public"                    { return yy::parser::token_type::PUBLIC;   }
+"return"                    { return yy::parser::token_type::RETURN;   }
+"short"                     { return yy::parser::token_type::SHORT;    }
+"static"                    { return yy::parser::token_type::STATIC;   }
+"this"                      { return yy::parser::token_type::THIS;     }
+"true"                      { return yy::parser::token_type::TRUE;     }
+"void"                      { return yy::parser::token_type::VOID;     }
+"while"                     { return yy::parser::token_type::WHILE;    }
 
 "{"		                    { return yy::parser::token_type::OCBRACKET; }
 "}"		                    { return yy::parser::token_type::CCBRACKET; }

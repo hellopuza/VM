@@ -1,16 +1,20 @@
 #ifndef VM_PKMVM_H
 #define VM_PKMVM_H
 
-#include "VM/PkmVMInitArgs.h"
+#include "VM/ClassLinker.h"
+
+#include <unordered_map>
 
 class PkmVM
 {
 public:
-    explicit PkmVM(PkmVMInitArgs args);
-    void destroyVM();
+    PkmVM() = default;
+    static void destroyVM();
+
+    void loadClasses(PkmClasses* pclasses);
 
 private:
-    PkmVMInitArgs args_;
+    PkmClasses classes_;
 };
 
 #endif // VM_PNI_H

@@ -39,21 +39,21 @@ AST* bindNodes(AST* lhs, AST* rhs);
 
 %token
 
-    <NodeType>     CLASS   "class"
-    <AccessType>   PRIVATE "private"
-    <AccessType>   PUBLIC  "public"
-    <MethodType>   NSTATIC
-    <MethodType>   STATIC  "static"
-    <MethodType>   NATIVE  "native"
-    <VariableType> VOID    "void"
-    <VariableType> BOOLEAN "boolean"
-    <VariableType> BYTE    "byte"
-    <VariableType> CHAR    "char"
-    <VariableType> SHORT   "short"
-    <VariableType> INT     "int"
-    <VariableType> LONG    "long"
-    <VariableType> FLOAT   "float"
-    <VariableType> DOUBLE  "double"
+    <NodeType>     CLASS    "class"
+    <AccessType>   PRIVATE  "private"
+    <AccessType>   PUBLIC   "public"
+    <MethodType>   INSTANCE "instance"
+    <MethodType>   STATIC   "static"
+    <MethodType>   NATIVE   "native"
+    <VariableType> VOID     "void"
+    <VariableType> BOOLEAN  "boolean"
+    <VariableType> BYTE     "byte"
+    <VariableType> CHAR     "char"
+    <VariableType> SHORT    "short"
+    <VariableType> INT      "int"
+    <VariableType> LONG     "long"
+    <VariableType> FLOAT    "float"
+    <VariableType> DOUBLE   "double"
 
     <OperationType> OR     "||"
     <OperationType> AND    "&&"
@@ -166,7 +166,7 @@ CLASS_SCOPE: OCBRACKET CLASS_FMS CCBRACKET       { $$ = std::move($2); }
            | SCOLON                              { }
 ;
 
-CLASS_FMS: CLASS_FMS CLASS_FM                    { $1.push_back($2); $$ = std::move($1); }
+CLASS_FMS: CLASS_FM CLASS_FMS                    { $2.push_front($1); $$ = std::move($2); }
          | %empty                                { }
 ;
 
@@ -196,9 +196,9 @@ MTYPE: TYPE                                      { $$ = $1; }
      | VOID                                      { $$ = $1; }
 ;
 
-MET: STATIC                                      { $$ = $1; }
+MET: INSTANCE                                    { $$ = $1; }
+   | STATIC                                      { $$ = $1; }
    | NATIVE                                      { $$ = $1; }
-   | %empty                                      { $$ = MethodType::NONSTATIC; }
 ;
 
 MPARAMS: ORBRACKET PARAMS CRBRACKET              { $$ = std::move($2); }

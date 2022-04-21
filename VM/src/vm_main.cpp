@@ -1,3 +1,5 @@
+#include "VM/ClassLinker.h"
+#include "VM/Klass/KlassLoader.h"
 #include "VM/PNI.h"
 
 #include <filesystem>
@@ -5,28 +7,33 @@
 #include <iostream>
 #include <vector>
 
-#define PRINT_ERROR(message) \
-    std::cout << (message) << "\n"; \
-    return -1;
+#define CHECK_ERROR(cond, message)      \
+    if (cond) {                         \
+        std::cout << (message) << "\n"; \
+        return -1;                      \
+    } //
 
-void runVM(int argc, const char* argv[]);
+const char* const BIN_FOLDER = "./pkm/bin";
 
 int main(int argc, const char* argv[])
 {
-    runVM(argc, argv);
-    return 0;
-}
+    KlassLoader kl;
+    kl.loadLib(BIN_FOLDER);
+    int err = kl.loadUser(argc, argv);
+    CHECK_ERROR(err, "Klass file not loaded: " + argv[err] + "\n");
 
-void runVM(int argc, const char* argv[])
-{
+    ClassLinker cl;
+    cl.link(&kl.klasses);
+
     PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;
-    PkmVMInitArgs init_args;
-    parseCmd(argc, argv, init_args);
 
-    PNI_createVM(&pvm, &env, &init_args);
+    PNI_createVM(&pvm, &env);
+    pvm->loadClasses(&cl.classes);
 
     pvm->destroyVM();
     delete pvm;
     delete env;
+
+    return 0;
 }
