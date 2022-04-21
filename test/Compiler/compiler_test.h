@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#define MAKE_FILE(str)           \
+#define CONSTRUCT_FILE(str)      \
     std::ofstream ofile("file"); \
     ofile << (str);              \
     ofile.close(); //
@@ -25,7 +25,7 @@ TEST(CompilerTest, LoadWrongFileName) // NOLINT
 
 TEST(CompilerTest, LoadEmptyFile) // NOLINT
 {
-    MAKE_FILE(
+    CONSTRUCT_FILE(
         ""
     )
     Compiler comp;
@@ -34,9 +34,11 @@ TEST(CompilerTest, LoadEmptyFile) // NOLINT
 
 TEST(CompilerTest, LoadNormFile) // NOLINT
 {
-    MAKE_FILE(
+    CONSTRUCT_FILE(
         "class Main;"
     )
     Compiler comp;
     EXPECT_TRUE(comp.load("file") == Compiler::OK);
 }
+
+#undef CONSTRUCT_FILE

@@ -13,7 +13,7 @@
 const char* const LANG_EXTENSION = ".pkm";
 const char* const CODE_EXTENSION = ".klass";
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     Compiler comp;
     for (int i = 1; i < argc; i++)

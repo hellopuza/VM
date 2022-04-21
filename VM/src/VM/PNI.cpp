@@ -1,7 +1,7 @@
 #include "VM/PNI.h"
 
-void PNI_createVM(PkmVM** pvm, PNIEnv** env, PkmVMInitArgs* init_args)
+void PNI_createVM(PkmVM** pvm, PNIEnv** env)
 {
-    *pvm = new PkmVM(*init_args);
+    *pvm = new PkmVM;
     *env = new PNIEnv;
 }

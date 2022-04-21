@@ -28,7 +28,7 @@ bool Compiler::compile(const std::string& code_ext)
 {
     for (size_t i = 0; i < ast_.branches_num(); i++)
     {
-        std::fstream file(static_cast<ClassNode*>(ast_[i].value().get())->name + code_ext, std::ios::out | std::ios::binary);
+        std::ofstream file(static_cast<ClassNode*>(ast_[i].value().get())->name + code_ext);
         if (file.is_open())
         {
             Translator trans(&ast_);
