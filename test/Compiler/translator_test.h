@@ -94,12 +94,26 @@ TEST(TranslatorTest, MethodScope) // NOLINT
 {
     CONSTRUCT_FILE(
         "class Main {\n"
-        "   private static int test() {\n"
-        "       int a = 0;\n"
-        "   }\n"
+        "   public int a;\n"
+        "   public native void print(long c) {}\n"
         "}\n"
     )
-    ast.dot_dump("graph");
+
+    EXPECT_TRUE(cl.classes.size() == 1);
+    EXPECT_TRUE(cl.classes.contains("Main"));
+    EXPECT_TRUE(cl.classes["Main"].fields.size() == 1);
+    EXPECT_TRUE(cl.classes["Main"].methods.size() == 1);
+
+    EXPECT_TRUE(cl.classes["Main"].fields.contains("a"));
+    EXPECT_TRUE(cl.classes["Main"].fields["a"].access_type == AccessType::PUBLIC);
+    EXPECT_TRUE(cl.classes["Main"].fields["a"].var_type == VariableType::INT);
+
+    EXPECT_TRUE(cl.classes["Main"].methods.contains("print"));
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].access_type == AccessType::PUBLIC);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].modifier == MethodType::NATIVE);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].ret_type == VariableType::VOID);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params.size() == 1);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::LONG);
 }
 
 #undef CONSTRUCT_FILE

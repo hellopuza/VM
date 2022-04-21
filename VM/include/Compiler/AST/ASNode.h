@@ -81,6 +81,15 @@ struct ControlNode : public ASNode
     std::string print() const override;
 };
 
+struct FunctionNode : public ASNode
+{
+    std::string name;
+
+    FunctionNode(std::string name_);
+    NodeType type() const override;
+    std::string print() const override;
+};
+
 struct VariableDeclarationNode : public ASNode
 {
     std::string name;

@@ -187,7 +187,6 @@ TEST(ASTMakerTest, ClassManyFieldsMethods) // NOLINT
         "   public native void print(long c) {}\n"
         "}\n"
     )
-    ast.dot_dump("graph");
 
     EXPECT_TRUE(ast[0][0].value().get()->type() == NodeType::FIELD);
     EXPECT_TRUE(ast[0][0].branches_num() == 0);
@@ -237,7 +236,7 @@ TEST(ASTMakerTest, ClassManyFieldsMethods) // NOLINT
     EXPECT_TRUE(ast[0][3][1].branches_num() == 0);
 }
 
-TEST(ASTMakerTest, MethodScopeOperators) // NOLINT
+TEST(ASTMakerTest, Operators) // NOLINT
 {
     CONSTRUCT_FILE(
         "class Main {\n"
@@ -259,6 +258,67 @@ TEST(ASTMakerTest, MethodScopeOperators) // NOLINT
 
     EXPECT_TRUE(ast[0][1][2][0][0][1].value().get()->type() == NodeType::VAR);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][1].value().get())->name == "right");
+}
+
+TEST(ASTMakerTest, Function) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main(int a) {\n"
+        "       int num = a * foo(a - 1);\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][1][0].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0].value().get())->op_type == OperationType::ASSIGN);
+
+    EXPECT_TRUE(ast[0][0][1][0][0].value().get()->type() == NodeType::VAR_DECL);
+    EXPECT_TRUE(static_cast<VariableDeclarationNode*>(ast[0][0][1][0][0].value().get())->var_type == VariableType::INT);
+    EXPECT_TRUE(static_cast<VariableDeclarationNode*>(ast[0][0][1][0][0].value().get())->name == "num");
+
+    EXPECT_TRUE(ast[0][0][1][0][1].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0][1].value().get())->op_type == OperationType::MUL);
+
+    EXPECT_TRUE(ast[0][0][1][0][1][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][1][0].value().get())->name == "a");
+
+    EXPECT_TRUE(ast[0][0][1][0][1][1].value().get()->type() == NodeType::FUNCTION);
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][1][0][1][1].value().get())->name == "foo");
+
+    EXPECT_TRUE(ast[0][0][1][0][1][1][0].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0][1][1][0].value().get())->op_type == OperationType::SUB);
+
+    EXPECT_TRUE(ast[0][0][1][0][1][1][0][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][1][1][0][0].value().get())->name == "a");
+
+    EXPECT_TRUE(ast[0][0][1][0][1][1][0][1].value().get()->type() == NodeType::NUMBER);
+    EXPECT_TRUE(static_cast<NumberNode*>(ast[0][0][1][0][1][1][0][1].value().get())->num_type == VariableType::INT);
+    EXPECT_TRUE(static_cast<NumberNode*>(ast[0][0][1][0][1][1][0][1].value().get())->number.i == 1);
+}
+
+TEST(ASTMakerTest, Control) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main() {\n"
+        "       if (cond) {\n"
+        "           foo();\n"
+        "       }\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::CONTROL);
+    EXPECT_TRUE(static_cast<ControlNode*>(ast[0][0][0][0].value().get())->control_type == ControlType::IF);
+
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "cond");
+
+    EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == NodeType::SCOPE);
+
+    EXPECT_TRUE(ast[0][0][0][0][1][0].value().get()->type() == NodeType::FUNCTION);
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][1][0].value().get())->name == "foo");
 }
 
 #undef CONSTRUCT_FILE

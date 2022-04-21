@@ -47,6 +47,7 @@ static const std::string OPERATION[] = {
 static const std::string CONTROL[] = {
     "if",
     "else",
+    "elif",
     "for",
     "while",
 };
@@ -148,6 +149,18 @@ NodeType ControlNode::type() const
 std::string ControlNode::print() const
 {
     return CONTROL[static_cast<int>(control_type)];
+}
+
+FunctionNode::FunctionNode(std::string name_) : name(std::move(name_)) {}
+
+NodeType FunctionNode::type() const
+{
+    return NodeType::FUNCTION;
+}
+
+std::string FunctionNode::print() const
+{
+    return name;
 }
 
 VariableDeclarationNode::VariableDeclarationNode(std::string name_, VariableType var_type_) :

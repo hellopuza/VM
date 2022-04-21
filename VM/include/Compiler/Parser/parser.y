@@ -69,12 +69,13 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <OperationType> DIV    "/"
     <OperationType> DOT    "."
     <OperationType> COMMA  ","
-    <OperationType> ASSOP  "="
+    <OperationType> ASSIGN "="
     <OperationType> NEW    "new"
     <OperationType> RETURN "return"
 
     <ControlType> IF    "if"
     <ControlType> ELSE  "else"
+    <ControlType> ELIF  "elif"
     <ControlType> FOR   "for"
     <ControlType> WHILE "while"
 
@@ -89,12 +90,12 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <std::string> STRING
     <char>        SYMBOL
 
-    OCBRACKET "{"
-    CCBRACKET "}"
-    ORBRACKET "("
-    CRBRACKET ")"
-    OSBRACKET "["
-    CSBRACKET "]"
+    OCB "{"
+    CCB "}"
+    ORB "("
+    CRB ")"
+    OSB "["
+    CSB "]"
     SCOLON ";"
     ERROR
 ;
@@ -118,6 +119,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <MethodType>   MET
 
     <std::list<AST*>> MPARAMS
+    <std::list<AST*>> FPARAMS
     <std::list<AST*>> PARAMS
     <AST*> PARAM
     <AST*> SCOPE
@@ -145,6 +147,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <AST*> CHECK_DOT
     <AST*> OBJ
     <AST*> EXPRINBR
+    <AST*> FUNCTION
     <AST*> VAR_DECL
     <AST*> VAR
     <AST*> NUM
@@ -162,7 +165,7 @@ CLASS_DECLS: CLASS_DECL CLASS_DECLS              { maker->ast()->emplace_branch(
 
 CLASS_DECL: CLASS WORD CLASS_SCOPE               { $$ = new AST(std::make_shared<ClassNode>(ClassNode($2))); pushBranches($$, &$3); }
 
-CLASS_SCOPE: OCBRACKET CLASS_FMS CCBRACKET       { $$ = std::move($2); }
+CLASS_SCOPE: OCB CLASS_FMS CCB                   { $$ = std::move($2); }
            | SCOLON                              { }
 ;
 
@@ -201,8 +204,8 @@ MET: INSTANCE                                    { $$ = $1; }
    | NATIVE                                      { $$ = $1; }
 ;
 
-MPARAMS: ORBRACKET PARAMS CRBRACKET              { $$ = std::move($2); }
-       | ORBRACKET CRBRACKET                     { }
+MPARAMS: ORB PARAMS CRB                          { $$ = std::move($2); }
+       | ORB CRB                                 { }
 
 PARAMS: PARAM COMMA PARAMS                       { $3.push_front($1); $$ = std::move($3); }
       | PARAM                                    { $$ = std::list<AST*>(); $$.push_back($1); }
@@ -210,7 +213,7 @@ PARAMS: PARAM COMMA PARAMS                       { $3.push_front($1); $$ = std::
 
 PARAM: TYPE WORD                                 { $$ = new AST(std::make_shared<MethodParameterNode>(MethodParameterNode($2, $1))); }
 
-SCOPE: OCBRACKET ACTIONS CCBRACKET               { $$ = new AST(std::make_shared<ScopeNode>(ScopeNode())); pushBranches($$, &$2); }
+SCOPE: OCB ACTIONS CCB                           { $$ = new AST(std::make_shared<ScopeNode>(ScopeNode())); pushBranches($$, &$2); }
 
 ACTIONS: ACTION ACTIONS                          { $2.push_front($1); $$ = std::move($2); }
        | %empty                                  { }
@@ -223,7 +226,7 @@ ACTION: EXPR SCOLON                              { $$ = $1; }
 
 EXPR: CHECK_ASS ASSIGNMENT                       { $$ = bindNodes($1, $2); }
 
-ASSIGNMENT: ASSOP CHECK_ASS ASSIGNMENT           { $$ = bindNodes($1, $2, $3); }
+ASSIGNMENT: ASSIGN CHECK_ASS ASSIGNMENT          { $$ = bindNodes($1, $2, $3); }
           | %empty                               { $$ = nullptr; }
 ;
 
@@ -281,15 +284,25 @@ CHECK_DOT: OBJ                                   { $$ = $1; }
 ;
 
 OBJ: EXPRINBR                                    { $$ = $1; }
+   | FUNCTION                                    { $$ = $1; }
    | VAR_DECL                                    { $$ = $1; }
    | NUM                                         { $$ = $1; }
    | VAR                                         { $$ = $1; }
 ;
 
-EXPRINBR: ORBRACKET EXPR CRBRACKET               { $$ = $2; }
+EXPRINBR: ORB EXPR CRB                           { $$ = $2; }
 
-CONTROL: IF    EXPRINBR SCOPE                    { }
-       | WHILE EXPRINBR SCOPE                    { }
+FUNCTION: WORD ORB FPARAMS CRB                   { $$ = new AST(std::make_shared<FunctionNode>(FunctionNode($1))); pushBranches($$, &$3); }
+
+FPARAMS: EXPR COMMA FPARAMS                      { $3.push_front($1); $$ = std::move($3); }
+       | EXPR                                    { $$ = std::list<AST*>(); $$.push_back($1); }
+       | %empty                                  { }
+;
+
+CONTROL: IF EXPRINBR SCOPE                       { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
+       | ELSE SCOPE                              { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; }
+       | ELIF EXPRINBR SCOPE                     { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
+       | WHILE EXPRINBR SCOPE                    { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
 ;
 
 VAR_DECL: TYPE WORD                              { $$ = new AST(std::make_shared<VariableDeclarationNode>(VariableDeclarationNode($2, $1))); }

@@ -186,7 +186,7 @@ void Translator::writeOperation(AST* op_node, std::stringstream* instructions)
 {
     switch (static_cast<OperationNode*>(op_node->value().get())->op_type)
     {
-    case OperationType::ASSOP:
+    case OperationType::ASSIGN:
     {
         auto* lhs = &(*op_node)[0];
         auto* rhs = &(*op_node)[1];

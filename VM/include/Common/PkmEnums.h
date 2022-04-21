@@ -11,6 +11,7 @@ enum class NodeType
     SCOPE,
     OPERATION,
     CONTROL,
+    FUNCTION,
     VAR_DECL,
     VAR,
     NUMBER,
@@ -59,7 +60,7 @@ enum class OperationType
     DIV,
     DOT,
     COMMA,
-    ASSOP,
+    ASSIGN,
     NEW,
     RETURN,
 };
@@ -68,6 +69,7 @@ enum class ControlType
 {
     IF,
     ELSE,
+    ELIF,
     FOR,
     WHILE,
 };
