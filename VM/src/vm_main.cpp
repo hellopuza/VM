@@ -1,3 +1,5 @@
+#include "VM/ClassLinker.h"
+#include "VM/Klass/KlassLoader.h"
 #include "VM/PNI.h"
 
 #include <filesystem>
@@ -5,40 +7,33 @@
 #include <iostream>
 #include <vector>
 
-#define PRINT_ERROR(message) \
-    std::cout << (message) << "\n"; \
-    return -1;
+#define CHECK_ERROR(cond, message)      \
+    if (cond) {                         \
+        std::cout << (message) << "\n"; \
+        return -1;                      \
+    } //
 
 const char* const BIN_FOLDER = "./pkm/bin";
 
-void runVM(int argc, char* argv[]);
-
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
-    for (const auto& entry : std::filesystem::directory_iterator(BIN_FOLDER))
-    {
-        std::cout << entry.path() << "\n";
-    }
-    for (int i = 1; i < argc; i++)
-    {
-        std::cout << argv[i] << "\n";
-    }
+    KlassLoader kl;
+    kl.loadLib(BIN_FOLDER);
+    int err = kl.loadUser(argc, argv);
+    CHECK_ERROR(err, "Klass file not loaded: " + argv[err] + "\n");
 
-    return 0;
-}
+    ClassLinker cl;
+    cl.link(kl.klasses);
 
-void runVM(int argc, char* argv[])
-{
-    PkmVM*  pvm = nullptr;
+    PkmVM* pvm = nullptr;
     PNIEnv* env = nullptr;
 
-    PkmVMInitArgs init_args;
-    init_args.files_num = argc;
-    init_args.files     = argv;
-
-    PNI_createVM(&pvm, &env, &init_args);
+    PNI_createVM(&pvm, &env);
+    pvm->loadClasses(&cl.classes);
 
     pvm->destroyVM();
     delete pvm;
     delete env;
+
+    return 0;
 }

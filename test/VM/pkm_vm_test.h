@@ -1,9 +1,8 @@
 #include "VM/PkmVM.h"
-#include "VM/PkmVMInitArgs.h"
 
 #include <gtest/gtest.h> // NOLINT
 
-TEST(PkmVMTest, ArgsCtor) // NOLINT
+TEST(PkmVMTest, DefaultCtor) // NOLINT
 {
-    PkmVM pvm(PkmVMInitArgs());
+    PkmVM pvm;
 }

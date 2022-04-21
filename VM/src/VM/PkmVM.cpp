@@ -1,10 +1,10 @@
 #include "VM/PkmVM.h"
 
-#include <utility>
-
-PkmVM::PkmVM(PkmVMInitArgs args) : args_(args) {}
-
 void PkmVM::destroyVM()
 {
-    args_.files = nullptr;
+}
+
+void PkmVM::loadClasses(PkmClasses* pclasses)
+{
+    classes_ = std::move(*pclasses);
 }

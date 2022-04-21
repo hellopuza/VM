@@ -5,27 +5,40 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
-/*
-#define CONSTRUCT_FILE(str)        \
-    std::ofstream ofile(FILENAME); \
-    ofile << (str);                \
-    ofile.close();                 \
-    std::ifstream ifile(FILENAME); \
-    ASTMaker ast_maker(&ifile);    \
-    AST ast;                       \
-    ast_maker.make(&ast); //
-*/
+#define CONSTRUCT_FILE(str)      \
+    std::ofstream ofile("file"); \
+    ofile << (str);              \
+    ofile.close(); //
 
 TEST(CompilerTest, DefaultConstructor) // NOLINT
 {
     Compiler comp;
 }
 
-/*
-TEST(CompilerTest, LoadEmpty) // NOLINT
+TEST(CompilerTest, LoadWrongFileName) // NOLINT
 {
     Compiler comp;
-    EXPECT_FALSE(comp.load(""));
+    EXPECT_TRUE(comp.load("!") == Compiler::FILE_NOT_FOUND);
 }
-*/
+
+TEST(CompilerTest, LoadEmptyFile) // NOLINT
+{
+    CONSTRUCT_FILE(
+        ""
+    )
+    Compiler comp;
+    EXPECT_TRUE(comp.load("file") == Compiler::FILE_NOT_LOAD);
+}
+
+TEST(CompilerTest, LoadNormFile) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main;"
+    )
+    Compiler comp;
+    EXPECT_TRUE(comp.load("file") == Compiler::OK);
+}
+
+#undef CONSTRUCT_FILE

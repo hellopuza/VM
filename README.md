@@ -1,2 +1,2 @@
 # VM
-Virtual machine for running java byte code
+Virtual machine for running byte code

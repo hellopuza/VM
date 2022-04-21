@@ -4,14 +4,16 @@
 #include <iostream>
 #include <vector>
 
-#define PRINT_ERROR(message) \
-    std::cout << (message) << "\n"; \
-    return -1;
+#define CHECK_ERROR(cond, message)      \
+    if (cond) {                         \
+        std::cout << (message) << "\n"; \
+        return -1;                      \
+    } //
 
 const char* const LANG_EXTENSION = ".pkm";
 const char* const CODE_EXTENSION = ".klass";
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     Compiler comp;
     for (int i = 1; i < argc; i++)
@@ -19,18 +21,12 @@ int main(int argc, char* argv[])
         std::string filename(argv[i]);
         std::filesystem::path path(filename);
         std::string ext(path.extension());
-        if (ext != LANG_EXTENSION)
-        {
-            PRINT_ERROR("Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION);
-        }
-        if (!comp.load(filename))
-        {
-            PRINT_ERROR("File not found: " + filename);
-        }
-        if (!comp.compile(CODE_EXTENSION))
-        {
-            PRINT_ERROR("File not compiled: " + filename);
-        }
+        CHECK_ERROR((ext != LANG_EXTENSION), "Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION);
+
+        int err = comp.load(filename);
+        CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not found: " + filename);
+        CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not load: " + filename + ", Wrong syntax or empty");
+        CHECK_ERROR((!comp.compile(CODE_EXTENSION)), "File not compiled: " + filename);
     }
 
     return 0;
