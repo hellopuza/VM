@@ -1,24 +1,24 @@
 #include "VM/ClassLinker.h"
 
-void ClassLinker::link(Klasses* klasses)
+void ClassLinker::link(const Klasses& klasses)
 {
-    for (auto& klass : *klasses)
+    for (const auto& klass : klasses)
     {
-        appendClass(&klass);
+        appendClass(klass);
     }
 }
 
-void ClassLinker::appendClass(std::string* klass)
+void ClassLinker::appendClass(const std::string& klass)
 {
     size_t pos = 0;
-    std::string class_name = getString(*klass, &pos);
+    std::string class_name = getString(klass, &pos);
 
-    getConstantPool(&classes[class_name].const_pool, *klass, &pos);
+    getConstantPool(&classes[class_name].const_pool, klass, &pos);
 
-    getFields(&classes[class_name].fields, *klass, &pos);
-    getMethods(&classes[class_name].methods, *klass, &pos);
+    getFields(&classes[class_name].fields, klass, &pos);
+    getMethods(&classes[class_name].methods, klass, &pos);
 
-    classes[class_name].bytecode = std::move(*klass);
+    classes[class_name].bytecode = klass.substr(pos);
 }
 
 std::string ClassLinker::getString(const std::string& klass, size_t* pos)
@@ -123,5 +123,9 @@ void ClassLinker::getMethods(PkmMethods* methods, const std::string& klass, size
             (*pos)++;
             (*methods)[method_name].met_params.push_back(static_cast<VariableType>(var_type));
         }
+
+        auto offset = *reinterpret_cast<const uint32_t*>(&klass[*pos]);
+        (*pos) += sizeof(offset);
+        (*methods)[method_name].offset = offset;
     }
 }

@@ -114,8 +114,8 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::COMMA:
         yylval->build<OperationType>() = OperationType::COMMA;
         break;
-    case yy::parser::token_type::ASSOP:
-        yylval->build<OperationType>() = OperationType::ASSOP;
+    case yy::parser::token_type::ASSIGN:
+        yylval->build<OperationType>() = OperationType::ASSIGN;
         break;
     case yy::parser::token_type::NEW:
         yylval->build<OperationType>() = OperationType::NEW;
@@ -128,6 +128,9 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
         break;
     case yy::parser::token_type::ELSE:
         yylval->build<ControlType>() = ControlType::ELSE;
+        break;
+    case yy::parser::token_type::ELIF:
+        yylval->build<ControlType>() = ControlType::ELIF;
         break;
     case yy::parser::token_type::FOR:
         yylval->build<ControlType>() = ControlType::FOR;
@@ -162,12 +165,12 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::SYMBOL:
         yylval->build<char>() = lexer_->YYText()[1];
         break;
-    case yy::parser::token_type::OCBRACKET:
-    case yy::parser::token_type::CCBRACKET:
-    case yy::parser::token_type::ORBRACKET:
-    case yy::parser::token_type::CRBRACKET:
-    case yy::parser::token_type::OSBRACKET:
-    case yy::parser::token_type::CSBRACKET:
+    case yy::parser::token_type::OCB:
+    case yy::parser::token_type::CCB:
+    case yy::parser::token_type::ORB:
+    case yy::parser::token_type::CRB:
+    case yy::parser::token_type::OSB:
+    case yy::parser::token_type::CSB:
     case yy::parser::token_type::SCOLON:
     case yy::parser::token_type::ERROR:
     default:

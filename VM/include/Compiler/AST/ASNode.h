@@ -81,6 +81,15 @@ struct ControlNode : public ASNode
     std::string print() const override;
 };
 
+struct FunctionNode : public ASNode
+{
+    std::string name;
+
+    FunctionNode(std::string name_);
+    NodeType type() const override;
+    std::string print() const override;
+};
+
 struct VariableDeclarationNode : public ASNode
 {
     std::string name;
@@ -104,24 +113,13 @@ struct NumberNode : public ASNode
 {
     VariableType num_type;
     union Num {
-        bool bl;
-        int8_t b;
-        char c;
-        int16_t s;
         int32_t i;
-        int64_t l;
         float f;
-        double d;
     } number;
 
-    NumberNode(VariableType type_, bool num);
-    NumberNode(VariableType type_, int8_t num);
-    NumberNode(VariableType type_, char num);
-    NumberNode(VariableType type_, int16_t num);
-    NumberNode(VariableType type_, int32_t num);
-    NumberNode(VariableType type_, int64_t num);
-    NumberNode(VariableType type_, float num);
-    NumberNode(VariableType type_, double num);
+    NumberNode(bool num);
+    NumberNode(int32_t num);
+    NumberNode(float num);
     NodeType type() const override;
     std::string print() const override;
 };

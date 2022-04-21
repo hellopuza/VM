@@ -27,6 +27,7 @@ QUOTE        [']
 "char"                      { return yy::parser::token_type::CHAR;     }
 "class"                     { return yy::parser::token_type::CLASS;    }
 "double"                    { return yy::parser::token_type::DOUBLE;   }
+"elif"                      { return yy::parser::token_type::ELIF;     }
 "else"                      { return yy::parser::token_type::ELSE;     }
 "false"                     { return yy::parser::token_type::FALSE;    }
 "float"                     { return yy::parser::token_type::FLOAT;    }
@@ -48,15 +49,15 @@ QUOTE        [']
 "void"                      { return yy::parser::token_type::VOID;     }
 "while"                     { return yy::parser::token_type::WHILE;    }
 
-"{"		                    { return yy::parser::token_type::OCBRACKET; }
-"}"		                    { return yy::parser::token_type::CCBRACKET; }
-"("		                    { return yy::parser::token_type::ORBRACKET; }
-")"		                    { return yy::parser::token_type::CRBRACKET; }
-"["		                    { return yy::parser::token_type::OSBRACKET; }
-"]"		                    { return yy::parser::token_type::CSBRACKET; }
-";"                         { return yy::parser::token_type::SCOLON;    }
-"."                         { return yy::parser::token_type::DOT;       }
-","                         { return yy::parser::token_type::COMMA;     }
+"{"		                    { return yy::parser::token_type::OCB;    }
+"}"		                    { return yy::parser::token_type::CCB;    }
+"("		                    { return yy::parser::token_type::ORB;    }
+")"		                    { return yy::parser::token_type::CRB;    }
+"["		                    { return yy::parser::token_type::OSB;    }
+"]"		                    { return yy::parser::token_type::CSB;    }
+";"                         { return yy::parser::token_type::SCOLON; }
+"."                         { return yy::parser::token_type::DOT;    }
+","                         { return yy::parser::token_type::COMMA;  }
 
 "||"                        { return yy::parser::token_type::OR;  }
 "&&"                        { return yy::parser::token_type::AND; }
@@ -67,11 +68,11 @@ QUOTE        [']
 "<"                         { return yy::parser::token_type::STL; }
 ">"                         { return yy::parser::token_type::STG; }
 
-"+"                         { return yy::parser::token_type::ADD;   }
-"-"                         { return yy::parser::token_type::SUB;   }
-"*"                         { return yy::parser::token_type::MUL;   }
-"/"                         { return yy::parser::token_type::DIV;   }
-"="                         { return yy::parser::token_type::ASSOP; }
+"+"                         { return yy::parser::token_type::ADD;    }
+"-"                         { return yy::parser::token_type::SUB;    }
+"*"                         { return yy::parser::token_type::MUL;    }
+"/"                         { return yy::parser::token_type::DIV;    }
+"="                         { return yy::parser::token_type::ASSIGN; }
 
 "//".*
 {WS}
