@@ -3,5 +3,5 @@
 void PNI_createVM(PkmVM** pvm, PNIEnv** env)
 {
     *pvm = new PkmVM;
-    *env = new PNIEnv;
+    *env = new PNIEnv(*pvm);
 }

@@ -15,12 +15,12 @@
 
 const char* const BIN_FOLDER = "./pkm/bin";
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     KlassLoader kl;
     kl.loadLib(BIN_FOLDER);
     int err = kl.loadUser(argc, argv);
-    CHECK_ERROR(err, "Klass file not loaded: " + argv[err] + "\n");
+    CHECK_ERROR(err, "Klass file not loaded: " + std::string(argv[err]));
 
     ClassLinker cl;
     cl.link(kl.klasses);
@@ -29,9 +29,17 @@ int main(int argc, const char* argv[])
     PNIEnv* env = nullptr;
 
     PNI_createVM(&pvm, &env);
-    pvm->loadClasses(&cl.classes);
+    env->loadClasses(&cl.classes);
 
-    pvm->destroyVM();
+    pclass cls = env->findClass("Main");
+    CHECK_ERROR(cls == nullptr, "Class Main not found");
+
+    pmethodID mid = PNIEnv::getMethodID(cls, "main");
+    CHECK_ERROR(cls == nullptr, "Method main not found");
+
+    PNIEnv::callMethod(cls, mid);
+
+    PkmVM::destroyVM();
     delete pvm;
     delete env;
 
