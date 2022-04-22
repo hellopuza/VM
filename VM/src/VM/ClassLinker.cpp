@@ -32,11 +32,11 @@ std::string ClassLinker::getString(const std::string& klass, size_t* pos)
     return klass.substr(start, *pos - 1 - start);
 }
 
-void ClassLinker::getConstantPool(ConstantPool* const_pool, const std::string& klass, size_t* pos)
+void ClassLinker::getConstantPool(ConstPool* const_pool, const std::string& klass, size_t* pos)
 {
     auto cp_size = *reinterpret_cast<const uint16_t*>(&klass[*pos]);
     (*pos) += sizeof(cp_size);
-    const_pool_.clear();
+    const_pool_ptr_ = const_pool;
 
     for (uint16_t i = 0; i < cp_size; i++)
     {
@@ -48,23 +48,20 @@ void ClassLinker::getConstantPool(ConstantPool* const_pool, const std::string& k
         {
             auto value = *reinterpret_cast<const int32_t*>(&klass[*pos]);
             (*pos) += sizeof(value);
-            (*const_pool)[std::make_unique<IntegerType>(IntegerType(value))] = i;
-            const_pool_.emplace_back(std::make_unique<IntegerType>(IntegerType(value)));
+            const_pool->emplace_back(std::make_unique<IntegerType>(IntegerType(value)));
             break;
         }
         case static_cast<uint8_t>(AbstractType::Type::FLOAT):
         {
             auto value = *reinterpret_cast<const float*>(&klass[*pos]);
             (*pos) += sizeof(value);
-            (*const_pool)[std::make_unique<FloatType>(FloatType(value))] = i;
-            const_pool_.emplace_back(std::make_unique<FloatType>(FloatType(value)));
+            const_pool->emplace_back(std::make_unique<FloatType>(FloatType(value)));
             break;
         }
         case static_cast<uint8_t>(AbstractType::Type::STRING):
         {
             auto value = getString(klass, pos);
-            (*const_pool)[std::make_unique<StringType>(StringType(value))] = i;
-            const_pool_.emplace_back(std::make_unique<StringType>(StringType(value)));
+            const_pool->emplace_back(std::make_unique<StringType>(StringType(value)));
             break;
         }
         default:
@@ -87,7 +84,7 @@ void ClassLinker::getFields(PkmFields* fields, const std::string& klass, size_t*
         auto name = *reinterpret_cast<const uint16_t*>(&klass[*pos]);
         (*pos) += sizeof(name);
 
-        auto field_name = static_cast<StringType*>(const_pool_[name].get())->value;
+        auto field_name = static_cast<StringType*>((*const_pool_ptr_)[name].get())->value;
         (*fields)[field_name].access_type = static_cast<AccessType>(access_type);
         (*fields)[field_name].var_type = static_cast<VariableType>(var_type);
     }
@@ -109,7 +106,7 @@ void ClassLinker::getMethods(PkmMethods* methods, const std::string& klass, size
         auto name = *reinterpret_cast<const uint16_t*>(&klass[*pos]);
         (*pos) += sizeof(name);
 
-        auto method_name = static_cast<StringType*>(const_pool_[name].get())->value;
+        auto method_name = static_cast<StringType*>((*const_pool_ptr_)[name].get())->value;
         (*methods)[method_name].access_type = static_cast<AccessType>(access_type);
         (*methods)[method_name].modifier = static_cast<MethodType>(modifier);
         (*methods)[method_name].ret_type = static_cast<VariableType>(ret_type);
