@@ -17,11 +17,11 @@ public:
 private:
     void appendClass(const std::string& klass);
     static std::string getString(const std::string& klass, size_t* pos);
-    void getConstantPool(ConstantPool* const_pool, const std::string& klass, size_t* pos);
+    void getConstantPool(ConstPool* const_pool, const std::string& klass, size_t* pos);
     void getFields(PkmFields* fields, const std::string& klass, size_t* pos);
     void getMethods(PkmMethods* methods, const std::string& klass, size_t* pos);
 
-    std::vector<std::unique_ptr<AbstractType>> const_pool_;
+    ConstPool* const_pool_ptr_;
 };
 
 #endif // VM_CLASSLINKER_H
