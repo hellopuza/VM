@@ -4,18 +4,24 @@
 #include <string>
 #include <iostream>
 
+#include "VM/Pkm/PkmMethod.h"
+#include "VM/Pkm/PkmClass.h"
+#include "VM/Pkm/PkmField.h"
+
+class PNIEnv;
+
 class Interpreter
 {
 public:
-    Interpreter() = default;
+    explicit Interpreter(PNIEnv* PNIEnv) : pni_env(PNIEnv) {};
     ~Interpreter() = default;
 
-    int interpret_goto();
+    int start_interpreting(pclass cls, pmethodID mid);
 
     static void read_file(const std::string& filename, std::string* out_buffer);
 
 private:
-    ClassLinker* cl;
+    PNIEnv* pni_env;
 };
 
 #endif // INTERPRETER_H_INCLUDED

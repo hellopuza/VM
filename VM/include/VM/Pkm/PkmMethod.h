@@ -16,4 +16,6 @@ struct PkmMethod
     std::vector<VariableType> met_params;
 };
 
+using pmethodID = PkmMethod*;
+
 #endif // VM_PKM_PKMMETHOD_H
