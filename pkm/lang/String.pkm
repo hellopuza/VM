@@ -1,16 +1,1 @@
-class String {
-    private char[] str;
-
-    public String(char c) {
-        this.str = new char[1];
-        this.str[0] = c;
-    }
-
-    public String(char[] strArr) {
-        this.str = new char[strArr.length];
-
-        for(int i = 0; i < strArr.length; ++i) {
-            this.str[i] = strArr[i];
-        }
-    }
-}
+class String;

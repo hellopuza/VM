@@ -355,7 +355,6 @@ AST* bindNodes(OperationType op, AST* lhs, AST* rhs)
     return node;
 }
 
-
 AST* bindNodes(AST* lhs, AST* rhs)
 {
     if (rhs)

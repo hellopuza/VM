@@ -7,7 +7,7 @@ void Translator::translate(std::ofstream* file)
 {
     auto* class_node = static_cast<AST*>(&((*ast_)[0]));
     std::string class_name = static_cast<ClassNode*>(class_node->value().get())->name;
-    file->write(class_name.c_str(), class_name.length() + 1);
+    file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
 
     std::stringstream class_content;
     writeFields(class_node, &class_content);
@@ -55,7 +55,7 @@ void Translator::writeConstantPool(std::ofstream* file)
         case static_cast<uint8_t>(AbstractType::Type::STRING):
         {
             auto value = static_cast<StringType*>(elem.first)->value;
-            file->write(reinterpret_cast<const char*>(value.c_str()), value.length() + 1);
+            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
         }
@@ -162,7 +162,7 @@ void Translator::appendLocal(VariableDeclarationNode* var_decl_node)
 
 uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instructions)
 {
-    uint32_t offset = instructions->tellg();
+    auto offset = static_cast<uint32_t>(instructions->tellg());
     for (size_t i = 0; i < scope_node->branches_num(); i++)
     {
         switch ((*scope_node)[i].value()->type())
@@ -178,6 +178,8 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
             break;
         case NodeType::VAR_DECL:
             appendLocal(static_cast<VariableDeclarationNode*>((*scope_node)[i].value().get()));
+            break;
+        default:
             break;
         }
     }
@@ -196,6 +198,8 @@ VariableType Translator::writeObject(AST* obj_node, std::stringstream* instructi
         return writeLoad(static_cast<VariableNode*>(obj_node->value().get())->name, instructions);
     case NodeType::NUMBER:
         return writeNumber(static_cast<NumberNode*>(obj_node->value().get()), instructions);
+    default:
+        break;
     }
     return VariableType::VOID;
 }
@@ -215,11 +219,11 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
         VariableType ret_type = writeObject(rhs, instructions);
         writeObject(lhs, instructions);
 
-        auto op_type = static_cast<uint8_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
-        op_type -= static_cast<uint8_t>(OperationType::ADD);
+        auto op_type = static_cast<uint32_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
+        op_type -= static_cast<uint32_t>(OperationType::ADD);
 
         uint32_t null = 0;
-        uint8_t op_code = 0;
+        uint32_t op_code = 0;
         switch (ret_type)
         {
         case VariableType::INT:
@@ -233,6 +237,8 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
             break;
         case VariableType::DOUBLE:
             op_code = static_cast<uint8_t>(Opcode::DADD) + op_type;
+            break;
+        default:
             break;
         }
 
@@ -262,6 +268,8 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
             writeStore(var_node->name, instructions);
             return ret_type;
         }
+        default:
+            break;
         }
         return ret_type;
     }
@@ -285,6 +293,8 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
         case VariableType::DOUBLE:
             op_code = static_cast<uint8_t>(Opcode::DRETURN);
             break;
+        default:
+            break;
         }
 
         instructions->write(reinterpret_cast<char*>(&op_code), 1);
@@ -292,6 +302,8 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
 
         return ret_type;
     }
+    default:
+        break;
     }
 
     return VariableType::VOID;
@@ -358,6 +370,8 @@ VariableType Translator::writeNumber(NumberNode* num_node, std::stringstream* in
         }
         ret_type = VariableType::FLOAT;
         break;
+    default:
+        break;
     }
 
     instructions->write(reinterpret_cast<char*>(&op_code), 1);
@@ -390,6 +404,8 @@ void Translator::writeStore(const std::string& name, std::stringstream* instruct
         break;
     case VariableType::DOUBLE:
         op_code = static_cast<uint8_t>(Opcode::DSTORE);
+        break;
+    default:
         break;
     }
 
@@ -426,6 +442,8 @@ VariableType Translator::writeLoad(const std::string& name, std::stringstream* i
     case VariableType::DOUBLE:
         op_code = static_cast<uint8_t>(Opcode::DLOAD);
         ret_type = VariableType::DOUBLE;
+        break;
+    default:
         break;
     }
 
