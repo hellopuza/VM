@@ -7,8 +7,7 @@
 class Interpreter
 {
 public:
-    Interpreter() = delete;
-    explicit Interpreter(std::string& byte_code_path);
+    Interpreter() = default;
     ~Interpreter() = default;
 
     int interpret_goto();
@@ -16,8 +15,7 @@ public:
     static void read_file(const std::string& filename, std::string* out_buffer);
 
 private:
-    std::string byte_code_path_;
-    std::string byte_code_buffer_;
+    ClassLinker* cl;
 };
 
 #endif // INTERPRETER_H_INCLUDED

@@ -1,12 +1,12 @@
 #include "VM/PkmVM.h"
 #include "Opcodes.h"
+#include "VM/Interpreter.h"
+#include "VM/ClassLinker.h"
 
+#include <iostream>
 #include <fstream>
-
-Interpreter::Interpreter(std::string& byte_code_path) : byte_code_path_(byte_code_path)
-{
-    read_file(byte_code_path_, &byte_code_buffer_);
-}
+#include <cstddef>
+#include <stack>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -18,38 +18,50 @@ int Interpreter::interpret_goto()
     static void* dispatch_table[] = {
         &&NOP         , &&LDC         , &&LDC2          , &&ILOAD         , &&LLOAD          ,
         &&FLOAD       , &&DLOAD       , &&ALOAD         , &&IALOAD        , &&LALOAD         ,
-        &&FALOAD      , &&DALOAD      , &&AALOAD        , &&BALOAD        , &&CALOAD         ,
-        &&SALOAD      , &&ISTORE      , &&LSTORE        , &&FSTORE        , &&DSTORE         ,
-        &&ASTORE      , &&IASTORE     , &&LASTORE       , &&FASTORE       , &&DASTORE        ,
-        &&AASTORE     , &&BASTORE     , &&CASTORE       , &&SASTORE       , &&POP            ,
-        &&POP2        , &&DUP         , &&DUP2          , &&IADD          , &&LADD           ,
-        &&FADD        , &&DADD        , &&ISUB          , &&LSUB          , &&FSUB           ,
-        &&DSUB        , &&IMUL        , &&LMUL          , &&FMUL          , &&DMUL           ,
-        &&IDIV        , &&LDIV        , &&FDIV          , &&DDIV          , &&IREM           ,
-        &&LREM        , &&FREM        , &&DREM          , &&INEG          , &&LNEG           ,
-        &&FNEG        , &&DNEG        , &&ISHL          , &&LSHL          , &&ISHR           ,
-        &&LSHR        , &&IAND        , &&LAND          , &&IOR           , &&LOR            ,
-        &&IXOR        , &&LXOR        , &&IINC          , &&I2L           , &&I2F            ,
-        &&I2D         , &&L2I         , &&L2F           , &&L2D           , &&F2I            ,
-        &&F2L         , &&F2D         , &&D2I           , &&D2L           , &&D2F            ,
-        &&I2B         , &&I2C         , &&I2S           , &&ICMP          , &&LCMP           ,
-        &&FCMPL       , &&FCMPG       , &&DCMPL         , &&DCMPG         , &&IFEQ           ,
-        &&IFNE        , &&IFLT        , &&IFGE          , &&IFGT          , &&IFLE           ,
-        &&GOTO        , &&TABLESWITCH , &&LOOKUPSWITCH  , &&IRETURN       , &&LRETURN        ,
-        &&FRETURN     , &&DRETURN     , &&ARETURN       , &&RETURN        , &&GETSTATIC      ,
-        &&PUTSTATIC   , &&GETFIELD    , &&PUTFIELD      , &&INVOKEVIRTUAL , &&INVOKESTATIC   ,
-        &&NEW         , &&NEWARRAY    , &&MULTINEWARRAY , &&ANEWARRAY     , &&AMULTINEWARRAY ,
-        &&ARRAYLENGTH
+        // &&FALOAD      , &&DALOAD      , &&AALOAD        , &&BALOAD        , &&CALOAD         ,
+        // &&SALOAD      , &&ISTORE      , &&LSTORE        , &&FSTORE        , &&DSTORE         ,
+        // &&ASTORE      , &&IASTORE     , &&LASTORE       , &&FASTORE       , &&DASTORE        ,
+        // &&AASTORE     , &&BASTORE     , &&CASTORE       , &&SASTORE       , &&POP            ,
+        // &&POP2        , &&DUP         , &&DUP2          , &&IADD          , &&LADD           ,
+        // &&FADD        , &&DADD        , &&ISUB          , &&LSUB          , &&FSUB           ,
+        // &&DSUB        , &&IMUL        , &&LMUL          , &&FMUL          , &&DMUL           ,
+        // &&IDIV        , &&LDIV        , &&FDIV          , &&DDIV          , &&IREM           ,
+        // &&LREM        , &&FREM        , &&DREM          , &&INEG          , &&LNEG           ,
+        // &&FNEG        , &&DNEG        , &&ISHL          , &&LSHL          , &&ISHR           ,
+        // &&LSHR        , &&IAND        , &&LAND          , &&IOR           , &&LOR            ,
+        // &&IXOR        , &&LXOR        , &&IINC          , &&I2L           , &&I2F            ,
+        // &&I2D         , &&L2I         , &&L2F           , &&L2D           , &&F2I            ,
+        // &&F2L         , &&F2D         , &&D2I           , &&D2L           , &&D2F            ,
+        // &&I2B         , &&I2C         , &&I2S           , &&ICMP          , &&LCMP           ,
+        // &&FCMPL       , &&FCMPG       , &&DCMPL         , &&DCMPG         , &&IFEQ           ,
+        // &&IFNE        , &&IFLT        , &&IFGE          , &&IFGT          , &&IFLE           ,
+        // &&GOTO        , &&TABLESWITCH , &&LOOKUPSWITCH  , &&IRETURN       , &&LRETURN        ,
+        // &&FRETURN     , &&DRETURN     , &&ARETURN       , &&RETURN        , &&GETSTATIC      ,
+        // &&PUTSTATIC   , &&GETFIELD    , &&PUTFIELD      , &&INVOKEVIRTUAL , &&INVOKESTATIC   ,
+        // &&NEW         , &&NEWARRAY    , &&MULTINEWARRAY , &&ANEWARRAY     , &&AMULTINEWARRAY ,
+        // &&ARRAYLENGTH
     };
 
-    #define DISPATCH() goto *dispatch_table[byte_code_buffer_[pc++]]
+    #define DISPATCH() goto *dispatch_table[static_cast<int>(byte_code_buffer_[pc++] - '0')]
+
+    #define NEXT_CMD() static_cast<int>(byte_code_buffer_[pc++] - '0')
+
+    std::stack<int>   stack_int;
+    std::stack<float> stack_float;
+
+    std::string cur_class_name;
 
     while (true)
     {   
         NOP:
             DISPATCH();
-        LDC:
+
+        LDC: // Push item from run-time constant pool
+        {
+            
             DISPATCH();
+        }
+
         LDC2:
             DISPATCH();
         ILOAD:
@@ -64,220 +76,8 @@ int Interpreter::interpret_goto()
             DISPATCH();
         IALOAD:
             DISPATCH();
-        LALOAD     :
-
-        FALOAD     :
-            
-        DALOAD        :
-            
-        AALOAD        :
-            
-        BALOAD        :
-            
-        CALOAD        :
-            
-        SALOAD        :
-            
-        ISTORE        :
-            
-        LSTORE        :
-            
-        FSTORE        :
-            
-        DSTORE        :
-            
-        ASTORE        :
-            
-        IASTORE       :
-            
-        LASTORE       :
-            
-        FASTORE       :
-            
-        DASTORE       :
-            
-        AASTORE       :
-            
-        BASTORE       :
-            
-        CASTORE       :
-            
-        SASTORE       :
-            
-        POP           :
-            
-        POP2          :
-            
-        DUP           :
-            
-        DUP2          :
-            
-        IADD          :
-            
-        LADD          :
-            
-        FADD          :
-            
-        DADD          :
-            
-        ISUB          :
-            
-        LSUB          :
-            
-        FSUB          :
-            
-        DSUB          :
-            
-        IMUL          :
-            
-        LMUL          :
-            
-        FMUL          :
-            
-        DMUL          :
-            
-        IDIV          :
-            
-        LDIV          :
-            
-        FDIV          :
-            
-        DDIV          :
-            
-        IREM          :
-            
-        LREM          :
-            
-        FREM          :
-            
-        DREM          :
-            
-        INEG          :
-            
-        LNEG          :
-            
-        FNEG          :
-            
-        DNEG          :
-            
-        ISHL          :
-            
-        LSHL          :
-            
-        ISHR          :
-            
-        LSHR          :
-            
-        IAND          :
-            
-        LAND          :
-            
-        IOR           :
-            
-        LOR           :
-            
-        IXOR          :
-            
-        LXOR          :
-            
-        IINC          :
-            
-        I2L           :
-            
-        I2F           :
-            
-        I2D           :
-            
-        L2I           :
-            
-        L2F           :
-            
-        L2D           :
-            
-        F2I           :
-            
-        F2L           :
-            
-        F2D           :
-            
-        D2I           :
-            
-        D2L           :
-            
-        D2F           :
-            
-        I2B           :
-            
-        I2C           :
-            
-        I2S           :
-            
-        ICMP          :
-            
-        LCMP          :
-            
-        FCMPL         :
-            
-        FCMPG         :
-            
-        DCMPL         :
-            
-        DCMPG         :
-            
-        IFEQ          :
-            
-        IFNE          :
-            
-        IFLT          :
-            
-        IFGE          :
-            
-        IFGT          :
-            
-        IFLE          :
-            
-        GOTO          :
-            
-        TABLESWITCH   :
-            
-        LOOKUPSWITCH  :
-            
-        IRETURN       :
-            
-        LRETURN       :
-            
-        FRETURN       :
-            
-        DRETURN       :
-            
-        ARETURN       :
-            
-        RETURN        :
-            
-        GETSTATIC     :
-            
-        PUTSTATIC     :
-            
-        GETFIELD      :
-            
-        PUTFIELD      :
-            
-        INVOKEVIRTUAL :
-            
-        INVOKESTATIC  :
-            
-        NEW           :
-            
-        NEWARRAY      :
-            
-        MULTINEWARRAY :
-            
-        ANEWARRAY     :
-            
-        AMULTINEWARRAY:
-            
-        ARRAYLENGTH:
-            
+        LALOAD:
+            DISPATCH();
     }
     return -1;
 }
