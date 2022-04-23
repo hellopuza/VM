@@ -27,9 +27,10 @@ namespace yy {
 
 parser::token_type yylex(parser::semantic_type* yylval, yy::parser::location_type* location, ASTMaker* maker);
 
+void pushBranch(AST* root, AST* br);
 void pushBranches(AST* root, std::list<AST*>* list);
 
-AST* bindNodes(OperationType op, AST* lhs, AST* rhs);
+AST* bindNodes(OperationType op, AST* lhs, AST* rhs = nullptr);
 AST* bindNodes(AST* lhs, AST* rhs);
 
 }
@@ -67,7 +68,6 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <OperationType> SUB    "-"
     <OperationType> MUL    "*"
     <OperationType> DIV    "/"
-    <OperationType> DOT    "."
     <OperationType> COMMA  ","
     <OperationType> ASSIGN "="
     <OperationType> NEW    "new"
@@ -85,6 +85,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <bool>        TRUE  "true"
 
     <std::string> WORD
+    <std::string> WORD_DOT
     <int32_t>     INTNUMBER
     <float>       FLOATNUMBER
     <std::string> STRING
@@ -136,7 +137,6 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <AST*> OP_COMP
     <AST*> OP_ADD
     <AST*> OP_MUL
-    <AST*> OP_DOT
     <AST*> CHECK_ASS
     <AST*> CHECK_OR
     <AST*> CHECK_AND
@@ -144,13 +144,19 @@ AST* bindNodes(AST* lhs, AST* rhs);
     <AST*> CHECK_COMP
     <AST*> CHECK_ADD
     <AST*> CHECK_MUL
-    <AST*> CHECK_DOT
     <AST*> OBJ
     <AST*> EXPRINBR
     <AST*> FUNCTION
     <AST*> VAR_DECL
     <AST*> VAR
-    <AST*> NUM
+    <AST*> NUMBER
+    <AST*> NEW_OBJ
+
+    <AST*> VAR_SQBR
+    <AST*> SQBR
+    <std::list<AST*>> SQBRS
+
+    <std::string> WORD_DOT_WORD
 ;
 
 %start program
@@ -159,7 +165,7 @@ AST* bindNodes(AST* lhs, AST* rhs);
 
 program: CLASS_DECLS                             { maker->ast()->value() = std::make_shared<ASNode>(ASNode()); }
 
-CLASS_DECLS: CLASS_DECL CLASS_DECLS              { maker->ast()->emplace_branch(std::move(*$1)); delete $1; }
+CLASS_DECLS: CLASS_DECL CLASS_DECLS              { pushBranch(maker->ast(), $1); }
            | %empty                              { }
 ;
 
@@ -179,7 +185,7 @@ CLASS_FM: FIELD                                  { $$ = $1; }
 
 FIELD: ACC TYPE WORD SCOLON                      { $$ = new AST(std::make_shared<FieldNode>(FieldNode($3, $1, $2))); }
 
-METHOD: ACC MET MTYPE WORD MPARAMS SCOPE         { $$ = new AST(std::make_shared<MethodNode>(MethodNode($4, $1, $2, $3))); pushBranches($$, &$5); $$->emplace_branch(std::move(*$6)); delete $6; }
+METHOD: ACC MET MTYPE WORD MPARAMS SCOPE         { $$ = new AST(std::make_shared<MethodNode>(MethodNode($4, $1, $2, $3))); pushBranches($$, &$5); pushBranch($$, $6); }
 
 ACC: PUBLIC                                      { $$ = $1; }
    | PRIVATE                                     { $$ = $1; }
@@ -206,6 +212,7 @@ MET: INSTANCE                                    { $$ = $1; }
 
 MPARAMS: ORB PARAMS CRB                          { $$ = std::move($2); }
        | ORB CRB                                 { }
+;
 
 PARAMS: PARAM COMMA PARAMS                       { $3.push_front($1); $$ = std::move($3); }
       | PARAM                                    { $$ = std::list<AST*>(); $$.push_back($1); }
@@ -221,7 +228,7 @@ ACTIONS: ACTION ACTIONS                          { $2.push_front($1); $$ = std::
 
 ACTION: EXPR SCOLON                              { $$ = $1; }
       | CONTROL                                  { $$ = $1; }
-      | RETURN EXPR SCOLON                       { $$ = new AST(std::make_shared<OperationNode>(OperationNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; }
+      | RETURN EXPR SCOLON                       { $$ = new AST(std::make_shared<OperationNode>(OperationNode($1))); pushBranch($$, $2); }
 ;
 
 EXPR: CHECK_ASS ASSIGNMENT                       { $$ = bindNodes($1, $2); }
@@ -272,13 +279,7 @@ OP_MUL: MUL CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
       | %empty                                   { $$ = nullptr; }
 ;
 
-CHECK_MUL: CHECK_DOT OP_DOT                      { $$ = bindNodes($1, $2); }
-
-OP_DOT: DOT CHECK_DOT OP_DOT                     { $$ = bindNodes($1, $2, $3); }
-      | %empty                                   { $$ = nullptr; }
-;
-
-CHECK_DOT: OBJ                                   { $$ = $1; }
+CHECK_MUL: OBJ                                   { $$ = $1; }
          | ADD OBJ                               { $$ = bindNodes($1, $2, nullptr); }
          | SUB OBJ                               { $$ = bindNodes($1, $2, nullptr); }
 ;
@@ -286,33 +287,51 @@ CHECK_DOT: OBJ                                   { $$ = $1; }
 OBJ: EXPRINBR                                    { $$ = $1; }
    | FUNCTION                                    { $$ = $1; }
    | VAR_DECL                                    { $$ = $1; }
-   | NUM                                         { $$ = $1; }
    | VAR                                         { $$ = $1; }
+   | VAR_SQBR                                    { $$ = $1; }
+   | NUMBER                                      { $$ = $1; }
+   | NEW_OBJ                                     { $$ = $1; }
+   | STRING                                      { $1.erase($1.begin()); $1.erase(--$1.end()); $$ = new AST(std::make_shared<StringNode>(StringNode($1))); }
+   | SYMBOL                                      { $$ = new AST(std::make_shared<SymbolNode>(SymbolNode($1))); }
 ;
 
 EXPRINBR: ORB EXPR CRB                           { $$ = $2; }
 
-FUNCTION: WORD ORB FPARAMS CRB                   { $$ = new AST(std::make_shared<FunctionNode>(FunctionNode($1))); pushBranches($$, &$3); }
+FUNCTION: WORD_DOT_WORD ORB FPARAMS CRB          { $$ = new AST(std::make_shared<FunctionNode>(FunctionNode($1))); pushBranches($$, &$3); }
 
 FPARAMS: EXPR COMMA FPARAMS                      { $3.push_front($1); $$ = std::move($3); }
        | EXPR                                    { $$ = std::list<AST*>(); $$.push_back($1); }
        | %empty                                  { }
 ;
 
-CONTROL: IF EXPRINBR SCOPE                       { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
-       | ELSE SCOPE                              { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; }
-       | ELIF EXPRINBR SCOPE                     { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
-       | WHILE EXPRINBR SCOPE                    { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); $$->emplace_branch(std::move(*$2)); delete $2; $$->emplace_branch(std::move(*$3)); delete $3; }
+CONTROL: IF EXPRINBR SCOPE                       { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$, $2); pushBranch($$, $3); }
+       | ELSE SCOPE                              { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$, $2); }
+       | ELIF EXPRINBR SCOPE                     { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$, $2); pushBranch($$, $3); }
+       | WHILE EXPRINBR SCOPE                    { $$ = new AST(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$, $2); pushBranch($$, $3); }
 ;
 
 VAR_DECL: TYPE WORD                              { $$ = new AST(std::make_shared<VariableDeclarationNode>(VariableDeclarationNode($2, $1))); }
 
-VAR: WORD                                        { $$ = new AST(std::make_shared<VariableNode>(VariableNode($1))); }
+VAR: WORD_DOT_WORD                               { $$ = new AST(std::make_shared<VariableNode>(VariableNode($1))); }
 
-NUM: INTNUMBER                                   { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
-   | FLOATNUMBER                                 { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
-   | FALSE                                       { $$ = new AST(std::make_shared<NumberNode>(NumberNode(false))); }
-   | TRUE                                        { $$ = new AST(std::make_shared<NumberNode>(NumberNode(true))); }
+VAR_SQBR: VAR SQBRS                              { $$ = new AST(std::make_shared<OperationNode>(OperationNode(OperationType::SQR_BR))); pushBranch($$, $1); pushBranches($$, &$2); }
+
+SQBRS: SQBR SQBRS                                { $2.push_front($1); $$ = std::move($2); }
+     | SQBR                                      { $$ = std::list<AST*>(); $$.push_back($1); }
+;
+
+SQBR: OSB EXPR CSB                               { $$ = $2; }
+
+NUMBER: INTNUMBER                                { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
+      | FLOATNUMBER                              { $$ = new AST(std::make_shared<NumberNode>(NumberNode($1))); }
+      | FALSE                                    { $$ = new AST(std::make_shared<NumberNode>(NumberNode(false))); }
+      | TRUE                                     { $$ = new AST(std::make_shared<NumberNode>(NumberNode(true))); }
+;
+
+NEW_OBJ: NEW WORD                                { $$ = new AST(std::make_shared<OperationNode>(OperationNode($1))); $$->emplace_branch(std::make_shared<TypeNode>(TypeNode($2))); }
+
+WORD_DOT_WORD: WORD                              { $$ = std::move($1); }
+             | WORD_DOT                          { $$ = std::move($1); }
 ;
 
 %%
@@ -322,6 +341,12 @@ namespace yy {
 parser::token_type yylex(parser::semantic_type* yylval, yy::parser::location_type* location, ASTMaker* maker)
 {
     return maker->yylex(yylval, location);
+}
+
+void pushBranch(AST* root, AST* br)
+{
+    root->emplace_branch(std::move(*br));
+    delete br;
 }
 
 void pushBranches(AST* root, std::list<AST*>* list)

@@ -11,7 +11,7 @@ static const std::string METHOD[] = {
     "native",
 };
 
-static const std::string VARIABLE[] = {
+static const std::string TYPES[] = {
     "void",
     "boolean",
     "byte",
@@ -37,9 +37,9 @@ static const std::string OPERATION[] = {
     "-",
     "*",
     "/",
-    ".",
     ",",
     "=",
+    "[]",
     "new",
     "return",
 };
@@ -85,7 +85,7 @@ NodeType FieldNode::type() const
 
 std::string FieldNode::print() const
 {
-    return ACCESS[static_cast<int>(access_type)] + " " + VARIABLE[static_cast<int>(var_type)] + " " + name;
+    return ACCESS[static_cast<int>(access_type)] + " " + TYPES[static_cast<int>(var_type)] + " " + name;
 }
 
 MethodNode::MethodNode(std::string name_, AccessType access_type_, MethodType modifier_, VariableType ret_type_) :
@@ -100,7 +100,7 @@ NodeType MethodNode::type() const
 std::string MethodNode::print() const
 {
     return ACCESS[static_cast<int>(access_type)] + " " + METHOD[static_cast<int>(modifier)] + " " + \
-           VARIABLE[static_cast<int>(ret_type)] + " " + name;
+           TYPES[static_cast<int>(ret_type)] + " " + name;
 }
 
 MethodParameterNode::MethodParameterNode(std::string name_, VariableType var_type_) :
@@ -114,7 +114,7 @@ NodeType MethodParameterNode::type() const
 
 std::string MethodParameterNode::print() const
 {
-    return VARIABLE[static_cast<int>(var_type)] + " " + name;
+    return TYPES[static_cast<int>(var_type)] + " " + name;
 }
 
 NodeType ScopeNode::type() const
@@ -174,14 +174,14 @@ NodeType VariableDeclarationNode::type() const
 
 std::string VariableDeclarationNode::print() const
 {
-    return VARIABLE[static_cast<int>(var_type)] + " " + name;
+    return TYPES[static_cast<int>(var_type)] + " " + name;
 }
 
 VariableNode::VariableNode(std::string name_) : name(std::move(name_)) {}
 
 NodeType VariableNode::type() const
 {
-    return NodeType::VAR;
+    return NodeType::VARIABLE;
 }
 
 std::string VariableNode::print() const
@@ -223,4 +223,40 @@ std::string NumberNode::print() const
         break;
     }
     return "err";
+}
+
+StringNode::StringNode(std::string value_) : value(std::move(value_)) {}
+
+NodeType StringNode::type() const
+{
+    return NodeType::STRING;
+}
+
+std::string StringNode::print() const
+{
+    return "\\\"" + value + "\\\"";
+}
+
+SymbolNode::SymbolNode(char value_) : value(value_) {}
+
+NodeType SymbolNode::type() const
+{
+    return NodeType::SYMBOL;
+}
+
+std::string SymbolNode::print() const
+{
+    return "\\\'" + std::string(1, value) + "\\\'";
+}
+
+TypeNode::TypeNode(std::string str_) : str(std::move(str_)) {}
+
+NodeType TypeNode::type() const
+{
+    return NodeType::TYPE;
+}
+
+std::string TypeNode::print() const
+{
+    return str;
 }
