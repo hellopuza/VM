@@ -108,9 +108,6 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::DIV:
         yylval->build<OperationType>() = OperationType::DIV;
         break;
-    case yy::parser::token_type::DOT:
-        yylval->build<OperationType>() = OperationType::DOT;
-        break;
     case yy::parser::token_type::COMMA:
         yylval->build<OperationType>() = OperationType::COMMA;
         break;
@@ -151,6 +148,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
         yylval->build<bool>() = true;
         break;
     case yy::parser::token_type::WORD:
+    case yy::parser::token_type::WORD_DOT:
         yylval->build<std::string>() = lexer_->YYText();
         break;
     case yy::parser::token_type::INTNUMBER:

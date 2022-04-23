@@ -194,7 +194,7 @@ VariableType Translator::writeObject(AST* obj_node, std::stringstream* instructi
         return writeOperation(obj_node, instructions);
     case NodeType::FUNCTION:
         return writeFunction(obj_node, instructions);
-    case NodeType::VAR:
+    case NodeType::VARIABLE:
         return writeLoad(static_cast<VariableNode*>(obj_node->value().get())->name, instructions);
     case NodeType::NUMBER:
         return writeNumber(static_cast<NumberNode*>(obj_node->value().get()), instructions);
@@ -262,7 +262,7 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
             writeStore(var_decl_node->name, instructions);
             return ret_type;
         }
-        case NodeType::VAR:
+        case NodeType::VARIABLE:
         {
             auto* var_node = static_cast<VariableNode*>(lhs->value().get());
             writeStore(var_node->name, instructions);

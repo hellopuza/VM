@@ -124,4 +124,31 @@ struct NumberNode : public ASNode
     std::string print() const override;
 };
 
+struct StringNode : public ASNode
+{
+    std::string value;
+
+    StringNode(std::string value_);
+    NodeType type() const override;
+    std::string print() const override;
+};
+
+struct SymbolNode : public ASNode
+{
+    char value;
+
+    SymbolNode(char value_);
+    NodeType type() const override;
+    std::string print() const override;
+};
+
+struct TypeNode : public ASNode
+{
+    std::string str;
+
+    TypeNode(std::string str_);
+    NodeType type() const override;
+    std::string print() const override;
+};
+
 #endif // COMPILER_AST_ASNODE_H

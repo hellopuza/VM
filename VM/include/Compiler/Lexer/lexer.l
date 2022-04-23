@@ -19,6 +19,10 @@ INTNUMBER    {DIGIT1}{DIGIT}*|0
 FLOATNUMBER  {INTNUMBER}"."{WRONGNUMBER}
 QUOTES       ["]
 QUOTE        [']
+STRING       {QUOTES}.*{QUOTES}
+SYMBOL       {QUOTE}.{QUOTE}
+W_DOT        {WORD}"."
+WORD_DOT     {W_DOT}+{WORD}
 
 %%
 
@@ -56,7 +60,6 @@ QUOTE        [']
 "["		                    { return yy::parser::token_type::OSB;    }
 "]"		                    { return yy::parser::token_type::CSB;    }
 ";"                         { return yy::parser::token_type::SCOLON; }
-"."                         { return yy::parser::token_type::DOT;    }
 ","                         { return yy::parser::token_type::COMMA;  }
 
 "||"                        { return yy::parser::token_type::OR;  }
@@ -77,10 +80,11 @@ QUOTE        [']
 "//".*
 {WS}
 {WORD}                      { return yy::parser::token_type::WORD;        }
+{WORD_DOT}                  { return yy::parser::token_type::WORD_DOT;    }
 {INTNUMBER}                 { return yy::parser::token_type::INTNUMBER;   }
 {FLOATNUMBER}               { return yy::parser::token_type::FLOATNUMBER; }
-{QUOTES}.*{QUOTES}          { return yy::parser::token_type::STRING;      }
-{QUOTE}.{QUOTE}             { return yy::parser::token_type::SYMBOL;      }
+{STRING}                    { return yy::parser::token_type::STRING;      }
+{SYMBOL}                    { return yy::parser::token_type::SYMBOL;      }
 {DIGIT}+{WORD}              { return yy::parser::token_type::ERROR;       }
 {WRONGNUMBER}               { return yy::parser::token_type::ERROR;       }
 .                           { return yy::parser::token_type::ERROR;       }
