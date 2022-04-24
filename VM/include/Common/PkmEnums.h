@@ -13,8 +13,11 @@ enum class NodeType
     CONTROL,
     FUNCTION,
     VAR_DECL,
-    VAR,
+    VARIABLE,
     NUMBER,
+    STRING,
+    SYMBOL,
+    TYPE,
 };
 
 enum class AccessType
@@ -58,9 +61,9 @@ enum class OperationType
     SUB,
     MUL,
     DIV,
-    DOT,
     COMMA,
     ASSIGN,
+    SQR_BR,
     NEW,
     RETURN,
 };

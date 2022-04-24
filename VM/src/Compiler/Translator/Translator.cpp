@@ -121,6 +121,9 @@ void Translator::writeMethods(AST* class_node, std::stringstream* class_content,
             uint32_t offset = writeInstructions(scope_node, instructions);
             class_content->write(reinterpret_cast<char*>(&offset), sizeof(offset));
 
+            auto locals_num = static_cast<uint16_t>(locals_.size());
+            class_content->write(reinterpret_cast<char*>(&locals_num), sizeof(locals_num));
+
             uint32_t null = 0;
             auto op_code = static_cast<uint8_t>(Opcode::RETURN);
             instructions->write(reinterpret_cast<char*>(&op_code), 1);
@@ -194,7 +197,7 @@ VariableType Translator::writeObject(AST* obj_node, std::stringstream* instructi
         return writeOperation(obj_node, instructions);
     case NodeType::FUNCTION:
         return writeFunction(obj_node, instructions);
-    case NodeType::VAR:
+    case NodeType::VARIABLE:
         return writeLoad(static_cast<VariableNode*>(obj_node->value().get())->name, instructions);
     case NodeType::NUMBER:
         return writeNumber(static_cast<NumberNode*>(obj_node->value().get()), instructions);
@@ -262,7 +265,7 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
             writeStore(var_decl_node->name, instructions);
             return ret_type;
         }
-        case NodeType::VAR:
+        case NodeType::VARIABLE:
         {
             auto* var_node = static_cast<VariableNode*>(lhs->value().get());
             writeStore(var_node->name, instructions);

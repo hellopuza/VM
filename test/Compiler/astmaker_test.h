@@ -253,10 +253,10 @@ TEST(ASTMakerTest, Operators) // NOLINT
     EXPECT_TRUE(ast[0][1][2][0][0].value().get()->type() == NodeType::OPERATION);
     EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][0][0].value().get())->op_type == OperationType::ADD);
 
-    EXPECT_TRUE(ast[0][1][2][0][0][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(ast[0][1][2][0][0][0].value().get()->type() == NodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][0].value().get())->name == "left");
 
-    EXPECT_TRUE(ast[0][1][2][0][0][1].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(ast[0][1][2][0][0][1].value().get()->type() == NodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][1].value().get())->name == "right");
 }
 
@@ -265,7 +265,7 @@ TEST(ASTMakerTest, Function) // NOLINT
     CONSTRUCT_FILE(
         "class Main {\n"
         "   private static int main(int a) {\n"
-        "       int num = a * foo(a - 1);\n"
+        "       int num = a * foo(a - 1, a);\n"
         "   }\n"
         "}\n"
     )
@@ -280,7 +280,7 @@ TEST(ASTMakerTest, Function) // NOLINT
     EXPECT_TRUE(ast[0][0][1][0][1].value().get()->type() == NodeType::OPERATION);
     EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0][1].value().get())->op_type == OperationType::MUL);
 
-    EXPECT_TRUE(ast[0][0][1][0][1][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(ast[0][0][1][0][1][0].value().get()->type() == NodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][1][0].value().get())->name == "a");
 
     EXPECT_TRUE(ast[0][0][1][0][1][1].value().get()->type() == NodeType::FUNCTION);
@@ -289,12 +289,15 @@ TEST(ASTMakerTest, Function) // NOLINT
     EXPECT_TRUE(ast[0][0][1][0][1][1][0].value().get()->type() == NodeType::OPERATION);
     EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0][1][1][0].value().get())->op_type == OperationType::SUB);
 
-    EXPECT_TRUE(ast[0][0][1][0][1][1][0][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(ast[0][0][1][0][1][1][0][0].value().get()->type() == NodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][1][1][0][0].value().get())->name == "a");
 
     EXPECT_TRUE(ast[0][0][1][0][1][1][0][1].value().get()->type() == NodeType::NUMBER);
     EXPECT_TRUE(static_cast<NumberNode*>(ast[0][0][1][0][1][1][0][1].value().get())->num_type == VariableType::INT);
     EXPECT_TRUE(static_cast<NumberNode*>(ast[0][0][1][0][1][1][0][1].value().get())->number.i == 1);
+
+    EXPECT_TRUE(ast[0][0][1][0][1][1][1].value().get()->type() == NodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][1][1][1].value().get())->name == "a");
 }
 
 TEST(ASTMakerTest, Control) // NOLINT
@@ -312,13 +315,208 @@ TEST(ASTMakerTest, Control) // NOLINT
     EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::CONTROL);
     EXPECT_TRUE(static_cast<ControlNode*>(ast[0][0][0][0].value().get())->control_type == ControlType::IF);
 
-    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VAR);
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "cond");
 
     EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == NodeType::SCOPE);
 
     EXPECT_TRUE(ast[0][0][0][0][1][0].value().get()->type() == NodeType::FUNCTION);
     EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][1][0].value().get())->name == "foo");
+}
+
+TEST(ASTMakerTest, String) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main() {\n"
+        "       str = \"abcd\";\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][0][0].value().get())->op_type == OperationType::ASSIGN);
+
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "str");
+
+    EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == NodeType::STRING);
+    EXPECT_TRUE(static_cast<StringNode*>(ast[0][0][0][0][1].value().get())->value == "abcd");
+}
+
+TEST(ASTMakerTest, Symbol) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main() {\n"
+        "       ch = \'a\';\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][0][0].value().get())->op_type == OperationType::ASSIGN);
+
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "ch");
+
+    EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == NodeType::SYMBOL);
+    EXPECT_TRUE(static_cast<SymbolNode*>(ast[0][0][0][0][1].value().get())->value == 'a');
+}
+
+TEST(ASTMakerTest, OperatorNew) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main() {\n"
+        "       str = new String;\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][0][0].value().get())->op_type == OperationType::ASSIGN);
+
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "str");
+
+    EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == NodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][0][0][1].value().get())->op_type == OperationType::NEW);
+
+    EXPECT_TRUE(ast[0][0][0][0][1][0].value().get()->type() == NodeType::TYPE);
+    EXPECT_TRUE(static_cast<TypeNode*>(ast[0][0][0][0][1][0].value().get())->str == "String");
+}
+
+TEST(ASTMakerTest, DotWord) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int main() {\n"
+        "       Other.foo(Other.var);\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][0][0].value().get()->type() == NodeType::FUNCTION);
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0].value().get())->name == "Other.foo");
+
+    EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == NodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "Other.var");
+}
+
+TEST(ASTMakerTest, ClassError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, ClassColonError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, ClassScopeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, AccessError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   a\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldTypeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public void\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldNameError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public int\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldColonError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public int a\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodTypeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodNameError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodParamsError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void foo\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodScopeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void foo() {\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
 }
 
 #undef CONSTRUCT_FILE
