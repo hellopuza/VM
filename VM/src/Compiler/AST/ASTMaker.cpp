@@ -172,9 +172,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::OSB:
     case yy::parser::token_type::CSB:
     case yy::parser::token_type::SCOLON:
-        break;
     case yy::parser::token_type::ERROR:
-        throw std::runtime_error(std::string("unrecognized symbol: ") + lexer_->YYText());
     default:
         break;
     }
