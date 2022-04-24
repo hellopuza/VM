@@ -41,8 +41,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         &&AMULTINEWARRAY , &&ARRAYLENGTH
     };
 
-    std::size_t pc       = mid->offset;
-    std::string bytecode = cls->bytecode;
+    std::size_t pc         = mid->offset;
+    std::string bytecode   = cls->bytecode;
+    Frame* current_frame   = pvm_->create_new_frame(mid->locals_num, &(cls->const_pool));
 
     #define DISPATCH() goto *dispatch_table[static_cast<int8_t>(bytecode[pc++])]
 
@@ -53,20 +54,26 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         LDC: // Push item from run-time constant pool
         {
             ++pc;
+            int8_t  index = static_cast<int8_t>(pc);
             int32_t value = 0;
-            memcpy(&value, (cls->const_pool[pc]).get(), sizeof(value));
-            pvm_->stack.push(value);
+            memcpy(&value, (((*(current_frame->const_pool))[index]).get()), sizeof(value));
+            current_frame->operand_stack.push(value);
             ++pc;
             DISPATCH();
         }
         LDC2:
+        {
             DISPATCH();
+        }
         ILOAD:
+        {
             ++pc;
-            int32_t value = 0;
-            memcpy(&value, (cls->const_pool[pc]).get(), sizeof(value));
-
+            int8_t  index = static_cast<int8_t>(pc);
+            int32_t value = (current_frame->local_variables)[index];
+            current_frame->operand_stack.push(value);
+            ++pc;
             DISPATCH();
+        }
         LLOAD:
             DISPATCH();
         FLOAD:
