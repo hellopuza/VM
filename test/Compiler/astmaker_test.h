@@ -404,4 +404,119 @@ TEST(ASTMakerTest, DotWord) // NOLINT
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "Other.var");
 }
 
+TEST(ASTMakerTest, ClassError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, ClassColonError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, ClassScopeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, AccessError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   a\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldTypeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public void\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldNameError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public int\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, FieldColonError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public int a\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodTypeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodNameError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodParamsError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void foo\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, MethodScopeError) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void foo() {\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast_maker.err());
+}
+
 #undef CONSTRUCT_FILE

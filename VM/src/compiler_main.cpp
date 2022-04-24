@@ -23,10 +23,10 @@ int main(int argc, const char* argv[])
         std::string ext(path.extension());
         CHECK_ERROR((ext != LANG_EXTENSION), "Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION);
 
-        int err = comp.load(filename);
+        int err = comp.compile(filename, CODE_EXTENSION);
         CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not found: " + filename);
-        CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not load: " + filename + ", Wrong syntax or empty");
-        CHECK_ERROR((!comp.compile(CODE_EXTENSION)), "File not compiled: " + filename);
+        CHECK_ERROR((err == Compiler::FILE_NOT_COMPILED), "File not compiled: " + filename);
+        comp.printErrors(std::cout);
     }
 
     return 0;

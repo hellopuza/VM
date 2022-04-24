@@ -20,7 +20,7 @@ TEST(CompilerTest, DefaultConstructor) // NOLINT
 TEST(CompilerTest, LoadWrongFileName) // NOLINT
 {
     Compiler comp;
-    EXPECT_TRUE(comp.load("!") == Compiler::FILE_NOT_FOUND);
+    EXPECT_TRUE(comp.compile("!", ".txt") == Compiler::FILE_NOT_FOUND);
 }
 
 TEST(CompilerTest, LoadEmptyFile) // NOLINT
@@ -29,7 +29,7 @@ TEST(CompilerTest, LoadEmptyFile) // NOLINT
         ""
     )
     Compiler comp;
-    EXPECT_TRUE(comp.load("file") == Compiler::FILE_NOT_LOAD);
+    EXPECT_TRUE(comp.compile("file", ".txt") == Compiler::FILE_NOT_COMPILED);
 }
 
 TEST(CompilerTest, LoadNormFile) // NOLINT
@@ -38,7 +38,7 @@ TEST(CompilerTest, LoadNormFile) // NOLINT
         "class Main;"
     )
     Compiler comp;
-    EXPECT_TRUE(comp.load("file") == Compiler::OK);
+    EXPECT_TRUE(comp.compile("file", ".txt") == Compiler::OK);
 }
 
 #undef CONSTRUCT_FILE
