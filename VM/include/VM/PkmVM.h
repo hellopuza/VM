@@ -4,12 +4,14 @@
 #include "VM/ClassLinker.h"
 
 #include <unordered_map>
+#include <stack>
 
-class PkmVM
+struct PkmVM
 {
-public:
     PkmVM() = default;
     static void destroyVM();
+
+    std::stack<int32_t> stack;
 };
 
 #endif // VM_PNI_H

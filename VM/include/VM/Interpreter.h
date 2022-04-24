@@ -13,15 +13,16 @@ class PNIEnv;
 class Interpreter
 {
 public:
-    explicit Interpreter(PNIEnv* PNIEnv) : pni_env(PNIEnv) {};
+    Interpreter(PkmVM* pvm, PkmClasses* pclasses) : pvm_(pvm), pclasses_(pclasses) {};
     ~Interpreter() = default;
 
-    int start_interpreting(pclass cls, pmethodID mid);
+    void start_interpreting(pclass cls, pmethodID mid);
 
     static void read_file(const std::string& filename, std::string* out_buffer);
 
 private:
-    PNIEnv* pni_env;
+    PkmVM* pvm_ = nullptr;
+    PkmClasses* pclasses_ = nullptr;
 };
 
 #endif // INTERPRETER_H_INCLUDED
