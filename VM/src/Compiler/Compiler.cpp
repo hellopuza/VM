@@ -4,16 +4,27 @@
 
 #include <fstream>
 
-int Compiler::load(const std::string& input_name)
+int Compiler::compile(const std::string& input_name, const std::string& code_ext)
 {
     std::ifstream file(input_name);
     if (file.is_open())
     {
         ASTMaker ast_maker(&file);
-        ast_maker.make(&ast_);
-        if (ast_.branches_num() == 0)
+        try
         {
-            return FILE_NOT_LOAD;
+            ast_maker.make(&ast_);
+        }  
+        catch (const std::runtime_error& e)
+        { 
+            std::cout << e.what() << '\n';
+            ast_errors_ = std::move(*ast_maker.getErrors());
+            return FILE_NOT_COMPILED;
+        }
+
+        if ((ast_.branches_num() == 0) || !translate(code_ext))
+        {
+            ast_errors_ = std::move(*ast_maker.getErrors());
+            return FILE_NOT_COMPILED;
         }
     }
     else
@@ -24,7 +35,7 @@ int Compiler::load(const std::string& input_name)
     return OK;
 }
 
-bool Compiler::compile(const std::string& code_ext)
+bool Compiler::translate(const std::string& code_ext)
 {
     for (size_t i = 0; i < ast_.branches_num(); i++)
     {
@@ -42,4 +53,12 @@ bool Compiler::compile(const std::string& code_ext)
     }
 
     return true;
+}
+
+void Compiler::printErrors(std::ostream& os) const
+{
+    for (const auto& err: ast_errors_)
+    {
+        os << err << "\n";
+    }
 }

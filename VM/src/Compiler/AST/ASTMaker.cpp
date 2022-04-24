@@ -1,5 +1,7 @@
 #include "Compiler/AST/ASTMaker.h"
 
+#include <cstring>
+
 ASTMaker::ASTMaker(std::ifstream* file) : lexer_(new Lexer(file))
 {
     while (*file)
@@ -19,7 +21,7 @@ void ASTMaker::make(AST* ast)
     parser.parse();
 }
 
-yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::parser::location_type* location)
+yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::parser::location_type* location) const
 {
     *location = lexer_->getLocation();
 
@@ -170,7 +172,9 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::OSB:
     case yy::parser::token_type::CSB:
     case yy::parser::token_type::SCOLON:
+        break;
     case yy::parser::token_type::ERROR:
+        throw std::runtime_error(std::string("unrecognized symbol: ") + lexer_->YYText());
     default:
         break;
     }
@@ -178,7 +182,49 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     return tt;
 }
 
-int ASTMaker::lineno()
+void ASTMaker::pushError(const std::string& error, const yy::location& location)
+{
+    std::string column{"\n"};
+    const size_t offset = 9;
+    column.insert(1, location.begin.column + offset, '~');
+    column.push_back('^');
+
+    errors_.push_back("line: " + std::to_string(lexer_->lineno() - 1) + " | error: " + error + "\n\t| " + \
+        program_[lexer_->lineno() - 2] + column
+    );
+}
+
+void ASTMaker::pushTextError(const std::string& error, const yy::location& location)
+{
+    if (std::strlen(lexer_->YYText()))
+    {
+        pushError(error + "before \"" + lexer_->YYText() + "\"", location);
+    }
+    else
+    {
+        pushError(error + "at the end of input", location);
+    }
+}
+
+std::vector<std::string>* ASTMaker::getErrors()
+{
+    return &errors_;
+}
+
+void ASTMaker::printErrors(std::ostream& os) const
+{
+    for (const auto& err: errors_)
+    {
+        os << err << "\n";
+    }
+}
+
+bool ASTMaker::err() const
+{
+    return !errors_.empty();
+}
+
+int ASTMaker::lineno() const
 {
     return lexer_->lineno();
 }

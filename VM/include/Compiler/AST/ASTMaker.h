@@ -19,13 +19,19 @@ public:
     ASTMaker(std::ifstream* file);
 
     void make(AST* ast);
-    yy::parser::token_type yylex(yy::parser::semantic_type *yylval, yy::parser::location_type* location);
-    int lineno();
+    yy::parser::token_type yylex(yy::parser::semantic_type *yylval, yy::parser::location_type* location) const;
+    void pushError(const std::string& error, const yy::location& location);
+    void pushTextError(const std::string& error, const yy::location& location);
+    std::vector<std::string>* getErrors();
+    void printErrors(std::ostream& os) const;
+    bool err() const;
+    int lineno() const;
     AST* ast();
 
 private:
     std::vector<std::string> program_;
     std::unique_ptr<Lexer> lexer_;
+    std::vector<std::string> errors_;
     AST* ast_ = nullptr;
 };
 
