@@ -124,5 +124,9 @@ void ClassLinker::getMethods(PkmMethods* methods, const std::string& klass, size
         auto offset = *reinterpret_cast<const uint32_t*>(&klass[*pos]);
         (*pos) += sizeof(offset);
         (*methods)[method_name].offset = offset;
+
+        auto locals_num = *reinterpret_cast<const uint16_t*>(&klass[*pos]);
+        (*pos) += sizeof(locals_num);
+        (*methods)[method_name].locals_num = locals_num;
     }
 }

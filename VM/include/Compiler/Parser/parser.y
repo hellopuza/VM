@@ -42,49 +42,49 @@ void deleteList(std::list<AST*>* list);
 
 %token
 
-    <NodeType>     CLASS    "class"
-    <AccessType>   PRIVATE  "private"
-    <AccessType>   PUBLIC   "public"
-    <MethodType>   INSTANCE "instance"
-    <MethodType>   STATIC   "static"
-    <MethodType>   NATIVE   "native"
-    <VariableType> VOID     "void"
-    <VariableType> BOOLEAN  "boolean"
-    <VariableType> BYTE     "byte"
-    <VariableType> CHAR     "char"
-    <VariableType> SHORT    "short"
-    <VariableType> INT      "int"
-    <VariableType> LONG     "long"
-    <VariableType> FLOAT    "float"
-    <VariableType> DOUBLE   "double"
+    <NodeType>     CLASS
+    <AccessType>   PRIVATE
+    <AccessType>   PUBLIC
+    <MethodType>   INSTANCE
+    <MethodType>   STATIC
+    <MethodType>   NATIVE
+    <VariableType> VOID
+    <VariableType> BOOLEAN
+    <VariableType> BYTE
+    <VariableType> CHAR
+    <VariableType> SHORT
+    <VariableType> INT
+    <VariableType> LONG
+    <VariableType> FLOAT
+    <VariableType> DOUBLE
 
-    <OperationType> OR     "||"
-    <OperationType> AND    "&&"
-    <OperationType> EQ     "=="
-    <OperationType> NEQ    "!="
-    <OperationType> LEQ    "<="
-    <OperationType> GEQ    ">="
-    <OperationType> STL    "<"
-    <OperationType> STG    ">"
-    <OperationType> ADD    "+"
-    <OperationType> SUB    "-"
-    <OperationType> MUL    "*"
-    <OperationType> DIV    "/"
-    <OperationType> COMMA  ","
-    <OperationType> ASSIGN "="
-    <OperationType> NEW    "new"
-    <OperationType> RETURN "return"
+    <OperationType> OR
+    <OperationType> AND
+    <OperationType> EQ
+    <OperationType> NEQ
+    <OperationType> LEQ
+    <OperationType> GEQ
+    <OperationType> STL
+    <OperationType> STG
+    <OperationType> ADD
+    <OperationType> SUB
+    <OperationType> MUL
+    <OperationType> DIV
+    <OperationType> COMMA
+    <OperationType> ASSIGN
+    <OperationType> NEW
+    <OperationType> RETURN
 
-    <ControlType> IF    "if"
-    <ControlType> ELSE  "else"
-    <ControlType> ELIF  "elif"
-    <ControlType> FOR   "for"
-    <ControlType> WHILE "while"
+    <ControlType> IF
+    <ControlType> ELSE
+    <ControlType> ELIF
+    <ControlType> FOR
+    <ControlType> WHILE
 
-    <std::string> NUL   "null"
-    <std::string> THIS  "this"
-    <bool>        FALSE "false"
-    <bool>        TRUE  "true"
+    <std::string> NUL
+    <std::string> THIS
+    <bool>        FALSE
+    <bool>        TRUE
 
     <std::string> WORD
     <std::string> WORD_DOT
@@ -93,13 +93,13 @@ void deleteList(std::list<AST*>* list);
     <std::string> STRING
     <char>        SYMBOL
 
-    OCB "{"
-    CCB "}"
-    ORB "("
-    CRB ")"
-    OSB "["
-    CSB "]"
-    SCOLON ";"
+    OCB
+    CCB
+    ORB
+    CRB
+    OSB
+    CSB
+    SCOLON
     ERROR
 ;
 
