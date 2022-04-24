@@ -10,18 +10,9 @@ int Compiler::compile(const std::string& input_name, const std::string& code_ext
     if (file.is_open())
     {
         ASTMaker ast_maker(&file);
-        try
-        {
-            ast_maker.make(&ast_);
-        }  
-        catch (const std::runtime_error& e)
-        { 
-            std::cout << e.what() << '\n';
-            ast_errors_ = std::move(*ast_maker.getErrors());
-            return FILE_NOT_COMPILED;
-        }
+        ast_maker.make(&ast_);
 
-        if ((ast_.branches_num() == 0) || !translate(code_ext))
+        if (ast_maker.err() || (ast_.branches_num() == 0) || !translate(code_ext))
         {
             ast_errors_ = std::move(*ast_maker.getErrors());
             return FILE_NOT_COMPILED;
