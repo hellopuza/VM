@@ -11,10 +11,9 @@ struct PkmVM
 {
     PkmVM() = default;
     static void destroyVM();
-    Frame* create_new_frame(uint16_t locals_num, ConstPool* const_pool);
-    void   delete_top_frame();
-    
-    std::stack<Frame*> stack_frame;
+    void create_new_frame(uint16_t locals_num, ConstPool* const_pool);
+
+    std::stack<Frame> stack_frame;
 };
 
 #endif // VM_PKMVM_H

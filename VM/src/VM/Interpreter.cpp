@@ -8,6 +8,30 @@
 #include <cstddef>
 #include <stack>
 #include <cstring>
+#include <bit>
+
+#define ARIFMETIC_OPERATION(type, operation)         \
+{                                                    \
+    type value1 = current_frame.operand_stack.top(); \
+    current_frame.operand_stack.pop();               \
+    type value2 = current_frame.operand_stack.top(); \
+    current_frame.operand_stack.pop();               \
+                                                     \
+    type result = value1 operation value2;           \
+    current_frame.operand_stack.push(result);        \
+}                                     
+
+#define BIT_OPERATION(bit_operation)                                  \
+{                                                                     \
+    int32_t value1 = current_frame.operand_stack.top();               \
+    current_frame.operand_stack.pop();                                \
+    int32_t value2 = 0;                                               \
+    memcpy(&value2, &(current_frame.operand_stack.top()), sizeof(5)); \
+    current_frame.operand_stack.pop();                                \
+                                                                      \
+    int32_t result = value1 bit_operation value2;                     \
+    current_frame.operand_stack.push(result);                         \
+}
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -41,9 +65,11 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         &&AMULTINEWARRAY , &&ARRAYLENGTH
     };
 
-    std::size_t pc         = mid->offset;
-    std::string bytecode   = cls->bytecode;
-    Frame* current_frame   = pvm_->create_new_frame(mid->locals_num, &(cls->const_pool));
+    std::size_t pc       = mid->offset;
+    std::string bytecode = cls->bytecode;
+    
+    pvm_->create_new_frame(mid->locals_num, &(cls->const_pool));
+    Frame& current_frame = pvm_->stack_frame.top();
 
     #define DISPATCH() goto *dispatch_table[static_cast<int8_t>(bytecode[pc++])]
 
@@ -53,11 +79,10 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         LDC: // Push item from run-time constant pool
         {
-            ++pc;
             int8_t  index = static_cast<int8_t>(pc);
             int32_t value = 0;
-            memcpy(&value, (((*(current_frame->const_pool))[index]).get()), sizeof(value));
-            current_frame->operand_stack.push(value);
+            memcpy(&value, (((*(current_frame.const_pool))[index]).get()), sizeof(value));
+            current_frame.operand_stack.push(value);
             ++pc;
             DISPATCH();
         }
@@ -67,17 +92,23 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         }
         ILOAD:
         {
-            ++pc;
             int8_t  index = static_cast<int8_t>(pc);
-            int32_t value = (current_frame->local_variables)[index];
-            current_frame->operand_stack.push(value);
+            int32_t value = current_frame.local_variables[index];
+            current_frame.operand_stack.push(value);
             ++pc;
             DISPATCH();
         }
         LLOAD:
             DISPATCH();
         FLOAD:
+        {
+            int8_t  index = static_cast<int8_t>(pc);
+            int32_t value = 0;
+            memcpy(&value, &(current_frame.local_variables[index]), sizeof(value));
+            current_frame.operand_stack.push(value);
+            ++pc;
             DISPATCH();
+        }
         DLOAD:
             DISPATCH();
         ALOAD:
@@ -98,12 +129,26 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         SALOAD         :
             DISPATCH();
-        ISTORE         :
+        ISTORE:
+        {
+            int8_t  index = static_cast<int8_t>(pc);
+            int32_t value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            current_frame.local_variables[index] = value;
+            ++pc;
             DISPATCH();
-        LSTORE         :
+        }
+        LSTORE:
             DISPATCH();
-        FSTORE         :
+        FSTORE:
+        {
+            int8_t  index = static_cast<int8_t>(pc);
+            int32_t value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            memcpy(&(current_frame.local_variables[index]), &value, sizeof(value));
+            ++pc;
             DISPATCH();
+        }
         DSTORE         :
             DISPATCH();
         ASTORE         :
@@ -124,161 +169,296 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         SASTORE        :
             DISPATCH();
-        POP            :
+        POP:
+        {
+            current_frame.operand_stack.pop();
+            
+            DISPATCH();
+        }
+        POP2:
+        {
+            current_frame.operand_stack.pop();
+            if (!current_frame.operand_stack.empty())
+                current_frame.operand_stack.pop();
+            
+            DISPATCH();
+        }
+        DUP:
+        {
+            int32_t duplicate_value = current_frame.operand_stack.top();
+            current_frame.operand_stack.push(duplicate_value);
+            DISPATCH();
+        }
+        DUP2:
+        {
+            int32_t fir_dup_value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            int32_t sec_dup_value = current_frame.operand_stack.top();
+            current_frame.operand_stack.push(fir_dup_value);
+            current_frame.operand_stack.push(sec_dup_value);
+            current_frame.operand_stack.push(fir_dup_value);
+            DISPATCH();
+        }
+        IADD:
+        {
+            ARIFMETIC_OPERATION(int32_t, +);
+            DISPATCH();
+        }
+        ISUB:
+        {
+            ARIFMETIC_OPERATION(int32_t, -);
+            DISPATCH();
+        }
+        IMUL:
+        {
+            ARIFMETIC_OPERATION(int32_t, *);
+            DISPATCH();
+        }
+        IDIV:
+        {
+            ARIFMETIC_OPERATION(int32_t, /);
+            DISPATCH();
+        }
+        LADD:
+            DISPATCH();
+        LSUB:
+            DISPATCH();
+        LMUL:
+            DISPATCH();
+        LDIV:
+            DISPATCH();
+        FADD:                               // DO MEMCPY TO FLOAT!!!
+        {
+            ARIFMETIC_OPERATION(float, +);
+            DISPATCH();
+        }
+        FSUB:
+        {
+            ARIFMETIC_OPERATION(float, -);
+            DISPATCH();
+        }
+        FMUL:
+        {
+            ARIFMETIC_OPERATION(float, *);
+            DISPATCH();
+        }
+        FDIV:
+        {
+            ARIFMETIC_OPERATION(float, /);
+            DISPATCH();
+        }
+        DADD:
+            DISPATCH();
+        DSUB:
+            DISPATCH();
+        DMUL:
+            DISPATCH();
+        DDIV:
+            DISPATCH();
+        IREM:
+        {
+            int32_t value1 = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            int32_t value2 = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+
+            int32_t result = value1 - (value1 / value2) * value2;
+            current_frame.operand_stack.push(result);
+            DISPATCH();
+        }
+        LREM:
+            DISPATCH();
+        FREM:
+        {
+            float value1 = std::bit_cast<float>(current_frame.operand_stack.top());
+            current_frame.operand_stack.pop();
+            float value2 = std::bit_cast<float>(current_frame.operand_stack.top());
+            current_frame.operand_stack.pop();
+
+            float result = value1 - (value1 / value2) * value2;
+            current_frame.operand_stack.push(result);
+            DISPATCH();
+        }
+        DREM:
+            DISPATCH();
+        INEG:
+        {
+            int32_t value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            current_frame.operand_stack.push(-value);
+            DISPATCH();
+        }
+        LNEG:
+            DISPATCH();
+        FNEG:
+        {
+            float value = std::bit_cast<float>(current_frame.operand_stack.top());
+            current_frame.operand_stack.pop();
+            current_frame.operand_stack.push(std::bit_cast<int32_t>(-value));
+            DISPATCH();
+        }
+        DNEG:
+            DISPATCH();
+        ISHL:
+        {
+            int32_t value1 = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            int32_t value2 = 0;
+            memcpy(&value2, &(current_frame.operand_stack.top()), sizeof(5));
+            current_frame.operand_stack.pop();
+
+            int32_t result = value1 << value2;
+            current_frame.operand_stack.push(result);
             DISPATCH();
-        POP2           :
+        }
+        LSHL:
             DISPATCH();
-        DUP            :
+        ISHR:
+        {
+            int32_t value1 = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            int32_t value2 = 0;
+            memcpy(&value2, &(current_frame.operand_stack.top()), sizeof(5));
+            current_frame.operand_stack.pop();
+
+            int32_t result = value1 >> value2;
+            current_frame.operand_stack.push(result);
             DISPATCH();
-        DUP2           :
+        }
+        LSHR:
             DISPATCH();
-        IADD           :
+        IAND:
+        {
+            BIT_OPERATION(&);
             DISPATCH();
-        ISUB           :
+        }
+        LAND:
             DISPATCH();
-        IMUL           :
+        IOR:
+        {
+            BIT_OPERATION(|);
             DISPATCH();
-        IDIV           :
+        }
+        LOR:
             DISPATCH();
-        LADD           :
+        IXOR:
+        {
+            BIT_OPERATION(^);
             DISPATCH();
-        LSUB           :
+        }
+        LXOR:
             DISPATCH();
-        LMUL           :
+        IINC: // ins ins ins
+        {
+            int8_t index = static_cast<int8_t>(pc);
+            int32_t& local_var = current_frame.local_variables[index];
+            pc++;
+            int32_t constant = static_cast<int32_t>(pc);
+            local_var += constant;
+            pc++
             DISPATCH();
-        LDIV           :
+        }
+        I2L:
             DISPATCH();
-        FADD           :
+        I2F:
+        {
+            int32_t value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            float convert_val = static_cast<float>(value);
+            current_frame.operand_stack.push(std::bit_cast<int32_t>(convert_val));
             DISPATCH();
-        FSUB           :
+        }
+        I2D:
             DISPATCH();
-        FMUL           :
+        L2I:
             DISPATCH();
-        FDIV           :
+        L2F:
             DISPATCH();
-        DADD           :
+        L2D:
             DISPATCH();
-        DSUB           :
+        F2I:
+        {
+            float value = bit_cast<float>(current_frame.operand_stack.top());
+            current_frame.operand_stack.pop();
+            int32_t convert_val = static_cast<int32_t>(value);
+            current_frame.operand_stack.push(convert_val);
             DISPATCH();
-        DMUL           :
+        }
+        F2L:
             DISPATCH();
-        DDIV           :
+        F2D:
             DISPATCH();
-        IREM           :
+        D2I:
             DISPATCH();
-        LREM           :
+        D2L:
             DISPATCH();
-        FREM           :
+        D2F:
             DISPATCH();
-        DREM           :
+        I2B:
             DISPATCH();
-        INEG           :
+        I2C:
             DISPATCH();
-        LNEG           :
+        I2S:
             DISPATCH();
-        FNEG           :
+        ICMP:
             DISPATCH();
-        DNEG           :
+        LCMP:
             DISPATCH();
-        ISHL           :
+        FCMPL:
             DISPATCH();
-        LSHL           :
+        FCMPG:
             DISPATCH();
-        ISHR           :
+        DCMPL:
             DISPATCH();
-        LSHR           :
+        DCMPG:
             DISPATCH();
-        IAND           :
+        IFEQ:
             DISPATCH();
-        LAND           :
+        IFNE:
             DISPATCH();
-        IOR            :
+        IFLT:
             DISPATCH();
-        LOR            :
+        IFGE:
             DISPATCH();
-        IXOR           :
+        IFGT:
             DISPATCH();
-        LXOR           :
+        IFLE:
             DISPATCH();
-        IINC           :
+        GOTO:
             DISPATCH();
-        I2L            :
+        TABLESWITCH:
             DISPATCH();
-        I2F            :
+        LOOKUPSWITCH:
             DISPATCH();
-        I2D            :
+        IRETURN:
+        {
+            int32_t value = current_frame.operand_stack.top();
+            current_frame.operand_stack.pop();
+            pvm->stack_frame.pop();
+            current_frame = pvm->stack_frame.top();
+            current_frame.operand_stack.push(value);
+
             DISPATCH();
-        L2I            :
+        }
+        LRETURN:
             DISPATCH();
-        L2F            :
+        FRETURN:
+        {
             DISPATCH();
-        L2D            :
+        }
+        DRETURN:
             DISPATCH();
-        F2I            :
+        ARETURN:
             DISPATCH();
-        F2L            :
+        RETURN:
+        {
             DISPATCH();
-        F2D            :
+        }
+        GETSTATIC:
             DISPATCH();
-        D2I            :
+        PUTSTATIC:
             DISPATCH();
-        D2L            :
-            DISPATCH();
-        D2F            :
-            DISPATCH();
-        I2B            :
-            DISPATCH();
-        I2C            :
-            DISPATCH();
-        I2S            :
-            DISPATCH();
-        ICMP           :
-            DISPATCH();
-        LCMP           :
-            DISPATCH();
-        FCMPL          :
-            DISPATCH();
-        FCMPG          :
-            DISPATCH();
-        DCMPL          :
-            DISPATCH();
-        DCMPG          :
-            DISPATCH();
-        IFEQ           :
-            DISPATCH();
-        IFNE           :
-            DISPATCH();
-        IFLT           :
-            DISPATCH();
-        IFGE           :
-            DISPATCH();
-        IFGT           :
-            DISPATCH();
-        IFLE           :
-            DISPATCH();
-        GOTO           :
-            DISPATCH();
-        TABLESWITCH    :
-            DISPATCH();
-        LOOKUPSWITCH   :
-            DISPATCH();
-        IRETURN        :
-            DISPATCH();
-        LRETURN        :
-            DISPATCH();
-        FRETURN        :
-            DISPATCH();
-        DRETURN        :
-            DISPATCH();
-        ARETURN        :
-            DISPATCH();
-        RETURN         :
-            DISPATCH();
-        GETSTATIC      :
-            DISPATCH();
-        PUTSTATIC      :
-            DISPATCH();
-        GETFIELD       :
+        GETFIELD:
             DISPATCH();
         PUTFIELD       :
             DISPATCH();
@@ -296,23 +476,11 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         ANEWARRAY      :
             DISPATCH();
-        AMULTINEWARRAY :
+        AMULTINEWARRAY:
             DISPATCH();
-        ARRAYLENGTH    :
+        ARRAYLENGTH:
             DISPATCH();
     }
 }
 
 #pragma GCC diagnostic pop
-
-void Interpreter::read_file(const std::string& filename, std::string* out_buffer)
-{
-    std::ifstream file(filename);
-
-    if (!file.is_open())
-    {
-        std::cout << "Error, can't open " << filename << " file" << std::endl;
-        return;
-    }
-    std::getline(file, *out_buffer, '\0');
-}
