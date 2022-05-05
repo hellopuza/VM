@@ -25,10 +25,10 @@ private:
     VariableType writeObject(AST* obj_node, std::stringstream* instructions);
     VariableType writeOperation(AST* op_node, std::stringstream* instructions);
     VariableType writeFunction(AST* func_node, std::stringstream* instructions);
-
     VariableType writeNumber(NumberNode* num_node, std::stringstream* instructions);
-    void writeStore(const std::string& name, std::stringstream* instructions);
     VariableType writeLoad(const std::string& name, std::stringstream* instructions);
+    static void writeControl(AST* scope_node, size_t ind, std::stringstream* instructions);
+    void writeStore(const std::string& name, std::stringstream* instructions);
 
     AST* ast_;
     ConstantPool const_pool_;

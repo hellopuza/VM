@@ -519,4 +519,18 @@ TEST(ASTMakerTest, MethodScopeError) // NOLINT
     EXPECT_TRUE(ast_maker.err());
 }
 
+TEST(ASTMakerTest, ControlTest) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void foo() {\n"
+        "       if (a || b && c || d) {}\n"
+        "   }\n"
+        "}\n"
+    )
+
+    ast_maker.printErrors(std::cout);
+    ast.dot_dump("graph");
+}
+
 #undef CONSTRUCT_FILE
