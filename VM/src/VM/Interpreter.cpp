@@ -8,16 +8,17 @@
 #include <cstddef>
 #include <stack>
 #include <cstring>
+#include <iostream>
 
-#define ARIFMETIC_OPERATION(type, operation)                              \
-{                                                                         \
-    type value1 = std::bit_cast<type>(current_frame.operand_stack.top()); \
-    current_frame.operand_stack.pop();                                    \
-    type value2 = std::bit_cast<type>(current_frame.operand_stack.top()); \
-    current_frame.operand_stack.pop();                                    \
-                                                                          \
-    int32_t result = std::bit_cast<int32_t>(value1 operation value2);     \
-    current_frame.operand_stack.push(result);                             \
+#define ARIFMETIC_OPERATION(type, operation)                               \
+{                                                                          \
+    type value1 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    current_frame->operand_stack.pop();                                    \
+    type value2 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    current_frame->operand_stack.pop();                                    \
+                                                                           \
+    int32_t result = std::bit_cast<int32_t>(value1 operation value2);      \
+    current_frame->operand_stack.push(result);                             \
 }
 
 #define BIT_OPERATION(bit_operation)            \
@@ -164,11 +165,11 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
     std::size_t  pc       = mid->offset;
     std::string* bytecode = &(cls->bytecode);
-    
-    pvm_->create_new_frame(mid);
-    Frame& current_frame = pvm_->stack_frame.top();
 
-    #define DISPATCH() goto *dispatch_table[static_cast<uint8_t>((*bytecode)[(pc += 4) - 4])]
+    pvm_->create_new_frame(mid);
+    Frame* current_frame = &(pvm_->stack_frame.top());
+
+    #define DISPATCH() goto *dispatch_table[static_cast<uint8_t>((*bytecode)[(pc += 4) - 4])];
 
     DISPATCH();
     while (true)
@@ -180,17 +181,17 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         LDC:
         {
             auto*   index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            auto*   val_ptr   = static_cast<IntegerType*>((current_frame.pmethod->cls->const_pool)[*index_ptr].get());
+            auto*   val_ptr   = static_cast<IntegerType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
             int32_t value     = val_ptr->value;
 
-            current_frame.operand_stack.push(value);
+            current_frame->operand_stack.push(value);
             DISPATCH();
         }
         ILOAD:
         {
             auto*   index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            int32_t value     = current_frame.local_variables[*index_ptr];
-            current_frame.operand_stack.push(value);
+            int32_t value     = current_frame->local_variables[*index_ptr];
+            current_frame->operand_stack.push(value);
             DISPATCH();
         }
         LLOAD:
@@ -198,8 +199,8 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         FLOAD:
         {
             auto*   index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            int32_t value     = current_frame.local_variables[*index_ptr];
-            current_frame.operand_stack.push(value);
+            int32_t value     = current_frame->local_variables[*index_ptr];
+            current_frame->operand_stack.push(value);
             DISPATCH();
         }
         DLOAD:
@@ -225,9 +226,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         ISTORE:
         {
             auto* index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            int32_t value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            current_frame.local_variables[*index_ptr] = value;
+            int32_t value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            current_frame->local_variables[*index_ptr] = value;
             DISPATCH();
         }
         LSTORE:
@@ -235,9 +236,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         FSTORE:
         {
             auto* index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            int32_t value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            current_frame.local_variables[*index_ptr] = value;
+            int32_t value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            current_frame->local_variables[*index_ptr] = value;
             DISPATCH();
         }
         DSTORE         :
@@ -262,31 +263,31 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         POP:
         {
-            current_frame.operand_stack.pop();
+            current_frame->operand_stack.pop();
             DISPATCH();
         }
         POP2:
         {
-            current_frame.operand_stack.pop();
-            if (!current_frame.operand_stack.empty())
-                current_frame.operand_stack.pop();
+            current_frame->operand_stack.pop();
+            if (!current_frame->operand_stack.empty())
+                current_frame->operand_stack.pop();
             
             DISPATCH();
         }
         DUP:
         {
-            int32_t duplicate_value = current_frame.operand_stack.top();
-            current_frame.operand_stack.push(duplicate_value);
+            int32_t duplicate_value = current_frame->operand_stack.top();
+            current_frame->operand_stack.push(duplicate_value);
             DISPATCH();
         }
         DUP2:
         {
-            int32_t fir_dup_value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            int32_t sec_dup_value = current_frame.operand_stack.top();
-            current_frame.operand_stack.push(fir_dup_value);
-            current_frame.operand_stack.push(sec_dup_value);
-            current_frame.operand_stack.push(fir_dup_value);
+            int32_t fir_dup_value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            int32_t sec_dup_value = current_frame->operand_stack.top();
+            current_frame->operand_stack.push(fir_dup_value);
+            current_frame->operand_stack.push(sec_dup_value);
+            current_frame->operand_stack.push(fir_dup_value);
             DISPATCH();
         }
         IADD:
@@ -347,44 +348,44 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         IREM:
         {
-            int32_t value1 = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            int32_t value2 = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
+            int32_t value1 = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            int32_t value2 = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
 
             int32_t result = value1 - (value1 / value2) * value2;
-            current_frame.operand_stack.push(result);
+            current_frame->operand_stack.push(result);
             DISPATCH();
         }
         LREM:
             DISPATCH();
         FREM:
         {
-            float value1 = std::bit_cast<float>(current_frame.operand_stack.top());
-            current_frame.operand_stack.pop();
-            float value2 = std::bit_cast<float>(current_frame.operand_stack.top());
-            current_frame.operand_stack.pop();
+            float value1 = std::bit_cast<float>(current_frame->operand_stack.top());
+            current_frame->operand_stack.pop();
+            float value2 = std::bit_cast<float>(current_frame->operand_stack.top());
+            current_frame->operand_stack.pop();
 
             float result = value1 - (value1 / value2) * value2;
-            current_frame.operand_stack.push(std::bit_cast<int32_t>(result));
+            current_frame->operand_stack.push(std::bit_cast<int32_t>(result));
             DISPATCH();
         }
         DREM:
             DISPATCH();
         INEG:
         {
-            int32_t value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            current_frame.operand_stack.push(-value);
+            int32_t value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            current_frame->operand_stack.push(-value);
             DISPATCH();
         }
         LNEG:
             DISPATCH();
         FNEG:
         {
-            float value = std::bit_cast<float>(current_frame.operand_stack.top());
-            current_frame.operand_stack.pop();
-            current_frame.operand_stack.push(std::bit_cast<int32_t>(-value));
+            float value = std::bit_cast<float>(current_frame->operand_stack.top());
+            current_frame->operand_stack.pop();
+            current_frame->operand_stack.push(std::bit_cast<int32_t>(-value));
             DISPATCH();
         }
         DNEG:
@@ -428,10 +429,10 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         I2F:
         {
-            int32_t value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
+            int32_t value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
             float convert_val = static_cast<float>(value);
-            current_frame.operand_stack.push(std::bit_cast<int32_t>(convert_val));
+            current_frame->operand_stack.push(std::bit_cast<int32_t>(convert_val));
             DISPATCH();
         }
         I2D:
@@ -444,10 +445,10 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         F2I:
         {
-            float value = std::bit_cast<float>(current_frame.operand_stack.top());
-            current_frame.operand_stack.pop();
+            float value = std::bit_cast<float>(current_frame->operand_stack.top());
+            current_frame->operand_stack.pop();
             int32_t convert_val = static_cast<int32_t>(value);
-            current_frame.operand_stack.push(convert_val);
+            current_frame->operand_stack.push(convert_val);
             DISPATCH();
         }
         F2L:
@@ -495,30 +496,29 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         FNEQ:
             DISPATCH();
         FLEQ:
-        DISPATCH();
+            DISPATCH();
         FGEQ:
-        DISPATCH();
+            DISPATCH();
         FSTL:
-        DISPATCH();
+            DISPATCH();
         FSTG:
-        DISPATCH();
+            DISPATCH();
         DEQ :
-        DISPATCH();
+            DISPATCH();
         DNEQ:
-        DISPATCH();
+            DISPATCH();
         DLEQ:
-        DISPATCH();
+            DISPATCH();
         DGEQ:
-        DISPATCH();
+            DISPATCH();
         DSTL:
-        DISPATCH();
+            DISPATCH();
         DSTG:
-        DISPATCH();
+            DISPATCH();
         IF  :
-        DISPATCH();
+            DISPATCH();
         IFN :
-        DISPATCH();
-
+            DISPATCH();
         GOTO:
             DISPATCH();
         TABLESWITCH:
@@ -527,18 +527,18 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         IRETURN:
         {
-            int32_t return_value = current_frame.operand_stack.top();
-            current_frame.operand_stack.pop();
-            
+            int32_t return_value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
                 return;
 
-            current_frame = pvm_->stack_frame.top();
+            current_frame = &(pvm_->stack_frame.top());
             
-            current_frame.operand_stack.push(return_value);
-            pc = current_frame.pc;
-            bytecode = &(current_frame.pmethod->cls->bytecode);
+            current_frame->operand_stack.push(return_value);
+            pc = current_frame->pc;
+            bytecode = &(current_frame->pmethod->cls->bytecode);
 
             DISPATCH();
         }
@@ -546,6 +546,19 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         FRETURN:
         {
+            int32_t return_value = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+
+            pvm_->stack_frame.pop();
+            if (pvm_->stack_frame.empty())
+                return;
+
+            current_frame = &(pvm_->stack_frame.top());
+            
+            current_frame->operand_stack.push(return_value);
+            pc = current_frame->pc;
+            bytecode = &(current_frame->pmethod->cls->bytecode);
+
             DISPATCH();
         }
         DRETURN:
@@ -558,9 +571,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             if (pvm_->stack_frame.empty())
                 return;
 
-            current_frame = pvm_->stack_frame.top();
-            pc = current_frame.pc;
-            bytecode = &(current_frame.pmethod->cls->bytecode);
+            current_frame = &(pvm_->stack_frame.top());
+            pc = current_frame->pc;
+            bytecode = &(current_frame->pmethod->cls->bytecode);
 
             DISPATCH();
         }
@@ -576,28 +589,36 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         INVOKESTATIC:
         {
-            current_frame.pc = pc;
+            current_frame->pc = pc;
 
             auto* index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            auto* val_ptr   = static_cast<PointerType*>((current_frame.pmethod->cls->const_pool)[*index_ptr].get());
-            auto  pmethod   = std::bit_cast<pmethodID>(val_ptr->value);
+            auto* val_ptr   = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
             
+            auto  pmethod   = std::bit_cast<pmethodID>(val_ptr->value);
+            auto* method_name = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[pmethod->name].get());
+           
+            if (!strcmp(val_ptr->value.data(), "print"))
+            {
+                std::cout << current_frame->operand_stack.top() << std::endl;
+                DISPATCH();
+            }
+
             int nmb_args = pmethod->met_params.size();
             auto* args = new int32_t[nmb_args];
 
             for (int i = nmb_args - 1; i >= 0; --i)
             {
-                args[i] = current_frame.operand_stack.top();
-                current_frame.operand_stack.pop();
+                args[i] = current_frame->operand_stack.top();
+                current_frame->operand_stack.pop();
             }
 
             pvm_->create_new_frame(pmethod);
             current_frame = pvm_->stack_frame.top();
 
-            memcpy(current_frame.local_variables, args, nmb_args * sizeof(int32_t));
+            memcpy(current_frame->local_variables, args, nmb_args * sizeof(int32_t));
 
-            pc = current_frame.pmethod->offset;
-            bytecode = &(current_frame.pmethod->cls->bytecode);
+            pc = current_frame->pmethod->offset;
+            bytecode = &(current_frame->pmethod->cls->bytecode);
             
             DISPATCH();
         }
