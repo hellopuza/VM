@@ -1,12 +1,11 @@
-#ifndef INTERPRETER_H_INCLUDED
-#define INTERPRETER_H_INCLUDED
+#ifndef INTERPRETER_H
+#define INTERPRETER_H
 
 #include <string>
 #include <iostream>
 
-#include "VM/Pkm/PkmMethod.h"
-#include "VM/Pkm/PkmClass.h"
-#include "VM/Pkm/PkmField.h"
+#include "VM/ClassLinker.h"
+#include "VM/PkmVM.h"
 
 class PNIEnv;
 
@@ -22,4 +21,4 @@ private:
     PkmClasses* pclasses_ = nullptr;
 };
 
-#endif // INTERPRETER_H_INCLUDED
+#endif // INTERPRETER_H
