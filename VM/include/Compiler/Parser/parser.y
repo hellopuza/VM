@@ -250,7 +250,9 @@ ACTIONS: ACTION ACTIONS                          { $2.push_front($1); $$ = std::
 ACTION: EXPR SCOLON                              { $$ = $1; }
       | CONTROL                                  { $$ = $1; }
       | RETURN EXPR SCOLON                       { $$ = new AST(std::make_shared<OperationNode>(OperationNode($1))); pushBranch($$, $2); }
+      | RETURN SCOLON                            { $$ = new AST(std::make_shared<OperationNode>(OperationNode($1))); }
       | RETURN EXPR error                        { delete $2; maker->pushTextError("expected ; ", @3); YYABORT; }
+      | RETURN error                             { maker->pushTextError("expected ; ", @2); YYABORT; }
       | EXPR error                               { delete $1; maker->pushTextError("expected ; ", @2); YYABORT; }
 ;
 

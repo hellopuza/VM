@@ -158,7 +158,7 @@ TEST(TranslatorTest, Function) // NOLINT
     EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
     pos += 4;
 
-    instr = static_cast<uint8_t>(Opcode::INVOKESTATIC);
+    instr = static_cast<uint8_t>(Opcode::INVOKESTATIC) + (static_cast<uint16_t>(2) << 0x10);
     EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
     pos += 4;
 

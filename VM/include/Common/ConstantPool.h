@@ -11,6 +11,7 @@ struct AbstractType
         INTEGER,
         FLOAT,
         STRING,
+        FUNCTION,
         POINTER,
     };
 
@@ -37,6 +38,14 @@ struct FloatType : public AbstractType
 struct StringType : public AbstractType
 {
     StringType(std::string value_);
+    Type type() const override;
+
+    std::string value;
+};
+
+struct FunctionType : public AbstractType
+{
+    FunctionType(std::string value_);
     Type type() const override;
 
     std::string value;

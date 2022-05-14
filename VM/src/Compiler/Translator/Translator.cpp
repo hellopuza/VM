@@ -58,6 +58,12 @@ void Translator::writeConstantPool(std::ofstream* file)
             file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
+        case static_cast<uint8_t>(AbstractType::Type::FUNCTION):
+        {
+            auto value = static_cast<FunctionType*>(elem.first)->value;
+            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            break;
+        }
         }
     }
 }
@@ -297,26 +303,34 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
     }
     case OperationType::RETURN:
     {
-        VariableType ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
-
         uint32_t null = 0;
         uint8_t op_code = 0;
-        switch (ret_type)
+        VariableType ret_type = VariableType::VOID;
+        if (op_node->branches_num() > 0)
         {
-        case VariableType::INT:
-            op_code = static_cast<uint8_t>(Opcode::IRETURN);
-            break;
-        case VariableType::LONG:
-            op_code = static_cast<uint8_t>(Opcode::LRETURN);
-            break;
-        case VariableType::FLOAT:
-            op_code = static_cast<uint8_t>(Opcode::FRETURN);
-            break;
-        case VariableType::DOUBLE:
-            op_code = static_cast<uint8_t>(Opcode::DRETURN);
-            break;
-        default:
-            break;
+            ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
+
+            switch (ret_type)
+            {
+            case VariableType::INT:
+                op_code = static_cast<uint8_t>(Opcode::IRETURN);
+                break;
+            case VariableType::LONG:
+                op_code = static_cast<uint8_t>(Opcode::LRETURN);
+                break;
+            case VariableType::FLOAT:
+                op_code = static_cast<uint8_t>(Opcode::FRETURN);
+                break;
+            case VariableType::DOUBLE:
+                op_code = static_cast<uint8_t>(Opcode::DRETURN);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            op_code = static_cast<uint8_t>(Opcode::RETURN);
         }
 
         instructions->write(reinterpret_cast<char*>(&op_code), 1);
@@ -348,13 +362,13 @@ VariableType Translator::writeFunction(AST* func_node, std::stringstream* instru
     auto cp_size = static_cast<uint16_t>(const_pool_.size());
     std::string func_name = static_cast<FunctionNode*>(func_node->value().get())->name;
 
-    if (!const_pool_.contains(std::make_unique<StringType>(StringType(func_name))))
+    if (!const_pool_.contains(std::make_unique<FunctionType>(FunctionType(func_name))))
     {
-        const_pool_[std::make_unique<StringType>(StringType(func_name))] = cp_size;
+        const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))] = cp_size;
     }
     else
     {
-        cp_size = const_pool_[std::make_unique<StringType>(StringType(func_name))];
+        cp_size = const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))];
     }
 
     instructions->write(reinterpret_cast<char*>(&op_code), 1);
