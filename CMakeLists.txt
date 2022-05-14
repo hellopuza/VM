@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 project(VM VERSION 1.0.0 DESCRIPTION "Virtual machine for running bytecode")
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB_RECURSE ALL_CXX_SOURCE_FILES *.cpp *.h)
 

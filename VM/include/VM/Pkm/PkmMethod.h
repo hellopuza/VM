@@ -16,6 +16,7 @@ struct PkmMethod
     VariableType ret_type;
     uint16_t locals_num;
     uint32_t offset;
+    uint16_t name;
     std::vector<VariableType> met_params;
     pclass cls;
 };

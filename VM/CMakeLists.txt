@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
@@ -32,12 +32,7 @@ function(add_exec EXEC_NAME)
 
     target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align
         -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wnon-virtual-dtor
-        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread)
-
-    set_target_properties(${EXEC_NAME} PROPERTIES
-        CXX_STANDARD          20
-        CXX_STANDARD_REQUIRED ON
-    )
+        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a)
 
     if(ENABLE_ASAN)
         target_compile_options(${EXEC_NAME} PUBLIC -fsanitize=address -g)

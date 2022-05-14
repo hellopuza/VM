@@ -107,6 +107,7 @@ void ClassLinker::getMethods(PkmMethods* methods, pclass cls, const std::string&
         (*pos) += sizeof(name);
 
         auto method_name = static_cast<StringType*>((*const_pool_ptr_)[name].get())->value;
+        (*methods)[method_name].name = name;
         (*methods)[method_name].access_type = static_cast<AccessType>(access_type);
         (*methods)[method_name].modifier = static_cast<MethodType>(modifier);
         (*methods)[method_name].ret_type = static_cast<VariableType>(ret_type);

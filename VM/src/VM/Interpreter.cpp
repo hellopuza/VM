@@ -3,12 +3,11 @@
 #include "VM/Interpreter.h"
 #include "VM/ClassLinker.h"
 
-#include <iostream>
+#include <bit>
 #include <fstream>
 #include <cstddef>
 #include <stack>
 #include <cstring>
-#include <bit>
 
 #define ARIFMETIC_OPERATION(type, operation)                              \
 {                                                                         \

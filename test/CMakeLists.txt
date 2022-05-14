@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
-
-set(CMAKE_CXX_STANDARD 20)
+cmake_minimum_required(VERSION 3.16)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -50,9 +48,9 @@ target_include_directories(${EXEC_NAME}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-set_target_properties(${EXEC_NAME} PROPERTIES
-    CXX_STANDARD          20
-    CXX_STANDARD_REQUIRED ON
+target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align
+        -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wnon-virtual-dtor
+        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a
 )
 
 add_custom_target(run_${EXEC_NAME} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXEC_NAME})
