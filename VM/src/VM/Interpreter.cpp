@@ -39,30 +39,135 @@
 void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 {
     static void* dispatch_table[] = {
-        &&NOP            , &&LDC         , &&LDC2          , &&ILOAD          , &&LLOAD          ,
-        &&FLOAD          , &&DLOAD       , &&ALOAD         , &&IALOAD         , &&LALOAD         ,
-        &&FALOAD         , &&DALOAD      , &&AALOAD        , &&BALOAD         , &&CALOAD         ,
-        &&SALOAD         , &&ISTORE      , &&LSTORE        , &&FSTORE         , &&DSTORE         ,
-        &&ASTORE         , &&IASTORE     , &&LASTORE       , &&FASTORE        , &&DASTORE        ,
-        &&AASTORE        , &&BASTORE     , &&CASTORE       , &&SASTORE        , &&POP            ,
-        &&POP2           , &&DUP         , &&DUP2          , &&IADD           , &&LADD           ,
-        &&FADD           , &&DADD        , &&ISUB          , &&LSUB           , &&FSUB           ,
-        &&DSUB           , &&IMUL        , &&LMUL          , &&FMUL           , &&DMUL           ,
-        &&IDIV           , &&LDIV        , &&FDIV          , &&DDIV           , &&IREM           ,
-        &&LREM           , &&FREM        , &&DREM          , &&INEG           , &&LNEG           ,
-        &&FNEG           , &&DNEG        , &&ISHL          , &&LSHL           , &&ISHR           ,
-        &&LSHR           , &&IAND        , &&LAND          , &&IOR            , &&LOR            ,
-        &&IXOR           , &&LXOR        , &&IINC          , &&I2L            , &&I2F            ,
-        &&I2D            , &&L2I         , &&L2F           , &&L2D            , &&F2I            ,
-        &&F2L            , &&F2D         , &&D2I           , &&D2L            , &&D2F            ,
-        &&I2B            , &&I2C         , &&I2S           , &&ICMP           , &&LCMP           ,
-        &&FCMPL          , &&FCMPG       , &&DCMPL         , &&DCMPG          , &&IFEQ           ,
-        &&IFNE           , &&IFLT        , &&IFGE          , &&IFGT           , &&IFLE           ,
-        &&GOTO           , &&TABLESWITCH , &&LOOKUPSWITCH  , &&IRETURN        , &&LRETURN        ,
-        &&FRETURN        , &&DRETURN     , &&ARETURN       , &&RETURN         , &&GETSTATIC      ,
-        &&PUTSTATIC      , &&GETFIELD    , &&PUTFIELD      , &&INVOKEINSTANCE , &&INVOKESTATIC   ,
-        &&INVOKENATIVE   , &&NEW         , &&NEWARRAY      , &&MULTINEWARRAY  , &&ANEWARRAY      , 
-        &&AMULTINEWARRAY , &&ARRAYLENGTH
+        &&NOP           ,
+        &&LDC           ,
+        &&ILOAD         ,
+        &&LLOAD         ,
+        &&FLOAD         ,
+        &&DLOAD         ,
+        &&ALOAD         ,
+        &&IALOAD        ,
+        &&LALOAD        ,
+        &&FALOAD        ,
+        &&DALOAD        ,
+        &&AALOAD        ,
+        &&BALOAD        ,
+        &&CALOAD        ,
+        &&SALOAD        ,
+        &&ISTORE        ,
+        &&LSTORE        ,
+        &&FSTORE        ,
+        &&DSTORE        ,
+        &&ASTORE        ,
+        &&IASTORE       ,
+        &&LASTORE       ,
+        &&FASTORE       ,
+        &&DASTORE       ,
+        &&AASTORE       ,
+        &&BASTORE       ,
+        &&CASTORE       ,
+        &&SASTORE       ,
+        &&POP           ,
+        &&POP2          ,
+        &&DUP           ,
+        &&DUP2          ,
+        &&IADD          ,
+        &&ISUB          ,
+        &&IMUL          ,
+        &&IDIV          ,
+        &&LADD          ,
+        &&LSUB          ,
+        &&LMUL          ,
+        &&LDIV          ,
+        &&FADD          ,
+        &&FSUB          ,
+        &&FMUL          ,
+        &&FDIV          ,
+        &&DADD          ,
+        &&DSUB          ,
+        &&DMUL          ,
+        &&DDIV          ,
+        &&IREM          ,
+        &&LREM          ,
+        &&FREM          ,
+        &&DREM          ,
+        &&INEG          ,
+        &&LNEG          ,
+        &&FNEG          ,
+        &&DNEG          ,
+        &&ISHL          ,
+        &&LSHL          ,
+        &&ISHR          ,
+        &&LSHR          ,
+        &&IAND          ,
+        &&LAND          ,
+        &&IOR           ,
+        &&LOR           ,
+        &&IXOR          ,
+        &&LXOR          ,
+        &&I2L           ,
+        &&I2F           ,
+        &&I2D           ,
+        &&L2I           ,
+        &&L2F           ,
+        &&L2D           ,
+        &&F2I           ,
+        &&F2L           ,
+        &&F2D           ,
+        &&D2I           ,
+        &&D2L           ,
+        &&D2F           ,
+        &&I2B           ,
+        &&I2C           ,
+        &&I2S           ,
+        &&IEQ           ,
+        &&INEQ          ,
+        &&ILEQ          ,
+        &&IGEQ          ,
+        &&ISTL          ,
+        &&ISTG          ,
+        &&LEQ           ,
+        &&LNEQ          ,
+        &&LLEQ          ,
+        &&LGEQ          ,
+        &&LSTL          ,
+        &&LSTG          ,
+        &&FEQ           ,
+        &&FNEQ          ,
+        &&FLEQ          ,
+        &&FGEQ          ,
+        &&FSTL          ,
+        &&FSTG          ,
+        &&DEQ           ,
+        &&DNEQ          ,
+        &&DLEQ          ,
+        &&DGEQ          ,
+        &&DSTL          ,
+        &&DSTG          ,
+        &&IF            ,
+        &&IFN           ,
+        &&GOTO          ,
+        &&TABLESWITCH   ,
+        &&LOOKUPSWITCH  ,
+        &&IRETURN       ,
+        &&LRETURN       ,
+        &&FRETURN       ,
+        &&DRETURN       ,
+        &&ARETURN       ,
+        &&RETURN        ,
+        &&GETSTATIC     ,
+        &&PUTSTATIC     ,
+        &&GETFIELD      ,
+        &&PUTFIELD      ,
+        &&INVOKEINSTANCE,
+        &&INVOKESTATIC  ,
+        &&INVOKENATIVE  ,
+        &&NEW           ,
+        &&NEWARRAY      ,
+        &&MULTINEWARRAY ,
+        &&ANEWARRAY     ,
+        &&AMULTINEWARRAY,
+        &&ARRAYLENGTH
     };
 
     std::size_t  pc       = mid->offset;
@@ -73,24 +178,22 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
     pclass main_class_ptr = cls;
 
-    #define DISPATCH() goto *dispatch_table[static_cast<uint8_t>((*bytecode)[pc += 4])]
+    #define DISPATCH() goto *dispatch_table[static_cast<uint8_t>((*bytecode)[(pc += 4) - 4])]
 
     DISPATCH();
     while (true)
     {
         NOP:
-            DISPATCH();
-        LDC:
         {
-            auto indexbyte1 = std::bit_cast<uint16_t>((*bytecode)[pc + 2]);
-            auto val_ptr  = static_cast<IntegerType*>(((current_frame.pmethod->cls->const_pool))[index].get());
-            int32_t value = val_ptr->value;
-
-            current_frame.operand_stack.push(value);
             DISPATCH();
         }
-        LDC2:
+        LDC:
         {
+            auto*   index_ptr = static_cast<uint16_t*>(&((*bytecode)[pc - 2]));
+            auto    val_ptr   = static_cast<IntegerType*>((current_frame.pmethod->cls->const_pool)[*index_ptr].get());
+            int32_t value     = val_ptr->value;
+
+            current_frame.operand_stack.push(value);
             DISPATCH();
         }
         ILOAD:
@@ -346,13 +449,6 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         }
         LXOR:
             DISPATCH();
-        IINC:
-        {
-            uint8_t index    = static_cast<uint8_t>((*bytecode)[pc++]);
-            int32_t constant = static_cast<int32_t>((*bytecode)[pc++]);
-            current_frame.local_variables[index] += constant;
-            DISPATCH();
-        }
         I2L:
             DISPATCH();
         I2F:
@@ -395,30 +491,59 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         I2S:
             DISPATCH();
-        ICMP:
+        IEQ:
             DISPATCH();
-        LCMP:
+        INEQ:
             DISPATCH();
-        FCMPL:
+        ILEQ:
             DISPATCH();
-        FCMPG:
+        IGEQ:
             DISPATCH();
-        DCMPL:
+        ISTL:
             DISPATCH();
-        DCMPG:
+        ISTG:
             DISPATCH();
-        IFEQ:
+        LEQ:
             DISPATCH();
-        IFNE:
+        LNEQ:
             DISPATCH();
-        IFLT:
+        LLEQ:
             DISPATCH();
-        IFGE:
+        LGEQ:
             DISPATCH();
-        IFGT:
+        LSTL:
             DISPATCH();
-        IFLE:
+        LSTG:
             DISPATCH();
+        FEQ :
+            DISPATCH();
+        FNEQ:
+            DISPATCH();
+        FLEQ:
+        DISPATCH();
+        FGEQ:
+        DISPATCH();
+        FSTL:
+        DISPATCH();
+        FSTG:
+        DISPATCH();
+        DEQ :
+        DISPATCH();
+        DNEQ:
+        DISPATCH();
+        DLEQ:
+        DISPATCH();
+        DGEQ:
+        DISPATCH();
+        DSTL:
+        DISPATCH();
+        DSTG:
+        DISPATCH();
+        IF  :
+        DISPATCH();
+        IFN :
+        DISPATCH();
+
         GOTO:
             DISPATCH();
         TABLESWITCH:
