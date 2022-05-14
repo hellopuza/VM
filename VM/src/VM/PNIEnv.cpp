@@ -1,4 +1,5 @@
 #include "VM/PNIEnv.h"
+#include "VM/Interpreter.h"
 
 PNIEnv::PNIEnv(PkmVM* pvm) : pvm_(pvm) {}
 
@@ -27,6 +28,8 @@ pmethodID PNIEnv::getMethodID(pclass cls, const std::string& met_name)
     return nullptr;
 }
 
-void PNIEnv::callMethod(pclass, pmethodID)
+void PNIEnv::callMethod(pclass cls, pmethodID mid)
 {
+    Interpreter interpreter(pvm_, &classes_);
+    interpreter.start_interpreting(cls, mid);
 }

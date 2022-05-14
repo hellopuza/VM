@@ -3,9 +3,6 @@
 
 #include "VM/PkmVM.h"
 
-using pclass = PkmClass*;
-using pmethodID = PkmMethod*;
-
 class PNIEnv
 {
 public:
@@ -15,10 +12,10 @@ public:
 
     pclass findClass(const std::string& class_name);
     static pmethodID getMethodID(pclass cls, const std::string& met_name);
-    static void callMethod(pclass cls, pmethodID mid);
+    void callMethod(pclass cls, pmethodID mid);
 
-    PkmVM* pvm_;
 private:
+    PkmVM* pvm_;
     PkmClasses classes_;
 };
 

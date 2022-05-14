@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     pmethodID mid = PNIEnv::getMethodID(cls, "main");
     CHECK_ERROR(cls == nullptr, "Method main not found");
 
-    PNIEnv::callMethod(cls, mid);
+    env->callMethod(cls, mid);
 
     PkmVM::destroyVM();
     delete pvm;
