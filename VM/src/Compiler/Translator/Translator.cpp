@@ -176,6 +176,9 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
         case NodeType::OPERATION:
             writeOperation(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
+        case NodeType::CONTROL:
+            writeControl(scope_node, i, instructions);
+            break;
         case NodeType::FUNCTION:
             writeFunction(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
@@ -216,9 +219,25 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
     case OperationType::MUL:
     case OperationType::DIV:
     {
+        if (op_node->branches_num() == 1)
+        {
+            auto* arg = static_cast<AST*>(&(*op_node)[0]);
+            VariableType ret_type = writeObject(arg, instructions);
+            auto op_type = static_cast<uint32_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
+            if (op_type == static_cast<uint32_t>(OperationType::SUB))
+            {
+                uint32_t null = 0;
+                auto op_code = static_cast<uint32_t>(Opcode::INEG) + static_cast<uint32_t>(ret_type) -
+                    static_cast<uint32_t>(VariableType::INT);
+
+                instructions->write(reinterpret_cast<char*>(&op_code), 1);
+                instructions->write(reinterpret_cast<char*>(&null), 3);
+            }
+            return ret_type;
+        }
+
         auto* lhs = static_cast<AST*>(&(*op_node)[0]);
         auto* rhs = static_cast<AST*>(&(*op_node)[1]);
-
         VariableType ret_type = writeObject(rhs, instructions);
         writeObject(lhs, instructions);
 
@@ -310,6 +329,10 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
     }
 
     return VariableType::VOID;
+}
+
+void Translator::writeControl(AST*, size_t, std::stringstream*)
+{
 }
 
 VariableType Translator::writeFunction(AST* func_node, std::stringstream* instructions)
