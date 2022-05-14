@@ -10,7 +10,7 @@
 #define YY_USER_ACTION setLocation();
 %}
 
-WS           [ \t\n\v]+
+WS           [ \t\n\v\r]+
 DIGIT        [0-9]
 DIGIT1       [1-9]
 WORD         [_a-zA-Z]+{DIGIT}*

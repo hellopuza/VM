@@ -171,6 +171,7 @@ void Translator::appendLocal(VariableDeclarationNode* var_decl_node)
 
 uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instructions)
 {
+    instructions->seekg(0, std::ios::end);
     auto offset = static_cast<uint32_t>(instructions->tellg());
     for (size_t i = 0; i < scope_node->branches_num(); i++)
     {
