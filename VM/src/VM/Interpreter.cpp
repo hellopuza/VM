@@ -580,7 +580,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             current_frame.pc = pc;
 
             auto* index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            auto* val_ptr   = static_cast<PointerType*>((current_frame.pmethod->cls->const_pool)[index].get());
+            auto* val_ptr   = static_cast<PointerType*>((current_frame.pmethod->cls->const_pool)[*index_ptr].get());
             auto  pmethod   = std::bit_cast<pmethodID>(val_ptr->value);
             
             int nmb_args = pmethod->met_params.size();
