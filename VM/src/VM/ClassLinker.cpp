@@ -19,6 +19,8 @@ void ClassLinker::appendClass(const std::string& klass)
     getMethods(&classes[class_name].methods, &classes[class_name], klass, &pos);
 
     classes[class_name].bytecode = klass.substr(pos);
+
+    linkClasses();
 }
 
 std::string ClassLinker::getString(const std::string& klass, size_t* pos)
@@ -62,6 +64,12 @@ void ClassLinker::getConstantPool(ConstPool* const_pool, const std::string& klas
         {
             auto value = getString(klass, pos);
             const_pool->emplace_back(std::make_unique<StringType>(StringType(value)));
+            break;
+        }
+        case static_cast<uint8_t>(AbstractType::Type::FUNCTION):
+        {
+            auto value = getString(klass, pos);
+            const_pool->emplace_back(std::make_unique<FunctionType>(FunctionType(value)));
             break;
         }
         default:
@@ -131,5 +139,31 @@ void ClassLinker::getMethods(PkmMethods* methods, pclass cls, const std::string&
         (*methods)[method_name].locals_num = locals_num;
 
         (*methods)[method_name].cls = cls;
+    }
+}
+
+void ClassLinker::linkClasses()
+{
+    for (auto& [name, cls] : classes)
+    {
+        for (auto& elem : cls.const_pool)
+        {
+            if (elem->type() == AbstractType::Type::FUNCTION)
+            {
+                std::string func_name = static_cast<FunctionType*>(elem.get())->value;
+
+                size_t dot_pos = func_name.find('.');
+                if (dot_pos == std::string::npos)
+                {
+                    elem = std::move(std::make_unique<PointerType>(PointerType(&(cls.methods[func_name]))));
+                }
+                else
+                {
+                    std::string class_name = func_name.substr(0, dot_pos);
+                    std::string method_name = func_name.substr(dot_pos + 1);
+                    elem = std::move(std::make_unique<PointerType>(PointerType(&(classes[class_name].methods[method_name]))));
+                }
+            }
+        }
     }
 }

@@ -21,6 +21,13 @@ AbstractType::Type StringType::type() const
     return AbstractType::Type::STRING;
 }
 
+FunctionType::FunctionType(std::string value_) : value(std::move(value_)) {}
+
+AbstractType::Type FunctionType::type() const
+{
+    return AbstractType::Type::FUNCTION;
+}
+
 PointerType::PointerType(void* value_) : value(value_) {}
 
 AbstractType::Type PointerType::type() const
@@ -40,6 +47,8 @@ size_t hash<std::unique_ptr<AbstractType>>::operator()(const std::unique_ptr<Abs
         return hash<float>()(static_cast<FloatType*>(key.get())->value);
     case AbstractType::Type::STRING:
         return hash<string>()(static_cast<StringType*>(key.get())->value);
+    case AbstractType::Type::FUNCTION:
+        return hash<string>()(static_cast<FunctionType*>(key.get())->value);
     case AbstractType::Type::POINTER:
         return hash<void*>()(static_cast<PointerType*>(key.get())->value);
     default:
@@ -65,6 +74,8 @@ bool operator==(const std::unique_ptr<AbstractType>& lhs, const std::unique_ptr<
         return static_cast<FloatType*>(lhs.get())->value == static_cast<FloatType*>(rhs.get())->value;
     case AbstractType::Type::STRING:
         return static_cast<StringType*>(lhs.get())->value == static_cast<StringType*>(rhs.get())->value;
+    case AbstractType::Type::FUNCTION:
+        return static_cast<FunctionType*>(lhs.get())->value == static_cast<FunctionType*>(rhs.get())->value;
     case AbstractType::Type::POINTER:
         return static_cast<PointerType*>(lhs.get())->value == static_cast<PointerType*>(rhs.get())->value;
     default:

@@ -20,6 +20,7 @@ private:
     void getConstantPool(ConstPool* const_pool, const std::string& klass, size_t* pos);
     void getFields(PkmFields* fields, const std::string& klass, size_t* pos);
     void getMethods(PkmMethods* methods, pclass cls, const std::string& klass, size_t* pos);
+    void linkClasses();
 
     ConstPool* const_pool_ptr_;
 };

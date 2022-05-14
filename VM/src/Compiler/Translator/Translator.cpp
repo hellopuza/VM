@@ -58,6 +58,12 @@ void Translator::writeConstantPool(std::ofstream* file)
             file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
+        case static_cast<uint8_t>(AbstractType::Type::FUNCTION):
+        {
+            auto value = static_cast<FunctionType*>(elem.first)->value;
+            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            break;
+        }
         }
     }
 }
@@ -356,13 +362,13 @@ VariableType Translator::writeFunction(AST* func_node, std::stringstream* instru
     auto cp_size = static_cast<uint16_t>(const_pool_.size());
     std::string func_name = static_cast<FunctionNode*>(func_node->value().get())->name;
 
-    if (!const_pool_.contains(std::make_unique<StringType>(StringType(func_name))))
+    if (!const_pool_.contains(std::make_unique<FunctionType>(FunctionType(func_name))))
     {
-        const_pool_[std::make_unique<StringType>(StringType(func_name))] = cp_size;
+        const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))] = cp_size;
     }
     else
     {
-        cp_size = const_pool_[std::make_unique<StringType>(StringType(func_name))];
+        cp_size = const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))];
     }
 
     instructions->write(reinterpret_cast<char*>(&op_code), 1);
