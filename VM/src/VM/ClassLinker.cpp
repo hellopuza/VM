@@ -16,7 +16,7 @@ void ClassLinker::appendClass(const std::string& klass)
     getConstantPool(&classes[class_name].const_pool, klass, &pos);
 
     getFields(&classes[class_name].fields, klass, &pos);
-    getMethods(&classes[class_name].methods, klass, &pos);
+    getMethods(&classes[class_name].methods, &classes[class_name], klass, &pos);
 
     classes[class_name].bytecode = klass.substr(pos);
 }
@@ -90,7 +90,7 @@ void ClassLinker::getFields(PkmFields* fields, const std::string& klass, size_t*
     }
 }
 
-void ClassLinker::getMethods(PkmMethods* methods, const std::string& klass, size_t* pos)
+void ClassLinker::getMethods(PkmMethods* methods, pclass cls, const std::string& klass, size_t* pos)
 {
     auto methods_num = static_cast<uint8_t>(klass[*pos]);
     (*pos)++;
@@ -128,5 +128,7 @@ void ClassLinker::getMethods(PkmMethods* methods, const std::string& klass, size
         auto locals_num = *reinterpret_cast<const uint16_t*>(&klass[*pos]);
         (*pos) += sizeof(locals_num);
         (*methods)[method_name].locals_num = locals_num;
+
+        (*methods)[method_name].cls = cls;
     }
 }

@@ -19,7 +19,7 @@ private:
     static std::string getString(const std::string& klass, size_t* pos);
     void getConstantPool(ConstPool* const_pool, const std::string& klass, size_t* pos);
     void getFields(PkmFields* fields, const std::string& klass, size_t* pos);
-    void getMethods(PkmMethods* methods, const std::string& klass, size_t* pos);
+    void getMethods(PkmMethods* methods, pclass cls, const std::string& klass, size_t* pos);
 
     ConstPool* const_pool_ptr_;
 };

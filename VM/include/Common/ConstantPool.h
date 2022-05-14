@@ -11,6 +11,7 @@ struct AbstractType
         INTEGER,
         FLOAT,
         STRING,
+        POINTER,
     };
 
     virtual Type type() const = 0;
@@ -39,6 +40,14 @@ struct StringType : public AbstractType
     Type type() const override;
 
     std::string value;
+};
+
+struct PointerType : public AbstractType
+{
+    PointerType(void* value_);
+    Type type() const override;
+
+    void* value;
 };
 
 namespace std {
