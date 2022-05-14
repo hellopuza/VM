@@ -164,6 +164,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
     };
 
     std::size_t  pc       = mid->offset;
+
     std::string* bytecode = &(cls->bytecode);
 
     pvm_->create_new_frame(mid);
@@ -616,12 +617,12 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
             pvm_->create_new_frame(pmethod);
             current_frame = &(pvm_->stack_frame.top());
-
+            
             memcpy(current_frame->local_variables, args, nmb_args * sizeof(int32_t));
 
             pc = current_frame->pmethod->offset;
             bytecode = &(current_frame->pmethod->cls->bytecode);
-            
+            std::cout << pc << std::endl;
             DISPATCH();
         }
         INVOKENATIVE:

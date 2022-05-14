@@ -10,7 +10,7 @@
 
 struct Frame
 {
-    explicit Frame(pmethodID pmethod) : pmethod(pmethod)
+    explicit Frame(pmethodID pmet) : pmethod(pmet)
     {
         local_variables = new int32_t[pmethod->locals_num] {};
     }
@@ -21,7 +21,6 @@ struct Frame
     }
     ~Frame()
     {
-        std::cout << "Frame destructor " << local_variables << std::endl;
         delete[] local_variables;
     }
 
