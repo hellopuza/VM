@@ -11,7 +11,7 @@ struct PkmVM
 {
     PkmVM() = default;
     static void destroyVM();
-    void create_new_frame(uint16_t locals_num, ConstPool* const_pool);
+    void create_new_frame(pmethodID pmethod);
 
     std::stack<Frame> stack_frame;
 };

@@ -2,7 +2,7 @@
 
 void PkmVM::destroyVM() {}
 
-void PkmVM::create_new_frame(uint16_t locals_num, ConstPool* const_pool)
+void PkmVM::create_new_frame(pmethodID pmethod)
 {
-    stack_frame.push(Frame(locals_num, const_pool));
+    stack_frame.push(Frame(pmethod));
 }

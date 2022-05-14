@@ -19,6 +19,4 @@ struct PkmClass
     std::string bytecode;
 };
 
-using pclass = PkmClass*;
-
 #endif // VM_PKM_PKMCLASS_H

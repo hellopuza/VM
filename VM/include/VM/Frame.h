@@ -8,17 +8,19 @@
 
 struct Frame
 {
-    Frame(uint16_t nmb_local_var, ConstPool* const_pool) : const_pool(const_pool)
+    explicit Frame(pmethodID pmethod) : pmethod(pmethod)
     {
-        local_variables = new int32_t[nmb_local_var] {};
+        local_variables = new int32_t[pmethod->locals_num] {};
     }
     ~Frame()
     {
         delete[] local_variables;
     }
 
-    ConstPool* const_pool      = nullptr;
-    int32_t*   local_variables = nullptr;
+    int32_t pc = 0;
+
+    pmethodID pmethod         = nullptr;
+    int32_t*  local_variables = nullptr;
 
     std::stack<int32_t> operand_stack;
 };

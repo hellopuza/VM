@@ -10,16 +10,16 @@
 #include <cstring>
 #include <bit>
 
-#define ARIFMETIC_OPERATION(type, operation)         \
-{                                                    \
-    type value1 = current_frame.operand_stack.top(); \
-    current_frame.operand_stack.pop();               \
-    type value2 = current_frame.operand_stack.top(); \
-    current_frame.operand_stack.pop();               \
-                                                     \
-    type result = value1 operation value2;           \
-    current_frame.operand_stack.push(result);        \
-}                                     
+#define ARIFMETIC_OPERATION(type, operation)                              \
+{                                                                         \
+    type value1 = std::bit_cast<type>(current_frame.operand_stack.top()); \
+    current_frame.operand_stack.pop();                                    \
+    type value2 = std::bit_cast<type>(current_frame.operand_stack.top()); \
+    current_frame.operand_stack.pop();                                    \
+                                                                          \
+    type result = value1 operation value2;                                \
+    current_frame.operand_stack.push(result);                             \
+}
 
 #define BIT_OPERATION(bit_operation)                                  \
 {                                                                     \
@@ -65,25 +65,28 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         &&AMULTINEWARRAY , &&ARRAYLENGTH
     };
 
-    std::size_t pc       = mid->offset;
-    std::string bytecode = cls->bytecode;
+    std::size_t  pc       = mid->offset;
+    std::string* bytecode = &(cls->bytecode);
     
-    pvm_->create_new_frame(mid->locals_num, &(cls->const_pool));
+    pvm_->create_new_frame(mid);
     Frame& current_frame = pvm_->stack_frame.top();
 
-    #define DISPATCH() goto *dispatch_table[static_cast<int8_t>(bytecode[pc++])]
+    pclass main_class_ptr = cls;
 
+    #define DISPATCH() goto *dispatch_table[static_cast<uint8_t>((*bytecode)[pc += 4])]
+
+    DISPATCH();
     while (true)
     {
         NOP:
             DISPATCH();
-        LDC: // Push item from run-time constant pool
+        LDC:
         {
-            int8_t  index = static_cast<int8_t>(pc);
-            int32_t value = 0;
-            memcpy(&value, (((*(current_frame.const_pool))[index]).get()), sizeof(value));
+            auto indexbyte1 = std::bit_cast<uint16_t>((*bytecode)[pc + 2]);
+            auto val_ptr  = static_cast<IntegerType*>(((current_frame.pmethod->cls->const_pool))[index].get());
+            int32_t value = val_ptr->value;
+
             current_frame.operand_stack.push(value);
-            ++pc;
             DISPATCH();
         }
         LDC2:
@@ -92,21 +95,19 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         }
         ILOAD:
         {
-            int8_t  index = static_cast<int8_t>(pc);
+            uint8_t index = static_cast<uint8_t>((*bytecode)[pc++]);
             int32_t value = current_frame.local_variables[index];
             current_frame.operand_stack.push(value);
-            ++pc;
             DISPATCH();
         }
         LLOAD:
             DISPATCH();
         FLOAD:
         {
-            int8_t  index = static_cast<int8_t>(pc);
+            uint8_t index = static_cast<uint8_t>((*bytecode)[pc++]);
             int32_t value = 0;
             memcpy(&value, &(current_frame.local_variables[index]), sizeof(value));
             current_frame.operand_stack.push(value);
-            ++pc;
             DISPATCH();
         }
         DLOAD:
@@ -131,22 +132,20 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         ISTORE:
         {
-            int8_t  index = static_cast<int8_t>(pc);
+            uint8_t index = static_cast<uint8_t>((*bytecode)[pc++]);
             int32_t value = current_frame.operand_stack.top();
             current_frame.operand_stack.pop();
             current_frame.local_variables[index] = value;
-            ++pc;
             DISPATCH();
         }
         LSTORE:
             DISPATCH();
         FSTORE:
         {
-            int8_t  index = static_cast<int8_t>(pc);
+            uint8_t  index = static_cast<uint8_t>((*bytecode)[pc++]);
             int32_t value = current_frame.operand_stack.top();
             current_frame.operand_stack.pop();
             memcpy(&(current_frame.local_variables[index]), &value, sizeof(value));
-            ++pc;
             DISPATCH();
         }
         DSTORE         :
@@ -172,7 +171,6 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         POP:
         {
             current_frame.operand_stack.pop();
-            
             DISPATCH();
         }
         POP2:
@@ -227,7 +225,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         LDIV:
             DISPATCH();
-        FADD:                               // DO MEMCPY TO FLOAT!!!
+        FADD:
         {
             ARIFMETIC_OPERATION(float, +);
             DISPATCH();
@@ -348,14 +346,11 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         }
         LXOR:
             DISPATCH();
-        IINC: // ins ins ins
+        IINC:
         {
-            int8_t index = static_cast<int8_t>(pc);
-            int32_t& local_var = current_frame.local_variables[index];
-            pc++;
-            int32_t constant = static_cast<int32_t>(pc);
-            local_var += constant;
-            pc++
+            uint8_t index    = static_cast<uint8_t>((*bytecode)[pc++]);
+            int32_t constant = static_cast<int32_t>((*bytecode)[pc++]);
+            current_frame.local_variables[index] += constant;
             DISPATCH();
         }
         I2L:
@@ -378,7 +373,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         F2I:
         {
-            float value = bit_cast<float>(current_frame.operand_stack.top());
+            float value = std::bit_cast<float>(current_frame.operand_stack.top());
             current_frame.operand_stack.pop();
             int32_t convert_val = static_cast<int32_t>(value);
             current_frame.operand_stack.push(convert_val);
@@ -434,9 +429,13 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             int32_t value = current_frame.operand_stack.top();
             current_frame.operand_stack.pop();
-            pvm->stack_frame.pop();
-            current_frame = pvm->stack_frame.top();
+            
+            pvm_->stack_frame.pop();
+            current_frame = pvm_->stack_frame.top();
+            
             current_frame.operand_stack.push(value);
+            pc = current_frame.pc;
+            bytecode = &(current_frame.pmethod->cls->bytecode);
 
             DISPATCH();
         }
@@ -452,6 +451,10 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         RETURN:
         {
+            if (current_frame.pmethod->cls == main_class_ptr)
+            {
+                return;
+            }
             DISPATCH();
         }
         GETSTATIC:
@@ -460,21 +463,42 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         GETFIELD:
             DISPATCH();
-        PUTFIELD       :
+        PUTFIELD:
             DISPATCH();
-        INVOKEINSTANCE :
+        INVOKEINSTANCE:
             DISPATCH();
-        INVOKESTATIC   :
+        INVOKESTATIC:
+        {
+            auto index   = std::bit_cast<uint16_t>((*bytecode)[pc + 2]);
+            auto val_ptr = static_cast<IntegerType*>((current_frame.pmethod->cls->const_pool)[index].get());
+            auto pmethod = std::bit_cast<pmethodID>(val_ptr->value);
+
+            pvm_->create_new_frame(pmethod);
+            current_frame.pc = pc;
+            std::vector<int32_t> args;
+            
+            while(!current_frame.operand_stack.empty())
+            {
+                args.push_back(current_frame.operand_stack.top());
+                current_frame.operand_stack.pop();
+            }
+
+            current_frame = pvm_->stack_frame.top();
+
+            pc = current_frame.pmethod->offset;
+            bytecode = &(current_frame.pmethod->cls->bytecode);
+            
             DISPATCH();
-        INVOKENATIVE   :
+        }
+        INVOKENATIVE:
             DISPATCH();
-        NEW            :
+        NEW:
             DISPATCH();
-        NEWARRAY       :
+        NEWARRAY:
             DISPATCH();
-        MULTINEWARRAY  :
+        MULTINEWARRAY:
             DISPATCH();
-        ANEWARRAY      :
+        ANEWARRAY:
             DISPATCH();
         AMULTINEWARRAY:
             DISPATCH();
