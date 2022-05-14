@@ -297,26 +297,34 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
     }
     case OperationType::RETURN:
     {
-        VariableType ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
-
         uint32_t null = 0;
         uint8_t op_code = 0;
-        switch (ret_type)
+        VariableType ret_type = VariableType::VOID;
+        if (op_node->branches_num() > 0)
         {
-        case VariableType::INT:
-            op_code = static_cast<uint8_t>(Opcode::IRETURN);
-            break;
-        case VariableType::LONG:
-            op_code = static_cast<uint8_t>(Opcode::LRETURN);
-            break;
-        case VariableType::FLOAT:
-            op_code = static_cast<uint8_t>(Opcode::FRETURN);
-            break;
-        case VariableType::DOUBLE:
-            op_code = static_cast<uint8_t>(Opcode::DRETURN);
-            break;
-        default:
-            break;
+            ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
+
+            switch (ret_type)
+            {
+            case VariableType::INT:
+                op_code = static_cast<uint8_t>(Opcode::IRETURN);
+                break;
+            case VariableType::LONG:
+                op_code = static_cast<uint8_t>(Opcode::LRETURN);
+                break;
+            case VariableType::FLOAT:
+                op_code = static_cast<uint8_t>(Opcode::FRETURN);
+                break;
+            case VariableType::DOUBLE:
+                op_code = static_cast<uint8_t>(Opcode::DRETURN);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            op_code = static_cast<uint8_t>(Opcode::RETURN);
         }
 
         instructions->write(reinterpret_cast<char*>(&op_code), 1);
