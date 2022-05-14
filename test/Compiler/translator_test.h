@@ -136,7 +136,6 @@ TEST(TranslatorTest, Function) // NOLINT
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].access_type == AccessType::PUBLIC);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].modifier == MethodType::STATIC);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].ret_type == VariableType::INT);
-    EXPECT_TRUE(cl.classes["Main"].methods["fact"].name == 0);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].locals_num == 1);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].offset == 0);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].met_params.size() == 1);

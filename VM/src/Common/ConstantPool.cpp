@@ -21,7 +21,7 @@ AbstractType::Type StringType::type() const
     return AbstractType::Type::STRING;
 }
 
-PointerType::PointerType(std::string value_) : value(value_) {}
+PointerType::PointerType(void* value_) : value(value_) {}
 
 AbstractType::Type PointerType::type() const
 {
@@ -41,7 +41,7 @@ size_t hash<std::unique_ptr<AbstractType>>::operator()(const std::unique_ptr<Abs
     case AbstractType::Type::STRING:
         return hash<string>()(static_cast<StringType*>(key.get())->value);
     case AbstractType::Type::POINTER:
-        return hash<string>()(static_cast<PointerType*>(key.get())->value);
+        return hash<void*>()(static_cast<PointerType*>(key.get())->value);
     default:
         break;
     }
