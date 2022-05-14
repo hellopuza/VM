@@ -591,13 +591,15 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             current_frame->pc = pc;
 
-            auto* index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            auto* val_ptr   = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
-            
-            auto  pmethod   = std::bit_cast<pmethodID>(val_ptr->value);
-            auto* method_name = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[pmethod->name].get());
-           
-            if (!strcmp(val_ptr->value.data(), "print"))
+            auto index = *reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
+
+            auto* pmetd_ptr = static_cast<PointerType*>((current_frame->pmethod->cls->const_pool)[index].get());
+            auto* pmethod   = reinterpret_cast<pmethodID>(pmetd_ptr->value);
+
+            auto* invoke_method_name_ptr = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[pmethod->name].get());
+            std::string invoke_method_name = invoke_method_name_ptr->value;
+
+            if (!strcmp(invoke_method_name.data(), "print"))
             {
                 std::cout << current_frame->operand_stack.top() << std::endl;
                 DISPATCH();
@@ -613,7 +615,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             }
 
             pvm_->create_new_frame(pmethod);
-            current_frame = pvm_->stack_frame.top();
+            current_frame = &(pvm_->stack_frame.top());
 
             memcpy(current_frame->local_variables, args, nmb_args * sizeof(int32_t));
 
