@@ -113,7 +113,7 @@ void Translator::writeMethods(AST* class_node, std::stringstream* class_content,
             auto cp_size = static_cast<uint16_t>(const_pool_.size());
             class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
             const_pool_[std::make_unique<StringType>(StringType(method_node->name))] = cp_size;
-            
+
             locals_.clear();
             writeMethodParams(static_cast<AST*>(&((*class_node)[i])), class_content);
 

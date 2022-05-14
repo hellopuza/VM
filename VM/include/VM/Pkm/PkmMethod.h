@@ -14,7 +14,6 @@ struct PkmMethod
     AccessType access_type;
     MethodType modifier;
     VariableType ret_type;
-    uint16_t name;
     uint16_t locals_num;
     uint32_t offset;
     std::vector<VariableType> met_params;
