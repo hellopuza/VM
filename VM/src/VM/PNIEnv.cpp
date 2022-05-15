@@ -30,6 +30,6 @@ pmethodID PNIEnv::getMethodID(pclass cls, const std::string& met_name)
 
 void PNIEnv::callMethod(pclass cls, pmethodID mid)
 {
-    Interpreter interpreter(pvm_, &classes_);
+    Interpreter interpreter(pvm_);
     interpreter.start_interpreting(cls, mid);
 }

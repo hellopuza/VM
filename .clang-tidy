@@ -9,6 +9,7 @@ Checks: >
   portability-*,
   readability-*,
   -google-runtime-references,
+  -misc-no-recursion,
   -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
   -readability-named-parameter,

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h> // NOLINT
 
-TEST(InterpreterTest, Ctor)
+TEST(InterpreterTest, Constructor)
 {
-    Interpreter interp(nullptr, nullptr);
+    Interpreter interp(nullptr);
 }

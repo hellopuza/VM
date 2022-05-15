@@ -1,11 +1,10 @@
 #ifndef VM_PKMVM_H
 #define VM_PKMVM_H
 
-#include "VM/ClassLinker.h"
 #include "Frame.h"
 
-#include <unordered_map>
 #include <stack>
+#include <unordered_map>
 
 struct PkmVM
 {

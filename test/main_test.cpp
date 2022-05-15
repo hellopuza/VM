@@ -4,7 +4,8 @@
 #include "Compiler/compiler_test.h"
 #include "Compiler/translator_test.h"
 
-#include "VM/Interpreter.h"
+#include "VM/frame_test.h"
+#include "VM/interpreter_test.h"
 #include "VM/pkm_vm_test.h"
 #include "VM/pni_env_test.h"
 #include "VM/pni_test.h"

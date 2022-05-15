@@ -155,13 +155,13 @@ void ClassLinker::linkClasses()
                 size_t dot_pos = func_name.find('.');
                 if (dot_pos == std::string::npos)
                 {
-                    elem = std::move(std::make_unique<PointerType>(PointerType(&(cls.methods[func_name]))));
+                    elem = std::make_unique<PointerType>(PointerType(&(cls.methods[func_name])));
                 }
                 else
                 {
                     std::string class_name = func_name.substr(0, dot_pos);
                     std::string method_name = func_name.substr(dot_pos + 1);
-                    elem = std::move(std::make_unique<PointerType>(PointerType(&(classes[class_name].methods[method_name]))));
+                    elem = std::make_unique<PointerType>(PointerType(&(classes[class_name].methods[method_name])));
                 }
             }
         }

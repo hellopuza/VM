@@ -1,20 +1,20 @@
-#include "VM/PkmVM.h"
-#include "Opcodes.h"
 #include "VM/Interpreter.h"
-#include "VM/ClassLinker.h"
+#include "VM/PkmVM.h"
+
+#include "Opcodes.h"
 
 #include <bit>
-#include <fstream>
 #include <cstddef>
-#include <stack>
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <stack>
 
 #define ARIFMETIC_OPERATION(type, operation)                               \
 {                                                                          \
-    type value1 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    auto value1 = std::bit_cast<type>(current_frame->operand_stack.top()); \
     current_frame->operand_stack.pop();                                    \
-    type value2 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    auto value2 = std::bit_cast<type>(current_frame->operand_stack.top()); \
     current_frame->operand_stack.pop();                                    \
                                                                            \
     int32_t result = std::bit_cast<int32_t>(value1 operation value2);      \
@@ -28,6 +28,8 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+
+Interpreter::Interpreter(PkmVM* pvm) : pvm_(pvm) {}
 
 void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 {
@@ -153,7 +155,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             current_frame->operand_stack.pop();
             if (!current_frame->operand_stack.empty())
+            {
                 current_frame->operand_stack.pop();
+            }
             
             DISPATCH();
         }
@@ -244,9 +248,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         FREM:
         {
-            float value1 = std::bit_cast<float>(current_frame->operand_stack.top());
+            auto value1 = std::bit_cast<float>(current_frame->operand_stack.top());
             current_frame->operand_stack.pop();
-            float value2 = std::bit_cast<float>(current_frame->operand_stack.top());
+            auto value2 = std::bit_cast<float>(current_frame->operand_stack.top());
             current_frame->operand_stack.pop();
 
             float result = value1 - (value1 / value2) * value2;
@@ -266,7 +270,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         FNEG:
         {
-            float value = std::bit_cast<float>(current_frame->operand_stack.top());
+            auto value = std::bit_cast<float>(current_frame->operand_stack.top());
             current_frame->operand_stack.pop();
             current_frame->operand_stack.push(std::bit_cast<int32_t>(-value));
             DISPATCH();
@@ -314,7 +318,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             int32_t value = current_frame->operand_stack.top();
             current_frame->operand_stack.pop();
-            float convert_val = static_cast<float>(value);
+            auto convert_val = static_cast<float>(value);
             current_frame->operand_stack.push(std::bit_cast<int32_t>(convert_val));
             DISPATCH();
         }
@@ -328,9 +332,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         F2I:
         {
-            float value = std::bit_cast<float>(current_frame->operand_stack.top());
+            auto value = std::bit_cast<float>(current_frame->operand_stack.top());
             current_frame->operand_stack.pop();
-            int32_t convert_val = static_cast<int32_t>(value);
+            auto convert_val = static_cast<int32_t>(value);
             current_frame->operand_stack.push(convert_val);
             DISPATCH();
         }
@@ -415,7 +419,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
+            {
                 return;
+            }
 
             current_frame = &(pvm_->stack_frame.top());
             current_frame->operand_stack.push(return_value);
@@ -433,7 +439,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
+            {
                 return;
+            }
 
             current_frame = &(pvm_->stack_frame.top());
             
@@ -451,7 +459,9 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
+            {
                 return;
+            }
 
             current_frame = &(pvm_->stack_frame.top());
             pc = current_frame->pc;
@@ -479,11 +489,11 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             auto* pmethod   = reinterpret_cast<pmethodID>(pmetd_ptr->value);
 
             auto* invoke_method_name_ptr = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[pmethod->name].get());
-            std::string invoke_method_name = invoke_method_name_ptr->value;
 
-            if (!strcmp(invoke_method_name.data(), "print"))
+            if (!strcmp(invoke_method_name_ptr->value.data(), "print"))
             {
                 std::cout << current_frame->operand_stack.top() << std::endl;
+                current_frame->operand_stack.pop();
                 DISPATCH();
             }
 
