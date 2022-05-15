@@ -1,5 +1,7 @@
 #include "Common/tree_test.h"
 
+#include "Disassembler/disassembler_test.h"
+
 #include "Compiler/astmaker_test.h"
 #include "Compiler/compiler_test.h"
 #include "Compiler/translator_test.h"

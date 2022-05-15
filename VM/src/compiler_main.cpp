@@ -24,9 +24,10 @@ int main(int argc, const char* argv[])
         CHECK_ERROR((ext != LANG_EXTENSION), "Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION);
 
         int err = comp.compile(filename, CODE_EXTENSION);
+        comp.printErrors(std::cout);
+
         CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not found: " + filename);
         CHECK_ERROR((err == Compiler::FILE_NOT_COMPILED), "File not compiled: " + filename);
-        comp.printErrors(std::cout);
     }
 
     return 0;

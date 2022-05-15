@@ -32,6 +32,7 @@ bison_target(parser
 add_flex_bison_dependency(lexer parser)
 
 file(GLOB_RECURSE VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../VM/*.cpp)
+list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../VM/src/disassembler_main.cpp)
 list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../VM/src/compiler_main.cpp)
 list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../VM/src/vm_main.cpp)
 

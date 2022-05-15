@@ -13,15 +13,16 @@
 WS           [ \t\n\v\r]+
 DIGIT        [0-9]
 DIGIT1       [1-9]
+DOT          [.]
 WORD         [_a-zA-Z]+{DIGIT}*
 WRONGNUMBER  0+{DIGIT}+
 INTNUMBER    {DIGIT1}{DIGIT}*|0
-FLOATNUMBER  {INTNUMBER}"."{WRONGNUMBER}
+FLOATNUMBER  {INTNUMBER}{DOT}{DIGIT}+
 QUOTES       ["]
 QUOTE        [']
 STRING       {QUOTES}.*{QUOTES}
 SYMBOL       {QUOTE}.{QUOTE}
-W_DOT        {WORD}"."
+W_DOT        {WORD}{DOT}
 WORD_DOT     {W_DOT}+{WORD}
 
 %%

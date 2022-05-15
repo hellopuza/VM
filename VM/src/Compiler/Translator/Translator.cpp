@@ -73,7 +73,7 @@ void Translator::writeFields(AST* class_node, std::stringstream* class_content)
     uint8_t fields_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == NodeType::FIELD)
+        if ((*class_node)[i].value()->type() == ASTNodeType::FIELD)
         {
             fields_num++;
         }
@@ -82,7 +82,7 @@ void Translator::writeFields(AST* class_node, std::stringstream* class_content)
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == NodeType::FIELD)
+        if ((*class_node)[i].value()->type() == ASTNodeType::FIELD)
         {
             auto* field_node = static_cast<FieldNode*>((*class_node)[i].value().get());
             class_content->write(reinterpret_cast<char*>(&field_node->access_type), 1);
@@ -100,7 +100,7 @@ void Translator::writeMethods(AST* class_node, std::stringstream* class_content,
     uint8_t methods_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == NodeType::METHOD)
+        if ((*class_node)[i].value()->type() == ASTNodeType::METHOD)
         {
             methods_num++;
         }
@@ -109,7 +109,7 @@ void Translator::writeMethods(AST* class_node, std::stringstream* class_content,
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == NodeType::METHOD)
+        if ((*class_node)[i].value()->type() == ASTNodeType::METHOD)
         {
             auto* method_node = static_cast<MethodNode*>((*class_node)[i].value().get());
             class_content->write(reinterpret_cast<char*>(&method_node->access_type), 1);
@@ -143,7 +143,7 @@ void Translator::writeMethodParams(AST* method_node, std::stringstream* class_co
     uint8_t mps_num = 0;
     for (size_t i = 0; i < method_node->branches_num(); i++)
     {
-        if ((*method_node)[i].value()->type() == NodeType::MET_PAR)
+        if ((*method_node)[i].value()->type() == ASTNodeType::MET_PAR)
         {
             mps_num++;
         }
@@ -152,7 +152,7 @@ void Translator::writeMethodParams(AST* method_node, std::stringstream* class_co
 
     for (size_t i = 0; i < method_node->branches_num(); i++)
     {
-        if ((*method_node)[i].value()->type() == NodeType::MET_PAR)
+        if ((*method_node)[i].value()->type() == ASTNodeType::MET_PAR)
         {
             auto* mp_node = static_cast<MethodParameterNode*>((*method_node)[i].value().get());
             class_content->write(reinterpret_cast<char*>(&mp_node->var_type), 1);
@@ -177,19 +177,19 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
     {
         switch ((*scope_node)[i].value()->type())
         {
-        case NodeType::SCOPE:
+        case ASTNodeType::SCOPE:
             writeInstructions(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
-        case NodeType::OPERATION:
+        case ASTNodeType::OPERATION:
             writeOperation(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
-        case NodeType::CONTROL:
+        case ASTNodeType::CONTROL:
             writeControl(scope_node, i, instructions);
             break;
-        case NodeType::FUNCTION:
+        case ASTNodeType::FUNCTION:
             writeFunction(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
-        case NodeType::VAR_DECL:
+        case ASTNodeType::VAR_DECL:
             appendLocal(static_cast<VariableDeclarationNode*>((*scope_node)[i].value().get()));
             break;
         default:
@@ -203,13 +203,13 @@ VariableType Translator::writeObject(AST* obj_node, std::stringstream* instructi
 {
     switch (obj_node->value()->type())
     {
-    case NodeType::OPERATION:
+    case ASTNodeType::OPERATION:
         return writeOperation(obj_node, instructions);
-    case NodeType::FUNCTION:
+    case ASTNodeType::FUNCTION:
         return writeFunction(obj_node, instructions);
-    case NodeType::VARIABLE:
+    case ASTNodeType::VARIABLE:
         return writeLoad(static_cast<VariableNode*>(obj_node->value().get())->name, instructions);
-    case NodeType::NUMBER:
+    case ASTNodeType::NUMBER:
         return writeNumber(static_cast<NumberNode*>(obj_node->value().get()), instructions);
     default:
         break;
@@ -284,14 +284,14 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
 
         switch (lhs->value()->type())
         {
-        case NodeType::VAR_DECL:
+        case ASTNodeType::VAR_DECL:
         {
             auto* var_decl_node = static_cast<VariableDeclarationNode*>(lhs->value().get());
             appendLocal(var_decl_node);
             writeStore(var_decl_node->name, instructions);
             return ret_type;
         }
-        case NodeType::VARIABLE:
+        case ASTNodeType::VARIABLE:
         {
             auto* var_node = static_cast<VariableNode*>(lhs->value().get());
             writeStore(var_node->name, instructions);

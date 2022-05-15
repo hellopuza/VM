@@ -10,7 +10,7 @@
 struct ASNode
 {
     virtual ~ASNode() = default;
-    virtual NodeType type() const;
+    virtual ASTNodeType type() const;
     virtual std::string print() const;
 };
 
@@ -19,7 +19,7 @@ struct ClassNode : public ASNode
     std::string name;
 
     ClassNode(std::string name_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -30,7 +30,7 @@ struct FieldNode : public ASNode
     VariableType var_type;
 
     FieldNode(std::string name_, AccessType access_type_, VariableType var_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -42,7 +42,7 @@ struct MethodNode : public ASNode
     VariableType ret_type;
 
     MethodNode(std::string name_, AccessType access_type_, MethodType modifier_, VariableType ret_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -52,14 +52,14 @@ struct MethodParameterNode : public ASNode
     VariableType var_type;
 
     MethodParameterNode(std::string name_, VariableType var_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
 struct ScopeNode : public ASNode
 {
     ScopeNode() = default;
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -68,7 +68,7 @@ struct OperationNode : public ASNode
     OperationType op_type;
 
     OperationNode(OperationType op_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -77,7 +77,7 @@ struct ControlNode : public ASNode
     ControlType control_type;
 
     ControlNode(ControlType control_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -86,7 +86,7 @@ struct FunctionNode : public ASNode
     std::string name;
 
     FunctionNode(std::string name_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -96,7 +96,7 @@ struct VariableDeclarationNode : public ASNode
     VariableType var_type;
 
     VariableDeclarationNode(std::string name_, VariableType var_type_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -105,7 +105,7 @@ struct VariableNode : public ASNode
     std::string name;
 
     VariableNode(std::string name_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -120,7 +120,7 @@ struct NumberNode : public ASNode
     NumberNode(bool num);
     NumberNode(int32_t num);
     NumberNode(float num);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -129,7 +129,7 @@ struct StringNode : public ASNode
     std::string value;
 
     StringNode(std::string value_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -138,7 +138,7 @@ struct SymbolNode : public ASNode
     char value;
 
     SymbolNode(char value_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 
@@ -147,7 +147,7 @@ struct TypeNode : public ASNode
     std::string str;
 
     TypeNode(std::string str_);
-    NodeType type() const override;
+    ASTNodeType type() const override;
     std::string print() const override;
 };
 

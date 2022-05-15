@@ -30,7 +30,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     switch (tt)
     {
     case yy::parser::token_type::CLASS:
-        yylval->build<NodeType>() = NodeType::CLASS;
+        yylval->build<ASTNodeType>() = ASTNodeType::CLASS;
         break;
     case yy::parser::token_type::PRIVATE:
         yylval->build<AccessType>() = AccessType::PRIVATE;
@@ -187,8 +187,8 @@ void ASTMaker::pushError(const std::string& error, const yy::location& location)
     column.insert(1, location.begin.column + offset, '~');
     column.push_back('^');
 
-    errors_.push_back("line: " + std::to_string(lexer_->lineno() - 1) + " | error: " + error + "\n\t| " + \
-        program_[lexer_->lineno() - 2] + column
+    errors_.push_back("line: " + std::to_string(lexer_->lineno()) + " | error: " + error + "\n\t| " + \
+        program_[lexer_->lineno() - 1] + column
     );
 }
 
@@ -196,11 +196,11 @@ void ASTMaker::pushTextError(const std::string& error, const yy::location& locat
 {
     if (std::strlen(lexer_->YYText()))
     {
-        pushError(error + "before \"" + lexer_->YYText() + "\"", location);
+        pushError(error + " before \"" + lexer_->YYText() + "\"", location);
     }
     else
     {
-        pushError(error + "at the end of input", location);
+        pushError(error + " at the end of input", location);
     }
 }
 

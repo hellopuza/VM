@@ -1,60 +1,14 @@
 #include "Compiler/AST/ASNode.h"
 
-static const std::string ACCESS[] = {
-    "public",
-    "private",
-};
+using pkm_str::ACCESS;
+using pkm_str::CONTROL;
+using pkm_str::METHOD;
+using pkm_str::OPERATION;
+using pkm_str::TYPES;
 
-static const std::string METHOD[] = {
-    "instance",
-    "static",
-    "native",
-};
-
-static const std::string TYPES[] = {
-    "void",
-    "boolean",
-    "byte",
-    "char",
-    "short",
-    "int",
-    "long",
-    "float",
-    "double",
-    "ref",
-};
-
-static const std::string OPERATION[] = {
-    "||",
-    "&&",
-    "==",
-    "!=",
-    "<=",
-    ">=",
-    "<",
-    ">",
-    "+",
-    "-",
-    "*",
-    "/",
-    ",",
-    "=",
-    "[]",
-    "new",
-    "return",
-};
-
-static const std::string CONTROL[] = {
-    "if",
-    "else",
-    "elif",
-    "for",
-    "while",
-};
-
-NodeType ASNode::type() const
+ASTNodeType ASNode::type() const
 {
-    return NodeType::ROOT;
+    return ASTNodeType::ROOT;
 }
 
 std::string ASNode::print() const
@@ -64,9 +18,9 @@ std::string ASNode::print() const
 
 ClassNode::ClassNode(std::string name_) : name(std::move(name_)) {}
 
-NodeType ClassNode::type() const
+ASTNodeType ClassNode::type() const
 {
-    return NodeType::CLASS;
+    return ASTNodeType::CLASS;
 }
 
 std::string ClassNode::print() const
@@ -78,9 +32,9 @@ FieldNode::FieldNode(std::string name_, AccessType access_type_, VariableType va
     name(std::move(name_)), access_type(access_type_), var_type(var_type_)
 {}
 
-NodeType FieldNode::type() const
+ASTNodeType FieldNode::type() const
 {
-    return NodeType::FIELD;
+    return ASTNodeType::FIELD;
 }
 
 std::string FieldNode::print() const
@@ -92,9 +46,9 @@ MethodNode::MethodNode(std::string name_, AccessType access_type_, MethodType mo
     name(std::move(name_)), access_type(access_type_), modifier(modifier_), ret_type(ret_type_)
 {}
 
-NodeType MethodNode::type() const
+ASTNodeType MethodNode::type() const
 {
-    return NodeType::METHOD;
+    return ASTNodeType::METHOD;
 }
 
 std::string MethodNode::print() const
@@ -107,9 +61,9 @@ MethodParameterNode::MethodParameterNode(std::string name_, VariableType var_typ
     name(std::move(name_)), var_type(var_type_)
 {}
 
-NodeType MethodParameterNode::type() const
+ASTNodeType MethodParameterNode::type() const
 {
-    return NodeType::MET_PAR;
+    return ASTNodeType::MET_PAR;
 }
 
 std::string MethodParameterNode::print() const
@@ -117,9 +71,9 @@ std::string MethodParameterNode::print() const
     return TYPES[static_cast<int>(var_type)] + " " + name;
 }
 
-NodeType ScopeNode::type() const
+ASTNodeType ScopeNode::type() const
 {
-    return NodeType::SCOPE;
+    return ASTNodeType::SCOPE;
 }
 
 std::string ScopeNode::print() const
@@ -129,9 +83,9 @@ std::string ScopeNode::print() const
 
 OperationNode::OperationNode(OperationType op_type_) : op_type(op_type_) {}
 
-NodeType OperationNode::type() const
+ASTNodeType OperationNode::type() const
 {
-    return NodeType::OPERATION;
+    return ASTNodeType::OPERATION;
 }
 
 std::string OperationNode::print() const
@@ -141,9 +95,9 @@ std::string OperationNode::print() const
 
 ControlNode::ControlNode(ControlType control_type_) : control_type(control_type_) {}
 
-NodeType ControlNode::type() const
+ASTNodeType ControlNode::type() const
 {
-    return NodeType::CONTROL;
+    return ASTNodeType::CONTROL;
 }
 
 std::string ControlNode::print() const
@@ -153,9 +107,9 @@ std::string ControlNode::print() const
 
 FunctionNode::FunctionNode(std::string name_) : name(std::move(name_)) {}
 
-NodeType FunctionNode::type() const
+ASTNodeType FunctionNode::type() const
 {
-    return NodeType::FUNCTION;
+    return ASTNodeType::FUNCTION;
 }
 
 std::string FunctionNode::print() const
@@ -167,9 +121,9 @@ VariableDeclarationNode::VariableDeclarationNode(std::string name_, VariableType
     name(std::move(name_)), var_type(var_type_)
 {}
 
-NodeType VariableDeclarationNode::type() const
+ASTNodeType VariableDeclarationNode::type() const
 {
-    return NodeType::VAR_DECL;
+    return ASTNodeType::VAR_DECL;
 }
 
 std::string VariableDeclarationNode::print() const
@@ -179,9 +133,9 @@ std::string VariableDeclarationNode::print() const
 
 VariableNode::VariableNode(std::string name_) : name(std::move(name_)) {}
 
-NodeType VariableNode::type() const
+ASTNodeType VariableNode::type() const
 {
-    return NodeType::VARIABLE;
+    return ASTNodeType::VARIABLE;
 }
 
 std::string VariableNode::print() const
@@ -204,9 +158,9 @@ NumberNode::NumberNode(float num) : num_type(VariableType::FLOAT)
     number.f = num;
 }
 
-NodeType NumberNode::type() const
+ASTNodeType NumberNode::type() const
 {
-    return NodeType::NUMBER;
+    return ASTNodeType::NUMBER;
 }
 
 std::string NumberNode::print() const
@@ -227,9 +181,9 @@ std::string NumberNode::print() const
 
 StringNode::StringNode(std::string value_) : value(std::move(value_)) {}
 
-NodeType StringNode::type() const
+ASTNodeType StringNode::type() const
 {
-    return NodeType::STRING;
+    return ASTNodeType::STRING;
 }
 
 std::string StringNode::print() const
@@ -239,9 +193,9 @@ std::string StringNode::print() const
 
 SymbolNode::SymbolNode(char value_) : value(value_) {}
 
-NodeType SymbolNode::type() const
+ASTNodeType SymbolNode::type() const
 {
-    return NodeType::SYMBOL;
+    return ASTNodeType::SYMBOL;
 }
 
 std::string SymbolNode::print() const
@@ -251,9 +205,9 @@ std::string SymbolNode::print() const
 
 TypeNode::TypeNode(std::string str_) : str(std::move(str_)) {}
 
-NodeType TypeNode::type() const
+ASTNodeType TypeNode::type() const
 {
-    return NodeType::TYPE;
+    return ASTNodeType::TYPE;
 }
 
 std::string TypeNode::print() const

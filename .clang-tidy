@@ -8,6 +8,7 @@ Checks: >
   performance-*,
   portability-*,
   readability-*,
+  -bugprone-signed-char-misuse,
   -google-runtime-references,
   -misc-no-recursion,
   -modernize-avoid-c-arrays,

@@ -4,8 +4,6 @@
 #include "Tree/Tree-impl.h"
 #include "Compiler/AST/ASNode.h"
 
-#include <memory>
-
 class AST : public Tree<std::shared_ptr<ASNode>>
 {
 public:
