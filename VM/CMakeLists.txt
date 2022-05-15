@@ -16,13 +16,10 @@ bison_target(parser
 
 add_flex_bison_dependency(lexer parser)
 
-file(GLOB_RECURSE VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/Common/*.cpp)
 
-list(APPEND VM_SOURCES ${BISON_parser_OUTPUTS})
-list(APPEND VM_SOURCES ${FLEX_lexer_OUTPUTS})
-
-function(add_exec EXEC_NAME)
-    add_executable(${EXEC_NAME} EXCLUDE_FROM_ALL ${VM_SOURCES})
+function(add_exec EXEC_NAME SOURCES)
+    add_executable(${EXEC_NAME} EXCLUDE_FROM_ALL ${${SOURCES}})
     target_include_directories(${EXEC_NAME}
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/Common
@@ -40,10 +37,14 @@ function(add_exec EXEC_NAME)
     endif()
 endfunction()
 
-list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_main.cpp)
-list(APPEND VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
-add_exec(vm)
+file(GLOB_RECURSE COMPILER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/Compiler/*.cpp)
+list(APPEND COMPILER_SOURCES ${COMMON_SOURCES})
+list(APPEND COMPILER_SOURCES ${BISON_parser_OUTPUTS})
+list(APPEND COMPILER_SOURCES ${FLEX_lexer_OUTPUTS})
+list(APPEND COMPILER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_main.cpp)
+add_exec(compiler COMPILER_SOURCES)
 
-list(REMOVE_ITEM VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
-list(APPEND VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_main.cpp)
-add_exec(compiler)
+file(GLOB_RECURSE VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/VM/*.cpp)
+list(APPEND VM_SOURCES ${COMMON_SOURCES})
+list(APPEND VM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_main.cpp)
+add_exec(vm VM_SOURCES)
