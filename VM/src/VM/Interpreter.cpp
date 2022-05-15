@@ -530,13 +530,12 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             int32_t return_value = current_frame->operand_stack.top();
             current_frame->operand_stack.pop();
-
+            
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
                 return;
 
             current_frame = &(pvm_->stack_frame.top());
-            
             current_frame->operand_stack.push(return_value);
             pc = current_frame->pc;
             bytecode = &(current_frame->pmethod->cls->bytecode);
@@ -619,6 +618,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             current_frame = &(pvm_->stack_frame.top());
             
             memcpy(current_frame->local_variables, args, nmb_args * sizeof(int32_t));
+            delete[] args;
 
             pc = current_frame->pmethod->offset;
             bytecode = &(current_frame->pmethod->cls->bytecode);
