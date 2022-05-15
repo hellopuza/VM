@@ -51,6 +51,7 @@ enum class VariableType
 
 enum class OperationType
 {
+    NOT,
     OR,
     AND,
     EQ,
@@ -106,6 +107,7 @@ static const std::string TYPES[] = {
 };
 
 static const std::string OPERATION[] = {
+    "!",
     "||",
     "&&",
     "==",

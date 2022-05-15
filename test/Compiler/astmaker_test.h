@@ -260,6 +260,26 @@ TEST(ASTMakerTest, Operators) // NOLINT
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][0][0][1].value().get())->name == "right");
 }
 
+TEST(ASTMakerTest, OperatorNot) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   private static int not(int a) {\n"
+        "       return !a;\n"
+        "   }\n"
+        "}\n"
+    )
+
+    EXPECT_TRUE(ast[0][0][1][0].value().get()->type() == ASTNodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0].value().get())->op_type == OperationType::RETURN);
+
+    EXPECT_TRUE(ast[0][0][1][0][0].value().get()->type() == ASTNodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][0][1][0][0].value().get())->op_type == OperationType::NOT);
+
+    EXPECT_TRUE(ast[0][0][1][0][0][0].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][1][0][0][0].value().get())->name == "a");
+}
+
 TEST(ASTMakerTest, Function) // NOLINT
 {
     CONSTRUCT_FILE(
@@ -517,6 +537,22 @@ TEST(ASTMakerTest, MethodScopeError) // NOLINT
     )
 
     EXPECT_TRUE(ast_maker.err());
+}
+
+TEST(ASTMakerTest, If) // NOLINT
+{
+    CONSTRUCT_FILE(
+        "class Main {\n"
+        "   public static void main() {\n"
+        "       if (a || !b && c || c) {\n"
+        "           do1();\n"
+        "       } else {\n"
+        "           do2();\n"
+        "       }\n"
+        "   }\n"
+        "}\n"
+    )
+    ast_maker.ast()->dot_dump("if");
 }
 
 #undef CONSTRUCT_FILE

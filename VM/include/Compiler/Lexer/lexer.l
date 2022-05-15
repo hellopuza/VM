@@ -63,6 +63,7 @@ WORD_DOT     {W_DOT}+{WORD}
 ";"                         { return yy::parser::token_type::SCOLON; }
 ","                         { return yy::parser::token_type::COMMA;  }
 
+"!"                         { return yy::parser::token_type::NOT; }
 "||"                        { return yy::parser::token_type::OR;  }
 "&&"                        { return yy::parser::token_type::AND; }
 "=="                        { return yy::parser::token_type::EQ;  }

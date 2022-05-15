@@ -58,6 +58,7 @@ astp bindNodes(astp lhs, astp rhs);
     <VariableType> FLOAT
     <VariableType> DOUBLE
 
+    <OperationType> NOT
     <OperationType> OR
     <OperationType> AND
     <OperationType> EQ
@@ -146,6 +147,7 @@ astp bindNodes(astp lhs, astp rhs);
     <astp> CHECK_COMP
     <astp> CHECK_ADD
     <astp> CHECK_MUL
+    <astp> NOT_OBJ
     <astp> OBJ
     <astp> EXPRINBR
     <astp> FUNCTION
@@ -318,9 +320,9 @@ OP_MUL: MUL CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
       | %empty                                   { $$ = nullptr; }
 ;
 
-CHECK_MUL: OBJ                                   { $$ = $1; }
-         | ADD OBJ                               { $$ = bindNodes($1, $2, nullptr); }
-         | SUB OBJ                               { $$ = bindNodes($1, $2, nullptr); }
+CHECK_MUL: NOT_OBJ                               { $$ = $1; }
+         | ADD NOT_OBJ                           { $$ = bindNodes($1, $2, nullptr); }
+         | SUB NOT_OBJ                           { $$ = bindNodes($1, $2, nullptr); }
          | SUB error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
          | ADD error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
          | ASSIGN error                          { maker->pushError("expected primary-expression before token '='" , @2); YYABORT; }
@@ -334,6 +336,10 @@ CHECK_MUL: OBJ                                   { $$ = $1; }
          | MUL error                             { maker->pushError("expected primary-expression before token '*'" , @2); YYABORT; }
          | DIV error                             { maker->pushError("expected primary-expression before token '/'" , @2); YYABORT; }
          | AND error                             { maker->pushError("expected primary-expression before token '&&'", @2); YYABORT; }
+;
+
+NOT_OBJ: NOT OBJ                                 { $$ = std::make_shared<AST>(std::make_shared<OperationNode>(OperationNode($1))); pushBranch($$.get(), $2); }
+       | OBJ                                     { $$ = $1; }
 ;
 
 OBJ: EXPRINBR                                    { $$ = $1; }

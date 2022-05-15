@@ -74,6 +74,9 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::DOUBLE:
         yylval->build<VariableType>() = VariableType::DOUBLE;
         break;
+    case yy::parser::token_type::NOT:
+        yylval->build<OperationType>() = OperationType::NOT;
+        break;
     case yy::parser::token_type::OR:
         yylval->build<OperationType>() = OperationType::OR;
         break;
