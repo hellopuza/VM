@@ -622,7 +622,6 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
             pc = current_frame->pmethod->offset;
             bytecode = &(current_frame->pmethod->cls->bytecode);
-            std::cout << pc << std::endl;
             DISPATCH();
         }
         INVOKENATIVE:
