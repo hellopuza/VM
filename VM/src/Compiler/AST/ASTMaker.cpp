@@ -187,8 +187,6 @@ void ASTMaker::pushError(const std::string& error, const yy::location& location)
     column.insert(1, location.begin.column + offset, '~');
     column.push_back('^');
 
-    std::cout << lexer_->lineno() << "\n";
-
     errors_.push_back("line: " + std::to_string(lexer_->lineno() - 1) + " | error: " + error + "\n\t| " + \
         program_[lexer_->lineno() - 2] + column
     );

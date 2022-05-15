@@ -33,7 +33,7 @@ bool Compiler::translate(const std::string& code_ext)
         std::ofstream file(static_cast<ClassNode*>(ast_[i].value().get())->name + code_ext);
         if (file.is_open())
         {
-            Translator trans(&ast_);
+            Translator trans(static_cast<AST*>(&ast_[i]));
             trans.translate(&file);
         }
         else

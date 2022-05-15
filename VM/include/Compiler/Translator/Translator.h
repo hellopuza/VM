@@ -10,7 +10,7 @@
 class Translator
 {
 public:
-    Translator(AST* ast);
+    Translator(AST* class_tree);
 
     void translate(std::ofstream* file);
 
@@ -30,7 +30,7 @@ private:
     static void writeControl(AST* scope_node, size_t ind, std::stringstream* instructions);
     void writeStore(const std::string& name, std::stringstream* instructions);
 
-    AST* ast_;
+    AST* class_tree_;
     ConstantPool const_pool_;
     std::unordered_map<std::string, std::pair<uint16_t, VariableType>> locals_;
 };

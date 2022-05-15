@@ -1,11 +1,11 @@
 #include "Compiler/Translator/Translator.h"
 #include "Opcodes.h"
 
-Translator::Translator(AST* ast) : ast_(ast) {}
+Translator::Translator(AST* class_tree) : class_tree_(class_tree) {}
 
 void Translator::translate(std::ofstream* file)
 {
-    auto* class_node = static_cast<AST*>(&((*ast_)[0]));
+    auto* class_node = class_tree_;
     std::string class_name = static_cast<ClassNode*>(class_node->value().get())->name;
     file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
 

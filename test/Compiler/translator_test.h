@@ -8,24 +8,25 @@
 
 #include <gtest/gtest.h> // NOLINT
 
-#define CONSTRUCT_FILE(code)     \
-    std::ofstream ofile("file"); \
-    ofile << (code);             \
-    ofile.close();               \
-    std::ifstream ifile("file"); \
-    ASTMaker ast_maker(&ifile);  \
-    AST ast;                     \
-    ast_maker.make(&ast);        \
-    ifile.close();               \
-    Translator trans(&ast);      \
-    ofile.open("file");          \
-    trans.translate(&ofile);     \
-    ofile.close();               \
-    ifile.open("file");          \
-    std::stringstream ss;        \
-    ss << ifile.rdbuf();         \
-    Klasses kls = {ss.str()};    \
-    ClassLinker cl;              \
+#define CONSTRUCT_FILE(code)                \
+    std::ofstream ofile("file");            \
+    ofile << (code);                        \
+    ofile.close();                          \
+    std::ifstream ifile("file");            \
+    ASTMaker ast_maker(&ifile);             \
+    AST ast;                                \
+    ast_maker.make(&ast);                   \
+    ifile.close();                          \
+    auto* cls = static_cast<AST*>(&ast[0]); \
+    Translator trans(cls);                  \
+    ofile.open("file");                     \
+    trans.translate(&ofile);                \
+    ofile.close();                          \
+    ifile.open("file");                     \
+    std::stringstream ss;                   \
+    ss << ifile.rdbuf();                    \
+    Klasses kls = {ss.str()};               \
+    ClassLinker cl;                         \
     cl.link(kls); //
 
 TEST(TranslatorTest, EmptyClass) // NOLINT
