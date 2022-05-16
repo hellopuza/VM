@@ -27,8 +27,11 @@ private:
     VariableType writeFunction(AST* func_node, std::stringstream* instructions);
     VariableType writeNumber(NumberNode* num_node, std::stringstream* instructions);
     VariableType writeLoad(const std::string& name, std::stringstream* instructions);
-    static void writeControl(AST* scope_node, size_t ind, std::stringstream* instructions);
     void writeStore(const std::string& name, std::stringstream* instructions);
+    void writeControl(AST* scope_node, size_t* ind, std::stringstream* instructions);
+    void writeCommands(void* array, std::stringstream* instructions);
+    void writeIfElse(AST* if_node, AST* else_node, std::stringstream* instructions);
+    void writeWhile(AST* while_node, std::stringstream* instructions);
 
     AST* class_tree_;
     ConstantPool const_pool_;

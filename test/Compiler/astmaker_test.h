@@ -539,20 +539,4 @@ TEST(ASTMakerTest, MethodScopeError) // NOLINT
     EXPECT_TRUE(ast_maker.err());
 }
 
-TEST(ASTMakerTest, If) // NOLINT
-{
-    CONSTRUCT_FILE(
-        "class Main {\n"
-        "   public static void main() {\n"
-        "       if (a || !b && c || c) {\n"
-        "           do1();\n"
-        "       } else {\n"
-        "           do2();\n"
-        "       }\n"
-        "   }\n"
-        "}\n"
-    )
-    ast_maker.ast()->dot_dump("if");
-}
-
 #undef CONSTRUCT_FILE

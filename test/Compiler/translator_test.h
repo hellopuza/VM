@@ -29,6 +29,10 @@
     ClassLinker cl;                         \
     cl.link(kls); //
 
+#define CHECK_INSTR(instr) \
+    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == (instr)); \
+    pos += 4; //
+
 TEST(TranslatorTest, EmptyClass) // NOLINT
 {
     CONSTRUCT_FILE(
@@ -122,53 +126,74 @@ TEST(TranslatorTest, Function) // NOLINT
 {
     CONSTRUCT_FILE(
         "class Main {\n"
+        "   public static void main() {\n"
+        "       print(fact(5));\n"
+        "   }\n"
+        "\n"
         "   public static int fact(int a) {\n"
+        "       if (a < 2) {\n"
+        "           return 1;\n"
+        "       }\n"
         "       return fact(a - 1) * a;\n"
         "   }\n"
+        "   public static void print() {}\n"
         "}\n"
     )
 
     EXPECT_TRUE(cl.classes.size() == 1);
     EXPECT_TRUE(cl.classes.contains("Main"));
     EXPECT_TRUE(cl.classes["Main"].fields.size() == 0);
-    EXPECT_TRUE(cl.classes["Main"].methods.size() == 1);
+    EXPECT_TRUE(cl.classes["Main"].methods.size() == 3);
+
+    EXPECT_TRUE(cl.classes["Main"].methods.contains("main"));
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].access_type == AccessType::PUBLIC);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].modifier == MethodType::STATIC);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].ret_type == VariableType::VOID);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].name == 0);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].locals_num == 0);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].offset == 0);
+    EXPECT_TRUE(cl.classes["Main"].methods["main"].met_params.size() == 0);
 
     EXPECT_TRUE(cl.classes["Main"].methods.contains("fact"));
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].access_type == AccessType::PUBLIC);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].modifier == MethodType::STATIC);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].ret_type == VariableType::INT);
+    EXPECT_TRUE(cl.classes["Main"].methods["fact"].name == 4);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].locals_num == 1);
-    EXPECT_TRUE(cl.classes["Main"].methods["fact"].offset == 0);
+    EXPECT_TRUE(cl.classes["Main"].methods["fact"].offset == 16);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].met_params.size() == 1);
     EXPECT_TRUE(cl.classes["Main"].methods["fact"].met_params[0] == VariableType::INT);
 
+    EXPECT_TRUE(cl.classes["Main"].methods.contains("print"));
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].access_type == AccessType::PUBLIC);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].modifier == MethodType::STATIC);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].ret_type == VariableType::VOID);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].name == 7);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].locals_num == 0);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].offset == 72);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params.size() == 0);
+
     size_t pos = 0;
-    uint32_t instr = static_cast<uint8_t>(Opcode::ILOAD);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::LDC) + (static_cast<uint16_t>(1) << 0x10);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::ILOAD);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::ISUB);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::INVOKESTATIC) + (static_cast<uint16_t>(2) << 0x10);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::IMUL);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
-    pos += 4;
-
-    instr = static_cast<uint8_t>(Opcode::IRETURN);
-    EXPECT_TRUE(*reinterpret_cast<uint32_t*>(&cl.classes["Main"].bytecode[pos]) == instr);
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::LDC) + (static_cast<uint16_t>(1) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::INVOKESTATIC) + (static_cast<uint16_t>(2) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::INVOKESTATIC) + (static_cast<uint16_t>(3) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::RETURN));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::LDC) + (static_cast<uint16_t>(5) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::ILOAD));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::ISTL));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::IFN) + (static_cast<uint16_t>(40) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::LDC) + (static_cast<uint16_t>(6) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::IRETURN));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::ILOAD));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::LDC) + (static_cast<uint16_t>(6) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::ILOAD));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::ISUB));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::INVOKESTATIC) + (static_cast<uint16_t>(2) << 0x10));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::IMUL));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::IRETURN));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::RETURN));
+    CHECK_INSTR(static_cast<uint8_t>(Opcode::RETURN));
 }
 
+#undef CHECK_INSTR
 #undef CONSTRUCT_FILE
