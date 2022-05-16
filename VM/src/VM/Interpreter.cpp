@@ -21,6 +21,17 @@
     current_frame->operand_stack.push(result);                             \
 }
 
+#define BOOL_OPERATION(type, operation)                                    \
+{                                                                          \
+    auto value1 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    current_frame->operand_stack.pop();                                    \
+    auto value2 = std::bit_cast<type>(current_frame->operand_stack.top()); \
+    current_frame->operand_stack.pop();                                    \
+                                                                           \
+    int32_t result = static_cast<int32_t>(value1 operation value2);        \
+    current_frame->operand_stack.push(result);                             \
+}
+
 #define BIT_OPERATION(bit_operation)            \
 {                                               \
     ARIFMETIC_OPERATION(int32_t, bit_operation) \
@@ -47,8 +58,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         &&MULTINEWARRAY, &&ANEWARRAY, &&AMULTINEWARRAY, &&ARRAYLENGTH,
     };
 
-    std::size_t  pc       = mid->offset;
-
+    std::size_t pc = mid->offset;
     std::string* bytecode = &(cls->bytecode);
 
     pvm_->create_new_frame(mid);
@@ -355,16 +365,22 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         I2S:
             DISPATCH();
         IEQ:
+            BOOL_OPERATION(int, ==);
             DISPATCH();
         INEQ:
+            BOOL_OPERATION(int, !=);
             DISPATCH();
         ILEQ:
+            BOOL_OPERATION(int, <=);
             DISPATCH();
         IGEQ:
+            BOOL_OPERATION(int, >=);
             DISPATCH();
         ISTL:
+            BOOL_OPERATION(int, <);
             DISPATCH();
         ISTG:
+            BOOL_OPERATION(int, >);
             DISPATCH();
         LEQ:
             DISPATCH();
@@ -378,19 +394,25 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         LSTG:
             DISPATCH();
-        FEQ :
+        FEQ:
+            BOOL_OPERATION(float, ==);
             DISPATCH();
         FNEQ:
+            BOOL_OPERATION(float, !=);
             DISPATCH();
         FLEQ:
+            BOOL_OPERATION(float, <=);
             DISPATCH();
         FGEQ:
+            BOOL_OPERATION(float, >=);
             DISPATCH();
         FSTL:
+            BOOL_OPERATION(float, <);
             DISPATCH();
         FSTG:
+            BOOL_OPERATION(float, >);
             DISPATCH();
-        DEQ :
+        DEQ:
             DISPATCH();
         DNEQ:
             DISPATCH();
@@ -402,12 +424,31 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             DISPATCH();
         DSTG:
             DISPATCH();
-        IF  :
+        IF:
+        {
+            int32_t condition = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            if (condition)
+            {
+                pc = *reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
+            }
             DISPATCH();
-        IFN :
+        }
+        IFN:
+        {
+            int32_t condition = current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            if (!condition)
+            {
+                pc = *reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
+            }
             DISPATCH();
+        }
         GOTO:
+        {
+            pc = *reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
             DISPATCH();
+        }
         TABLESWITCH:
             DISPATCH();
         LOOKUPSWITCH:
@@ -416,7 +457,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         {
             int32_t return_value = current_frame->operand_stack.top();
             current_frame->operand_stack.pop();
-            
+
             pvm_->stack_frame.pop();
             if (pvm_->stack_frame.empty())
             {
@@ -427,7 +468,6 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             current_frame->operand_stack.push(return_value);
             pc = current_frame->pc;
             bytecode = &(current_frame->pmethod->cls->bytecode);
-
             DISPATCH();
         }
         LRETURN:
@@ -444,11 +484,10 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             }
 
             current_frame = &(pvm_->stack_frame.top());
-            
+
             current_frame->operand_stack.push(return_value);
             pc = current_frame->pc;
             bytecode = &(current_frame->pmethod->cls->bytecode);
-
             DISPATCH();
         }
         DRETURN:
@@ -466,7 +505,6 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             current_frame = &(pvm_->stack_frame.top());
             pc = current_frame->pc;
             bytecode = &(current_frame->pmethod->cls->bytecode);
-
             DISPATCH();
         }
         GETSTATIC:
