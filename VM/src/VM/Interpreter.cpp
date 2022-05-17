@@ -569,29 +569,46 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
 bool Interpreter::run_system(pmethodID pmet, Frame* current_frame)
 {
-    if (pmet == &(*classes_)["System"].methods["iprint"])
+    if (pmet->cls == &(*classes_)["System"])
     {
-        std::cout << current_frame->operand_stack.top();
-        current_frame->operand_stack.pop();
-        return true;
-    }
-    if (pmet == &(*classes_)["System"].methods["iprintln"])
-    {
-        std::cout << current_frame->operand_stack.top() << "\n";
-        current_frame->operand_stack.pop();
-        return true;
-    }
-    if (pmet == &(*classes_)["System"].methods["fprint"])
-    {
-        std::cout << std::bit_cast<float>(current_frame->operand_stack.top());
-        current_frame->operand_stack.pop();
-        return true;
-    }
-    if (pmet == &(*classes_)["System"].methods["fprintln"])
-    {
-        std::cout << std::bit_cast<float>(current_frame->operand_stack.top()) << "\n";
-        current_frame->operand_stack.pop();
-        return true;
+        if (pmet == &(*classes_)["System"].methods["iscan"])
+        {
+            int input = 0;
+            std::cin >> input;
+            current_frame->operand_stack.push(input);
+            return true;
+        }
+        if (pmet == &(*classes_)["System"].methods["iprint"])
+        {
+            std::cout << current_frame->operand_stack.top();
+            current_frame->operand_stack.pop();
+            return true;
+        }
+        if (pmet == &(*classes_)["System"].methods["iprintln"])
+        {
+            std::cout << current_frame->operand_stack.top() << "\n";
+            current_frame->operand_stack.pop();
+            return true;
+        }
+        if (pmet == &(*classes_)["System"].methods["fscan"])
+        {
+            float input = 0.0F;
+            std::cin >> input;
+            current_frame->operand_stack.push(std::bit_cast<int32_t>(input));
+            return true;
+        }
+        if (pmet == &(*classes_)["System"].methods["fprint"])
+        {
+            std::cout << std::bit_cast<float>(current_frame->operand_stack.top());
+            current_frame->operand_stack.pop();
+            return true;
+        }
+        if (pmet == &(*classes_)["System"].methods["fprintln"])
+        {
+            std::cout << std::bit_cast<float>(current_frame->operand_stack.top()) << "\n";
+            current_frame->operand_stack.pop();
+            return true;
+        }
     }
     return false;
 }

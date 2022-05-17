@@ -1,8 +1,11 @@
 class System {
-    public static void iprint() {}
-    public static void iprintln() {}
-    public static void fprint() {}
-    public static void fprintln() {}
+    public static int iscan() {}
+    public static void iprint(int a) {}
+    public static void iprintln(int a) {}
+
+    public static float fscan() {}
+    public static void fprint(float a) {}
+    public static void fprintln(float a) {}
 
     public static int fib(int n) {
         if (n < 2) {
