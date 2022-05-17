@@ -189,7 +189,7 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
             writeOperation(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
         case ASTNodeType::CONTROL:
-            writeControl(scope_node, &i, instructions);
+            writeControl(static_cast<AST*>(&(*scope_node)[i]), instructions);
             break;
         case ASTNodeType::FUNCTION:
             writeFunction(static_cast<AST*>(&(*scope_node)[i]), instructions);
@@ -535,34 +535,19 @@ void Translator::writeStore(const std::string& name, std::stringstream* instruct
     instructions->write(reinterpret_cast<char*>(&index), sizeof(index));
 }
 
-void Translator::writeControl(AST* scope_node, size_t* ind, std::stringstream* instructions)
+void Translator::writeControl(AST* control_node, std::stringstream* instructions)
 {
-    switch (static_cast<ControlNode*>((*scope_node)[*ind].value().get())->control_type)
+    switch (static_cast<ControlNode*>(control_node->value().get())->control_type)
     {
     case ControlType::IF:
-    {
-        auto* if_node = static_cast<AST*>(&(*scope_node)[*ind]);
-        AST* else_node = nullptr;
-
-        if ((*scope_node)[*ind].value()->type() == ASTNodeType::CONTROL)
-        {
-            if ((*ind + 1 < scope_node->branches_num()) &&
-                (static_cast<ControlNode*>((*scope_node)[*ind + 1].value().get())->control_type == ControlType::ELSE))
-            {
-                else_node = static_cast<AST*>(&(*scope_node)[*ind + 1]);
-                (*ind)++;
-            }
-        }
-
-        writeIfElse(if_node, else_node, instructions);
+        writeIfElifElse(control_node, instructions);
         break;
-    }
     case ControlType::ELSE:
-        break;
     case ControlType::ELIF:
+        break;
     case ControlType::FOR:
     case ControlType::WHILE:
-        writeWhile(static_cast<AST*>(&(*scope_node)[*ind]), instructions);
+        writeWhile(control_node, instructions);
         break;
     default:
         break;
@@ -624,19 +609,21 @@ struct CondCommand
     AST* ast = nullptr;
 };
 
-void setCommands(std::vector<CondCommand>* command_array, Tree<Condition>* cond_tree)
+size_t setCommands(std::vector<CondCommand>* command_array, Tree<Condition>* cond_tree)
 {
+    size_t cmd_num = 0;
     switch (cond_tree->value().type)
     {
     case Condition::OR:
     {
         for (size_t i = 0; i < cond_tree->branches_num(); i++)
         {
-            setCommands(command_array, &(*cond_tree)[i]);
+            cmd_num += setCommands(command_array, &(*cond_tree)[i]);
             if ((*cond_tree)[i].value().type == Condition::OBJ)
             {
                 CondCommand::Type type = (i + 1 == cond_tree->branches_num()) ? CondCommand::IFN : CondCommand::IF;
                 command_array->emplace_back(CondCommand{type, 0, nullptr});
+                cmd_num++;
             }
         }
         break;
@@ -645,10 +632,11 @@ void setCommands(std::vector<CondCommand>* command_array, Tree<Condition>* cond_
     {
         for (size_t i = 0; i < cond_tree->branches_num(); i++)
         {
-            setCommands(command_array, &(*cond_tree)[i]);
+            cmd_num += setCommands(command_array, &(*cond_tree)[i]);
             if ((*cond_tree)[i].value().type == Condition::OBJ)
             {
                 command_array->emplace_back(CondCommand{CondCommand::IFN, 0, nullptr});
+                cmd_num++;
             }
         }
         break;
@@ -661,11 +649,13 @@ void setCommands(std::vector<CondCommand>* command_array, Tree<Condition>* cond_
         }
         cond_tree->value().line = command_array->size();
         command_array->emplace_back(CondCommand{CondCommand::OBJ, 0, cond_tree->value().ast});
+        cmd_num++;
         break;
     }
     default:
         break;
     }
+    return cmd_num;
 }
 
 size_t getJump(Tree<Condition>* cond_tree)
@@ -708,8 +698,8 @@ void setJumps(std::vector<CondCommand>* command_array, Tree<Condition>* cond_tre
 
 void makeCommandArray(std::vector<CondCommand>* command_array, Tree<Condition>* cond_tree)
 {
-    setCommands(command_array, cond_tree);
-    if (command_array->size() == 1)
+    size_t cmd_num = setCommands(command_array, cond_tree);
+    if (cmd_num == 1)
     {
         command_array->emplace_back(CondCommand{CondCommand::IFN, 0, nullptr});
     }
@@ -843,30 +833,54 @@ void setOffsets(std::vector<CondCommand>* command_array, size_t true_offset, siz
     }
 }
 
-void Translator::writeIfElse(AST* if_node, AST* else_node, std::stringstream* instructions)
+void setOffsets(std::vector<CondCommand>* command_array, size_t goto_offset)
 {
-    auto* cond_node = static_cast<AST*>(&(*if_node)[0]);
-    auto* if_scope = static_cast<AST*>(&(*if_node)[1]);
-    AST* else_scope = (else_node) ? static_cast<AST*>(&(*else_node)[0]) : nullptr;
+    for (auto& command : *command_array)
+    {
+        if ((command.type == CondCommand::GOTO) && (command.jump == 0))
+        {
+            command.jump = goto_offset;
+        }
+    }
+}
+
+void makeCommandArrayIfElifElse(std::vector<CondCommand>* command_array, AST* control_node)
+{
+    auto* cond_node = static_cast<AST*>(&(*control_node)[0]);
+    auto* if_scope = static_cast<AST*>(&(*control_node)[1]);
+    AST* else_scope = (control_node->branches_num() == 3) ? static_cast<AST*>(&(*control_node)[2]) : nullptr;
 
     Tree<Condition> cond_tree;
     makeConditionTree(&cond_tree, cond_node);
+    makeCommandArray(command_array, &cond_tree);
 
-    std::vector<CondCommand> command_array;
-    makeCommandArray(&command_array, &cond_tree);
+    size_t true_offset = command_array->size();
+    command_array->emplace_back(CondCommand{CondCommand::INST, 0, if_scope});
 
-    size_t true_offset = command_array.size();
-    command_array.emplace_back(CondCommand{CondCommand::INST, 0, if_scope});
-
-    size_t false_offset = true_offset + 1;
     if (else_scope)
     {
-        false_offset = true_offset + 2;
-        command_array.emplace_back(CondCommand{CondCommand::GOTO, true_offset + 3, nullptr});
-        command_array.emplace_back(CondCommand{CondCommand::INST, 0, else_scope});
-    }
+        setOffsets(command_array, true_offset, true_offset + 2);
+        command_array->emplace_back(CondCommand{CondCommand::GOTO, 0, nullptr});
 
-    setOffsets(&command_array, true_offset, false_offset);
+        if (static_cast<ControlNode*>(else_scope->value().get())->control_type == ControlType::ELIF)
+        {
+            makeCommandArrayIfElifElse(command_array, else_scope);
+        }
+        else
+        {
+            command_array->emplace_back(CondCommand{CondCommand::INST, 0, static_cast<AST*>(&(*else_scope)[0])});
+        }
+        return;
+    }
+    setOffsets(command_array, true_offset, true_offset + 1);
+}
+
+void Translator::writeIfElifElse(AST* if_node, std::stringstream* instructions)
+{
+    std::vector<CondCommand> command_array;
+    makeCommandArrayIfElifElse(&command_array, if_node);
+    setOffsets(&command_array, command_array.size());
+
     writeCommands(&command_array, instructions);
 }
 

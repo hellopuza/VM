@@ -4,5 +4,5 @@
 
 TEST(InterpreterTest, Constructor)
 {
-    Interpreter interp(nullptr);
+    Interpreter interp(nullptr, nullptr);
 }

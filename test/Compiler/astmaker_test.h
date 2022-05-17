@@ -325,8 +325,12 @@ TEST(ASTMakerTest, Control) // NOLINT
     CONSTRUCT_FILE(
         "class Main {\n"
         "   private static int main() {\n"
-        "       if (cond) {\n"
-        "           foo();\n"
+        "       if (cond1) {\n"
+        "           foo1();\n"
+        "       } elif (cond2) {\n"
+        "           foo2();\n"
+        "       } else {\n"
+        "           foo3();\n"
         "       }\n"
         "   }\n"
         "}\n"
@@ -336,12 +340,28 @@ TEST(ASTMakerTest, Control) // NOLINT
     EXPECT_TRUE(static_cast<ControlNode*>(ast[0][0][0][0].value().get())->control_type == ControlType::IF);
 
     EXPECT_TRUE(ast[0][0][0][0][0].value().get()->type() == ASTNodeType::VARIABLE);
-    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "cond");
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][0].value().get())->name == "cond1");
 
     EXPECT_TRUE(ast[0][0][0][0][1].value().get()->type() == ASTNodeType::SCOPE);
-
     EXPECT_TRUE(ast[0][0][0][0][1][0].value().get()->type() == ASTNodeType::FUNCTION);
-    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][1][0].value().get())->name == "foo");
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][1][0].value().get())->name == "foo1");
+
+    EXPECT_TRUE(ast[0][0][0][0][2].value().get()->type() == ASTNodeType::CONTROL);
+    EXPECT_TRUE(static_cast<ControlNode*>(ast[0][0][0][0][2].value().get())->control_type == ControlType::ELIF);
+
+    EXPECT_TRUE(ast[0][0][0][0][2][0].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][0][0][0][2][0].value().get())->name == "cond2");
+
+    EXPECT_TRUE(ast[0][0][0][0][2][1].value().get()->type() == ASTNodeType::SCOPE);
+    EXPECT_TRUE(ast[0][0][0][0][2][1][0].value().get()->type() == ASTNodeType::FUNCTION);
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][2][1][0].value().get())->name == "foo2");
+
+    EXPECT_TRUE(ast[0][0][0][0][2][2].value().get()->type() == ASTNodeType::CONTROL);
+    EXPECT_TRUE(static_cast<ControlNode*>(ast[0][0][0][0][2][2].value().get())->control_type == ControlType::ELSE);
+
+    EXPECT_TRUE(ast[0][0][0][0][2][2][0].value().get()->type() == ASTNodeType::SCOPE);
+    EXPECT_TRUE(ast[0][0][0][0][2][2][0][0].value().get()->type() == ASTNodeType::FUNCTION);
+    EXPECT_TRUE(static_cast<FunctionNode*>(ast[0][0][0][0][2][2][0][0].value().get())->name == "foo3");
 }
 
 TEST(ASTMakerTest, String) // NOLINT

@@ -130,9 +130,16 @@ astp bindNodes(astp lhs, astp rhs);
 
     <std::list<astp>> ACTIONS
     <astp> ACTION
-
     <astp> EXPR
+
     <astp> CONTROL
+    <astp> IF_ELIF_ELSE
+    <astp> ELIF_ELSE
+    <astp> IF_SCOPE
+    <astp> ELIF_SCOPE
+    <astp> ELSE_SCOPE
+    <astp> WHILE_SCOPE
+
     <astp> ASSIGNMENT
     <astp> OP_OR
     <astp> OP_AND
@@ -156,9 +163,9 @@ astp bindNodes(astp lhs, astp rhs);
     <astp> NUMBER
     <astp> NEW_OBJ
 
+    <std::list<astp>> SQBRS
     <astp> VAR_SQBR
     <astp> SQBR
-    <std::list<astp>> SQBRS
 
     <std::string> WORD_DOT_WORD
 ;
@@ -367,17 +374,34 @@ FPARAMS: EXPR COMMA FPARAMS                      { $3.push_front($1); $$ = std::
        | %empty                                  { }
 ;
 
-CONTROL: IF EXPRINBR SCOPE                       { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
-       | ELSE SCOPE                              { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); }
-       | ELIF EXPRINBR SCOPE                     { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
-       | WHILE EXPRINBR SCOPE                    { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
-       | IF EXPRINBR error                       { maker->pushTextError("expected {", @3); YYABORT; }
-       | IF error                                { maker->pushTextError("expected (", @2); YYABORT; }
-       | ELSE error                              { maker->pushTextError("expected {", @2); YYABORT; }
-       | ELIF EXPRINBR error                     { maker->pushTextError("expected {", @3); YYABORT; }
-       | ELIF error                              { maker->pushTextError("expected (", @2); YYABORT; }
-       | WHILE EXPRINBR error                    { maker->pushTextError("expected {", @3); YYABORT; }
-       | WHILE error                             { maker->pushTextError("expected (", @2); YYABORT; }
+CONTROL: IF_ELIF_ELSE                            { $$ = $1; }
+       | WHILE_SCOPE                             { $$ = $1; }
+;
+
+IF_ELIF_ELSE: IF_SCOPE ELIF_ELSE                 { $$ = $1; pushBranch($$.get(), $2); }
+
+ELIF_ELSE: ELIF_SCOPE ELIF_ELSE                  { $$ = $1; pushBranch($$.get(), $2); }
+         | ELSE_SCOPE                            { $$ = $1; }
+         | %empty                                { $$ = nullptr; }
+;
+
+IF_SCOPE: IF EXPRINBR SCOPE                      { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
+        | IF EXPRINBR error                      { maker->pushTextError("expected {", @3); YYABORT; }
+        | IF error                               { maker->pushTextError("expected (", @2); YYABORT; }
+;
+
+ELIF_SCOPE: ELIF EXPRINBR SCOPE                  { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
+          | ELIF EXPRINBR error                  { maker->pushTextError("expected {", @3); YYABORT; }
+          | ELIF error                           { maker->pushTextError("expected (", @2); YYABORT; }
+;
+
+ELSE_SCOPE: ELSE SCOPE                           { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); }
+          | ELSE error                           { maker->pushTextError("expected {", @2); YYABORT; }
+;
+
+WHILE_SCOPE: WHILE EXPRINBR SCOPE                { $$ = std::make_shared<AST>(std::make_shared<ControlNode>(ControlNode($1))); pushBranch($$.get(), $2); pushBranch($$.get(), $3); }
+           | WHILE EXPRINBR error                { maker->pushTextError("expected {", @3); YYABORT; }
+           | WHILE error                         { maker->pushTextError("expected (", @2); YYABORT; }
 ;
 
 VAR_DECL: TYPE WORD                              { $$ =  std::make_shared<AST>(std::make_shared<VariableDeclarationNode>(VariableDeclarationNode($2, $1))); }
@@ -394,7 +418,7 @@ SQBRS: SQBR SQBRS                                { $2.push_front($1); $$ = std::
 
 SQBR: OSB EXPR CSB                               { $$ = $2; }
     | OSB EXPR error                             { maker->pushTextError("expected ]", @3); YYABORT; }
-    | OSB error                                  { maker->pushTextError("expected ]", @2); YYABORT; }
+    | OSB error                                  { maker->pushTextError("expected expression", @2); YYABORT; }
 ;
 
 NUMBER: FLOATNUMBER                              { $$ = std::make_shared<AST>(std::make_shared<NumberNode>(NumberNode($1))); }
@@ -420,14 +444,20 @@ parser::token_type yylex(parser::semantic_type* yylval, yy::parser::location_typ
 
 void pushBranch(AST* root, astp br)
 {
-    root->emplace_branch(std::move(*br));
+    if (br)
+    {
+        root->emplace_branch(std::move(*br));
+    }
 }
 
 void pushBranches(AST* root, std::list<astp>* list)
 {
     for (auto& br : *list)
     {
-        root->emplace_branch(std::move(*br));
+        if (br)
+        {
+            root->emplace_branch(std::move(*br));
+        }
     }
 }
 
