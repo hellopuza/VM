@@ -1,0 +1,34 @@
+class System {
+    public static void print() {}
+    public static void println() {}
+
+    public static int fib(int n) {
+        if (n < 2) {
+            return 1;
+        }
+        return fib(n - 1) + fib(n - 2);
+    }
+
+    public static void run_fib(int num) {
+        int i = 0;
+        while (i < num) {
+            System.println(fib(i));
+            i = i + 1;
+        }
+    }
+
+    public static int fact(int n) {
+        if (n < 2) {
+            return 1;
+        }
+        return fact(n - 1) * n;
+    }
+
+    public static void run_fact(int num) {
+        int i = 0;
+        while (i < num) {
+            System.println(fact(i));
+            i = i + 1;
+        }
+    }
+}

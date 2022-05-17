@@ -40,7 +40,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
-Interpreter::Interpreter(PkmVM* pvm) : pvm_(pvm) {}
+Interpreter::Interpreter(PkmVM* pvm, PkmClasses* classes) : pvm_(pvm), classes_(classes) {}
 
 void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 {
@@ -526,12 +526,8 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             auto* pmetd_ptr = static_cast<PointerType*>((current_frame->pmethod->cls->const_pool)[index].get());
             auto* pmethod   = reinterpret_cast<pmethodID>(pmetd_ptr->value);
 
-            auto* invoke_method_name_ptr = static_cast<StringType*>((current_frame->pmethod->cls->const_pool)[pmethod->name].get());
-
-            if (!strcmp(invoke_method_name_ptr->value.data(), "print"))
+            if (run_system(pmethod, current_frame))
             {
-                std::cout << current_frame->operand_stack.top() << std::endl;
-                current_frame->operand_stack.pop();
                 DISPATCH();
             }
 
@@ -569,6 +565,23 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         ARRAYLENGTH:
             DISPATCH();
     }
+}
+
+bool Interpreter::run_system(pmethodID pmet, Frame* current_frame)
+{
+    if (pmet == &(*classes_)["System"].methods["println"])
+    {
+        std::cout << current_frame->operand_stack.top() << "\n";
+        current_frame->operand_stack.pop();
+        return true;
+    }
+    if (pmet == &(*classes_)["System"].methods["print"])
+    {
+        std::cout << current_frame->operand_stack.top();
+        current_frame->operand_stack.pop();
+        return true;
+    }
+    return false;
 }
 
 #pragma GCC diagnostic pop
