@@ -569,15 +569,27 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
 bool Interpreter::run_system(pmethodID pmet, Frame* current_frame)
 {
-    if (pmet == &(*classes_)["System"].methods["println"])
+    if (pmet == &(*classes_)["System"].methods["iprint"])
+    {
+        std::cout << current_frame->operand_stack.top();
+        current_frame->operand_stack.pop();
+        return true;
+    }
+    if (pmet == &(*classes_)["System"].methods["iprintln"])
     {
         std::cout << current_frame->operand_stack.top() << "\n";
         current_frame->operand_stack.pop();
         return true;
     }
-    if (pmet == &(*classes_)["System"].methods["print"])
+    if (pmet == &(*classes_)["System"].methods["fprint"])
     {
-        std::cout << current_frame->operand_stack.top();
+        std::cout << std::bit_cast<float>(current_frame->operand_stack.top());
+        current_frame->operand_stack.pop();
+        return true;
+    }
+    if (pmet == &(*classes_)["System"].methods["fprintln"])
+    {
+        std::cout << std::bit_cast<float>(current_frame->operand_stack.top()) << "\n";
         current_frame->operand_stack.pop();
         return true;
     }
