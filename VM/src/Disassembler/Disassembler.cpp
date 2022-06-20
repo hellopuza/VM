@@ -184,7 +184,8 @@ void Disassembler::getInstructions(const std::string& klass, size_t* pos)
         text_ << HEX_OUT4 << pc << ": ";
         for (size_t b = 0; b < sizeof(int32_t); b++)
         {
-            auto byte = static_cast<int>(klass[*pos]);
+            const auto mask = 0xFF;
+            auto byte = static_cast<int16_t>(klass[*pos]) & mask;
             (*pos)++;
             text_ << HEX_OUT1 << byte << " ";
         }

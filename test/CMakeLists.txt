@@ -51,7 +51,7 @@ target_include_directories(${EXEC_NAME}
 
 target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align
         -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wnon-virtual-dtor
-        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a
+        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a -fno-exceptions -fno-rtti
 )
 
 add_custom_target(run_${EXEC_NAME} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXEC_NAME})

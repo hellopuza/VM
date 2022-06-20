@@ -29,7 +29,8 @@ function(add_exec EXEC_NAME SOURCES)
 
     target_compile_options(${EXEC_NAME} PRIVATE -Wall -Werror -Wextra -Wpedantic -Wcast-qual -Wcast-align
         -Wsign-promo -Wfloat-equal -Wenum-compare -Wredundant-decls -Wnon-virtual-dtor
-        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a)
+        -Wctor-dtor-privacy -Woverloaded-virtual -Wno-float-equal -pthread -std=c++2a -fno-exceptions -fno-rtti
+    )
 
     if(ENABLE_ASAN)
         target_compile_options(${EXEC_NAME} PUBLIC -fsanitize=address -g)
