@@ -58,7 +58,8 @@ astp bindNodes(astp lhs, astp rhs);
     <VariableType> FLOAT
     <VariableType> DOUBLE
 
-    <OperationType> NOT
+    <OperationType> RETURN
+    <OperationType> ASSIGN
     <OperationType> OR
     <OperationType> AND
     <OperationType> EQ
@@ -67,13 +68,15 @@ astp bindNodes(astp lhs, astp rhs);
     <OperationType> GEQ
     <OperationType> STL
     <OperationType> STG
+    <OperationType> SHL
+    <OperationType> SHR
     <OperationType> ADD
     <OperationType> SUB
     <OperationType> MUL
     <OperationType> DIV
-    <OperationType> ASSIGN
+    <OperationType> REM
+    <OperationType> NOT
     <OperationType> NEW
-    <OperationType> RETURN
 
     <ControlType> IF
     <ControlType> ELSE
@@ -143,6 +146,7 @@ astp bindNodes(astp lhs, astp rhs);
     <astp> OP_AND
     <astp> OP_EQ
     <astp> OP_COMP
+    <astp> OP_SHIFT
     <astp> OP_ADD
     <astp> OP_MUL
     <astp> CHECK_ASS
@@ -150,6 +154,7 @@ astp bindNodes(astp lhs, astp rhs);
     <astp> CHECK_AND
     <astp> CHECK_EQ
     <astp> CHECK_COMP
+    <astp> CHECK_SHIFT
     <astp> CHECK_ADD
     <astp> CHECK_MUL
     <astp> NOT_OBJ
@@ -302,7 +307,16 @@ OP_COMP: STL CHECK_COMP OP_COMP                  { $$ = bindNodes($1, $2, $3); }
        | %empty                                  { $$ = nullptr; }
 ;
 
-CHECK_COMP: CHECK_ADD OP_ADD                     { $$ = bindNodes($1, $2); }
+CHECK_COMP: CHECK_SHIFT OP_SHIFT                 { $$ = bindNodes($1, $2); }
+
+OP_SHIFT: SHL CHECK_SHIFT OP_SHIFT               { $$ = bindNodes($1, $2, $3); }
+        | SHR CHECK_SHIFT OP_SHIFT               { $$ = bindNodes($1, $2, $3); }
+        | SHL error                              { maker->pushTextError("expected primary-expression", @2); YYABORT; }
+        | SHR error                              { maker->pushTextError("expected primary-expression", @2); YYABORT; }
+        | %empty                                 { $$ = nullptr; }
+;
+
+CHECK_SHIFT: CHECK_ADD OP_ADD                    { $$ = bindNodes($1, $2); }
 
 OP_ADD: ADD CHECK_ADD OP_ADD                     { $$ = bindNodes($1, $2, $3); }
       | SUB CHECK_ADD OP_ADD                     { $$ = bindNodes($1, $2, $3); }
@@ -315,8 +329,10 @@ CHECK_ADD: CHECK_MUL OP_MUL                      { $$ = bindNodes($1, $2); }
 
 OP_MUL: MUL CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
       | DIV CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
+      | REM CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
       | MUL error                                { maker->pushTextError("expected primary-expression", @2); YYABORT; }
       | DIV error                                { maker->pushTextError("expected primary-expression", @2); YYABORT; }
+      | REM error                                { maker->pushTextError("expected primary-expression", @2); YYABORT; }
       | %empty                                   { $$ = nullptr; }
 ;
 
@@ -325,17 +341,18 @@ CHECK_MUL: NOT_OBJ                               { $$ = $1; }
          | SUB NOT_OBJ                           { $$ = bindNodes($1, $2, nullptr); }
          | ADD error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
          | SUB error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
-         | ASSIGN error                          { maker->pushError("expected primary-expression before token '='" , @2); YYABORT; }
-         | OR error                              { maker->pushError("expected primary-expression before token '||'", @2); YYABORT; }
-         | AND error                             { maker->pushError("expected primary-expression before token '&&'", @2); YYABORT; }
-         | EQ error                              { maker->pushError("expected primary-expression before token '=='", @2); YYABORT; }
-         | NEQ error                             { maker->pushError("expected primary-expression before token '!='", @2); YYABORT; }
-         | LEQ error                             { maker->pushError("expected primary-expression before token '<='", @2); YYABORT; }
-         | GEQ error                             { maker->pushError("expected primary-expression before token '>='", @2); YYABORT; }
-         | STL error                             { maker->pushError("expected primary-expression before token '<'" , @2); YYABORT; }
-         | STG error                             { maker->pushError("expected primary-expression before token '>'" , @2); YYABORT; }
-         | MUL error                             { maker->pushError("expected primary-expression before token '*'" , @2); YYABORT; }
-         | DIV error                             { maker->pushError("expected primary-expression before token '/'" , @2); YYABORT; }
+         | ASSIGN error                          { maker->pushError("expected primary-expression before token =" , @2); YYABORT; }
+         | OR error                              { maker->pushError("expected primary-expression before token ||", @2); YYABORT; }
+         | AND error                             { maker->pushError("expected primary-expression before token &&", @2); YYABORT; }
+         | EQ error                              { maker->pushError("expected primary-expression before token ==", @2); YYABORT; }
+         | NEQ error                             { maker->pushError("expected primary-expression before token !=", @2); YYABORT; }
+         | LEQ error                             { maker->pushError("expected primary-expression before token <=", @2); YYABORT; }
+         | GEQ error                             { maker->pushError("expected primary-expression before token >=", @2); YYABORT; }
+         | STL error                             { maker->pushError("expected primary-expression before token <" , @2); YYABORT; }
+         | STG error                             { maker->pushError("expected primary-expression before token >" , @2); YYABORT; }
+         | MUL error                             { maker->pushError("expected primary-expression before token *" , @2); YYABORT; }
+         | DIV error                             { maker->pushError("expected primary-expression before token /" , @2); YYABORT; }
+         | REM error                             { maker->pushError("expected primary-expression before token %" , @2); YYABORT; }
 ;
 
 NOT_OBJ: NOT OBJ                                 { $$ = std::make_shared<AST>(std::make_shared<OperationNode>(OperationNode($1))); pushBranch($$.get(), $2); }

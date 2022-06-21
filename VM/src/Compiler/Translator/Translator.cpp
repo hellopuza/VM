@@ -5,11 +5,11 @@
 
 Translator::Translator(AST* class_tree) : class_tree_(class_tree) {}
 
-void Translator::translate(std::ofstream* file)
+void Translator::translate(std::ofstream* output_file)
 {
     auto* class_node = class_tree_;
     std::string class_name = static_cast<ClassNode*>(class_node->value().get())->name;
-    file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
+    output_file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
 
     std::stringstream class_content;
     writeFields(class_node, &class_content);
@@ -17,15 +17,15 @@ void Translator::translate(std::ofstream* file)
     std::stringstream instructions;
     writeMethods(class_node, &class_content, &instructions);
 
-    writeConstantPool(file);
-    *file << class_content.str();
-    *file << instructions.str();
+    writeConstantPool(output_file);
+    *output_file << class_content.str();
+    *output_file << instructions.str();
 }
 
-void Translator::writeConstantPool(std::ofstream* file)
+void Translator::writeConstantPool(std::ofstream* output_file)
 {
     auto cp_size = static_cast<uint16_t>(const_pool_.size());
-    file->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+    output_file->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
 
     std::vector<std::pair<AbstractType*, uint16_t>> elems;
     for (const auto& [key, value] : const_pool_)
@@ -39,31 +39,31 @@ void Translator::writeConstantPool(std::ofstream* file)
     for (const auto& elem : elems)
     {
         auto type = static_cast<uint8_t>(elem.first->type());
-        file->write(reinterpret_cast<char*>(&type), sizeof(type));
+        output_file->write(reinterpret_cast<char*>(&type), sizeof(type));
         switch (type)
         {
         case static_cast<uint8_t>(AbstractType::Type::INTEGER):
         {
             auto value = static_cast<IntegerType*>(elem.first)->value;
-            file->write(reinterpret_cast<char*>(&value), sizeof(value));
+            output_file->write(reinterpret_cast<char*>(&value), sizeof(value));
             break;
         }
         case static_cast<uint8_t>(AbstractType::Type::FLOAT):
         {
             auto value = static_cast<FloatType*>(elem.first)->value;
-            file->write(reinterpret_cast<char*>(&value), sizeof(value));
+            output_file->write(reinterpret_cast<char*>(&value), sizeof(value));
             break;
         }
         case static_cast<uint8_t>(AbstractType::Type::STRING):
         {
             auto value = static_cast<StringType*>(elem.first)->value;
-            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            output_file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
         case static_cast<uint8_t>(AbstractType::Type::FUNCTION):
         {
             auto value = static_cast<FunctionType*>(elem.first)->value;
-            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            output_file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
         }
@@ -197,6 +197,12 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
         case ASTNodeType::VAR_DECL:
             appendLocal(static_cast<VariableDeclarationNode*>((*scope_node)[i].value().get()));
             break;
+        case ASTNodeType::VARIABLE:
+            writeLoad(static_cast<VariableNode*>((*scope_node)[i].value().get())->name, instructions);
+            break;
+        case ASTNodeType::NUMBER:
+            writeNumber(static_cast<NumberNode*>((*scope_node)[i].value().get()), instructions);
+            break;
         default:
             break;
         }
@@ -226,6 +232,84 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
 {
     switch (static_cast<OperationNode*>(op_node->value().get())->op_type)
     {
+    case OperationType::RETURN:
+    {
+        uint32_t null = 0;
+        uint8_t op_code = 0;
+        VariableType ret_type = VariableType::VOID;
+        if (op_node->branches_num() > 0)
+        {
+            ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
+
+            switch (ret_type)
+            {
+            case VariableType::INT:
+                op_code = static_cast<uint8_t>(Opcode::IRETURN);
+                break;
+            case VariableType::LONG:
+                op_code = static_cast<uint8_t>(Opcode::LRETURN);
+                break;
+            case VariableType::FLOAT:
+                op_code = static_cast<uint8_t>(Opcode::FRETURN);
+                break;
+            case VariableType::DOUBLE:
+                op_code = static_cast<uint8_t>(Opcode::DRETURN);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            op_code = static_cast<uint8_t>(Opcode::RETURN);
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+
+        return ret_type;
+    }
+    case OperationType::ASSIGN:
+    {
+        auto* lhs = &(*op_node)[0];
+        auto* rhs = &(*op_node)[1];
+
+        VariableType ret_type = writeObject(static_cast<AST*>(rhs), instructions);
+
+        switch (lhs->value()->type())
+        {
+        case ASTNodeType::VAR_DECL:
+        {
+            auto* var_decl_node = static_cast<VariableDeclarationNode*>(lhs->value().get());
+            appendLocal(var_decl_node);
+            writeStore(var_decl_node->name, instructions);
+            return ret_type;
+        }
+        case ASTNodeType::VARIABLE:
+        {
+            auto* var_node = static_cast<VariableNode*>(lhs->value().get());
+            writeStore(var_node->name, instructions);
+            return ret_type;
+        }
+        default:
+            break;
+        }
+        return ret_type;
+    }
+    case OperationType::OR:
+    case OperationType::AND:
+    {
+        AST ast(std::make_shared<ControlNode>(ControlNode(ControlType::IF)));
+        ast.emplace_branch(std::move(*op_node));
+        ast.emplace_branch(std::make_shared<ScopeNode>(ScopeNode()));
+        ast[1].emplace_branch(std::make_shared<NumberNode>(NumberNode(1)));
+        ast.emplace_branch(std::make_shared<ControlNode>(ControlNode(ControlType::ELSE)));
+        ast[2].emplace_branch(std::make_shared<ScopeNode>(ScopeNode()));
+        ast[2][0].emplace_branch(std::make_shared<NumberNode>(NumberNode(0)));
+
+        writeControl(&ast, instructions);
+        return VariableType::INT;
+    }
     case OperationType::EQ:
     case OperationType::NEQ:
     case OperationType::LEQ:
@@ -256,6 +340,35 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
             break;
         case VariableType::DOUBLE:
             op_code = static_cast<uint8_t>(Opcode::DADD) + op_type;
+            break;
+        default:
+            break;
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+        return VariableType::INT;
+    }
+    case OperationType::SHL:
+    case OperationType::SHR:
+    {
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        VariableType ret_type = writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
+
+        auto var_type = static_cast<uint32_t>(ret_type);
+        var_type -= static_cast<uint32_t>(VariableType::INT);
+
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (static_cast<OperationNode*>(op_node->value().get())->op_type)
+        {
+        case OperationType::SHL:
+            op_code = static_cast<uint8_t>(Opcode::ISHL) + var_type;
+            break;
+        case OperationType::SHR:
+            op_code = static_cast<uint8_t>(Opcode::ISHR) + var_type;
             break;
         default:
             break;
@@ -319,70 +432,52 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
         instructions->write(reinterpret_cast<char*>(&null), 3);
         return ret_type;
     }
-    case OperationType::ASSIGN:
+    case OperationType::REM:
     {
-        auto* lhs = &(*op_node)[0];
-        auto* rhs = &(*op_node)[1];
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        VariableType ret_type = writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
 
-        VariableType ret_type = writeObject(static_cast<AST*>(rhs), instructions);
-
-        switch (lhs->value()->type())
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (ret_type)
         {
-        case ASTNodeType::VAR_DECL:
-        {
-            auto* var_decl_node = static_cast<VariableDeclarationNode*>(lhs->value().get());
-            appendLocal(var_decl_node);
-            writeStore(var_decl_node->name, instructions);
-            return ret_type;
-        }
-        case ASTNodeType::VARIABLE:
-        {
-            auto* var_node = static_cast<VariableNode*>(lhs->value().get());
-            writeStore(var_node->name, instructions);
-            return ret_type;
-        }
+        case VariableType::INT:
+            op_code = static_cast<uint8_t>(Opcode::IREM);
+            break;
+        case VariableType::LONG:
+            op_code = static_cast<uint8_t>(Opcode::LREM);
+            break;
+        case VariableType::FLOAT:
+            op_code = static_cast<uint8_t>(Opcode::FREM);
+            break;
+        case VariableType::DOUBLE:
+            op_code = static_cast<uint8_t>(Opcode::DREM);
+            break;
         default:
             break;
-        }
-        return ret_type;
-    }
-    case OperationType::RETURN:
-    {
-        uint32_t null = 0;
-        uint8_t op_code = 0;
-        VariableType ret_type = VariableType::VOID;
-        if (op_node->branches_num() > 0)
-        {
-            ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
-
-            switch (ret_type)
-            {
-            case VariableType::INT:
-                op_code = static_cast<uint8_t>(Opcode::IRETURN);
-                break;
-            case VariableType::LONG:
-                op_code = static_cast<uint8_t>(Opcode::LRETURN);
-                break;
-            case VariableType::FLOAT:
-                op_code = static_cast<uint8_t>(Opcode::FRETURN);
-                break;
-            case VariableType::DOUBLE:
-                op_code = static_cast<uint8_t>(Opcode::DRETURN);
-                break;
-            default:
-                break;
-            }
-        }
-        else
-        {
-            op_code = static_cast<uint8_t>(Opcode::RETURN);
         }
 
         instructions->write(reinterpret_cast<char*>(&op_code), 1);
         instructions->write(reinterpret_cast<char*>(&null), 3);
-
         return ret_type;
     }
+    case OperationType::NOT:
+    {
+        AST ast(std::make_shared<ControlNode>(ControlNode(ControlType::IF)));
+        ast.emplace_branch(std::move(*static_cast<AST*>(&(*op_node)[0])));
+        ast.emplace_branch(std::make_shared<ScopeNode>(ScopeNode()));
+        ast[1].emplace_branch(std::make_shared<NumberNode>(NumberNode(0)));
+        ast.emplace_branch(std::make_shared<ControlNode>(ControlNode(ControlType::ELSE)));
+        ast[2].emplace_branch(std::make_shared<ScopeNode>(ScopeNode()));
+        ast[2][0].emplace_branch(std::make_shared<NumberNode>(NumberNode(1)));
+
+        writeControl(&ast, instructions);
+        return VariableType::INT;
+    }
+    case OperationType::SQR_BR:
+    case OperationType::NEW:
     default:
         break;
     }

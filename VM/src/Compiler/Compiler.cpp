@@ -6,6 +6,19 @@
 
 int Compiler::compile(const std::string& input_name, const std::string& code_ext)
 {
+    int err = parse(input_name);
+    if (err)
+    {
+        return err;
+    }
+
+    err = translate(code_ext);
+
+    return err;
+}
+
+int Compiler::parse(const std::string& input_name)
+{
     std::ifstream file(input_name);
     if (file.is_open())
     {
@@ -23,9 +36,7 @@ int Compiler::compile(const std::string& input_name, const std::string& code_ext
         return FILE_NOT_FOUND;
     }
 
-    int err = translate(code_ext);
-
-    return err;
+    return OK;
 }
 
 int Compiler::translate(const std::string& code_ext)

@@ -74,8 +74,11 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::DOUBLE:
         yylval->build<VariableType>() = VariableType::DOUBLE;
         break;
-    case yy::parser::token_type::NOT:
-        yylval->build<OperationType>() = OperationType::NOT;
+    case yy::parser::token_type::RETURN:
+        yylval->build<OperationType>() = OperationType::RETURN;
+        break;
+    case yy::parser::token_type::ASSIGN:
+        yylval->build<OperationType>() = OperationType::ASSIGN;
         break;
     case yy::parser::token_type::OR:
         yylval->build<OperationType>() = OperationType::OR;
@@ -101,6 +104,12 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::STG:
         yylval->build<OperationType>() = OperationType::STG;
         break;
+    case yy::parser::token_type::SHL:
+        yylval->build<OperationType>() = OperationType::SHL;
+        break;
+    case yy::parser::token_type::SHR:
+        yylval->build<OperationType>() = OperationType::SHR;
+        break;
     case yy::parser::token_type::ADD:
         yylval->build<OperationType>() = OperationType::ADD;
         break;
@@ -113,14 +122,14 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::DIV:
         yylval->build<OperationType>() = OperationType::DIV;
         break;
-    case yy::parser::token_type::ASSIGN:
-        yylval->build<OperationType>() = OperationType::ASSIGN;
+    case yy::parser::token_type::REM:
+        yylval->build<OperationType>() = OperationType::REM;
+        break;
+    case yy::parser::token_type::NOT:
+        yylval->build<OperationType>() = OperationType::NOT;
         break;
     case yy::parser::token_type::NEW:
         yylval->build<OperationType>() = OperationType::NEW;
-        break;
-    case yy::parser::token_type::RETURN:
-        yylval->build<OperationType>() = OperationType::RETURN;
         break;
     case yy::parser::token_type::IF:
         yylval->build<ControlType>() = ControlType::IF;

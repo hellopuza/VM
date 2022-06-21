@@ -246,6 +246,9 @@ TEST(ASTMakerTest, BinaryOperators) // NOLINT
         "       left >= right;\n"
         "       left < right;\n"
         "       left > right;\n"
+        "       left << right;\n"
+        "       left >> right;\n"
+        "       left % right;\n"
         "   }\n"
         "}\n"
     )
@@ -363,6 +366,33 @@ TEST(ASTMakerTest, BinaryOperators) // NOLINT
 
     EXPECT_TRUE(ast[0][1][2][11][1].value().get()->type() == ASTNodeType::VARIABLE);
     EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][11][1].value().get())->name == "right");
+
+    EXPECT_TRUE(ast[0][1][2][12].value().get()->type() == ASTNodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][12].value().get())->op_type == OperationType::SHL);
+
+    EXPECT_TRUE(ast[0][1][2][12][0].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][12][0].value().get())->name == "left");
+
+    EXPECT_TRUE(ast[0][1][2][12][1].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][12][1].value().get())->name == "right");
+
+    EXPECT_TRUE(ast[0][1][2][13].value().get()->type() == ASTNodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][13].value().get())->op_type == OperationType::SHR);
+
+    EXPECT_TRUE(ast[0][1][2][13][0].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][13][0].value().get())->name == "left");
+
+    EXPECT_TRUE(ast[0][1][2][13][1].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][13][1].value().get())->name == "right");
+
+    EXPECT_TRUE(ast[0][1][2][14].value().get()->type() == ASTNodeType::OPERATION);
+    EXPECT_TRUE(static_cast<OperationNode*>(ast[0][1][2][14].value().get())->op_type == OperationType::REM);
+
+    EXPECT_TRUE(ast[0][1][2][14][0].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][14][0].value().get())->name == "left");
+
+    EXPECT_TRUE(ast[0][1][2][14][1].value().get()->type() == ASTNodeType::VARIABLE);
+    EXPECT_TRUE(static_cast<VariableNode*>(ast[0][1][2][14][1].value().get())->name == "right");
 }
 
 TEST(ASTMakerTest, OperatorNot) // NOLINT

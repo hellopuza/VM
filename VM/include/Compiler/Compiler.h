@@ -18,6 +18,7 @@ public:
     void printErrors(std::ostream& os) const;
 
 private:
+    int parse(const std::string& input_name);
     int translate(const std::string& code_ext);
 
     AST ast_;

@@ -61,21 +61,23 @@ WORD_DOT     {W_DOT}+{WORD}
 ";"                         { return yy::parser::token_type::SCOLON; }
 ","                         { return yy::parser::token_type::COMMA;  }
 
-"!"                         { return yy::parser::token_type::NOT; }
-"||"                        { return yy::parser::token_type::OR;  }
-"&&"                        { return yy::parser::token_type::AND; }
-"=="                        { return yy::parser::token_type::EQ;  }
-"!="                        { return yy::parser::token_type::NEQ; }
-"<="                        { return yy::parser::token_type::LEQ; }
-">="                        { return yy::parser::token_type::GEQ; }
-"<"                         { return yy::parser::token_type::STL; }
-">"                         { return yy::parser::token_type::STG; }
-
+"="                         { return yy::parser::token_type::ASSIGN; }
+"||"                        { return yy::parser::token_type::OR;     }
+"&&"                        { return yy::parser::token_type::AND;    }
+"=="                        { return yy::parser::token_type::EQ;     }
+"!="                        { return yy::parser::token_type::NEQ;    }
+"<="                        { return yy::parser::token_type::LEQ;    }
+">="                        { return yy::parser::token_type::GEQ;    }
+"<"                         { return yy::parser::token_type::STL;    }
+">"                         { return yy::parser::token_type::STG;    }
+"<<"                        { return yy::parser::token_type::SHL;    }
+">>"                        { return yy::parser::token_type::SHR;    }
 "+"                         { return yy::parser::token_type::ADD;    }
 "-"                         { return yy::parser::token_type::SUB;    }
 "*"                         { return yy::parser::token_type::MUL;    }
 "/"                         { return yy::parser::token_type::DIV;    }
-"="                         { return yy::parser::token_type::ASSIGN; }
+"%"                         { return yy::parser::token_type::REM;    }
+"!"                         { return yy::parser::token_type::NOT;    }
 
 "//".*
 {WS}

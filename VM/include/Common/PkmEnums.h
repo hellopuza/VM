@@ -51,7 +51,8 @@ enum class VariableType
 
 enum class OperationType
 {
-    NOT,
+    RETURN,
+    ASSIGN,
     OR,
     AND,
     EQ,
@@ -60,14 +61,16 @@ enum class OperationType
     GEQ,
     STL,
     STG,
+    SHL,
+    SHR,
     ADD,
     SUB,
     MUL,
     DIV,
-    ASSIGN,
+    REM,
+    NOT,
     SQR_BR,
     NEW,
-    RETURN,
 };
 
 enum class ControlType
@@ -105,7 +108,8 @@ static const std::string TYPES[] = {
 };
 
 static const std::string OPERATION[] = {
-    "!",
+    "return",
+    "=",
     "||",
     "&&",
     "==",
@@ -114,14 +118,16 @@ static const std::string OPERATION[] = {
     ">=",
     "<",
     ">",
+    "<<",
+    ">>",
     "+",
     "-",
     "*",
     "/",
-    "=",
+    "%",
+    "!",
     "[]",
     "new",
-    "return",
 };
 
 static const std::string CONTROL[] = {

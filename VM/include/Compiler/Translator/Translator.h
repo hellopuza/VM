@@ -12,10 +12,10 @@ class Translator
 public:
     Translator(AST* class_tree);
 
-    void translate(std::ofstream* file);
+    void translate(std::ofstream* output_file);
 
 private:
-    void writeConstantPool(std::ofstream* file);
+    void writeConstantPool(std::ofstream* output_file);
     void writeFields(AST* class_node, std::stringstream* class_content);
     void writeMethods(AST* class_node, std::stringstream* class_content, std::stringstream* instructions);
     void writeMethodParams(AST* method_node, std::stringstream* class_content);
