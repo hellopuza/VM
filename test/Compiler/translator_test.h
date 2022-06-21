@@ -71,7 +71,7 @@ TEST(TranslatorTest, ClassMethods) // NOLINT
     CONSTRUCT_FILE(
         "class Main {\n"
         "   private static int sum(int a, float b) {}\n"
-        "   public native void print(long c) {}\n"
+        "   public native void print(char c) {}\n"
         "}\n"
     )
 
@@ -93,7 +93,7 @@ TEST(TranslatorTest, ClassMethods) // NOLINT
     EXPECT_TRUE(cl.classes["Main"].methods["print"].modifier == MethodType::NATIVE);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].ret_type == VariableType::VOID);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params.size() == 1);
-    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::LONG);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::CHAR);
 }
 
 TEST(TranslatorTest, MethodScope) // NOLINT
@@ -101,7 +101,7 @@ TEST(TranslatorTest, MethodScope) // NOLINT
     CONSTRUCT_FILE(
         "class Main {\n"
         "   public int a;\n"
-        "   public native void print(long c) {}\n"
+        "   public native void print(char c) {}\n"
         "}\n"
     )
 
@@ -119,7 +119,7 @@ TEST(TranslatorTest, MethodScope) // NOLINT
     EXPECT_TRUE(cl.classes["Main"].methods["print"].modifier == MethodType::NATIVE);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].ret_type == VariableType::VOID);
     EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params.size() == 1);
-    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::LONG);
+    EXPECT_TRUE(cl.classes["Main"].methods["print"].met_params[0] == VariableType::CHAR);
 }
 
 TEST(TranslatorTest, Function) // NOLINT

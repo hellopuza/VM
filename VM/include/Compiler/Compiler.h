@@ -18,10 +18,10 @@ public:
     void printErrors(std::ostream& os) const;
 
 private:
-    bool translate(const std::string& code_ext);
+    int translate(const std::string& code_ext);
 
     AST ast_;
-    std::vector<std::string> ast_errors_;
+    std::string errstr_;
 };
 
 #endif // COMPILER_COMPILER_H

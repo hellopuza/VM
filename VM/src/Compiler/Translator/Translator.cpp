@@ -545,7 +545,6 @@ void Translator::writeControl(AST* control_node, std::stringstream* instructions
     case ControlType::ELSE:
     case ControlType::ELIF:
         break;
-    case ControlType::FOR:
     case ControlType::WHILE:
         writeWhile(control_node, instructions);
         break;

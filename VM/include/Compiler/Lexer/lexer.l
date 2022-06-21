@@ -15,7 +15,6 @@ DIGIT        [0-9]
 DIGIT1       [1-9]
 DOT          [.]
 WORD         [_a-zA-Z]+{DIGIT}*
-WRONGNUMBER  0+{DIGIT}+
 INTNUMBER    {DIGIT1}{DIGIT}*|0
 FLOATNUMBER  {INTNUMBER}{DOT}{DIGIT}+
 QUOTES       ["]
@@ -36,7 +35,6 @@ WORD_DOT     {W_DOT}+{WORD}
 "else"                      { return yy::parser::token_type::ELSE;     }
 "false"                     { return yy::parser::token_type::FALSE;    }
 "float"                     { return yy::parser::token_type::FLOAT;    }
-"for"                       { return yy::parser::token_type::FOR;      }
 "if"                        { return yy::parser::token_type::IF;       }
 "int"                       { return yy::parser::token_type::INT;      }
 "instance"                  { return yy::parser::token_type::INSTANCE; }
@@ -87,8 +85,5 @@ WORD_DOT     {W_DOT}+{WORD}
 {FLOATNUMBER}               { return yy::parser::token_type::FLOATNUMBER; }
 {STRING}                    { return yy::parser::token_type::STRING;      }
 {SYMBOL}                    { return yy::parser::token_type::SYMBOL;      }
-{DIGIT}+{WORD}              { return yy::parser::token_type::ERROR;       }
-{WRONGNUMBER}               { return yy::parser::token_type::ERROR;       }
-.                           { return yy::parser::token_type::ERROR;       }
 
 %%

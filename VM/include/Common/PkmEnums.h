@@ -64,7 +64,6 @@ enum class OperationType
     SUB,
     MUL,
     DIV,
-    COMMA,
     ASSIGN,
     SQR_BR,
     NEW,
@@ -76,7 +75,6 @@ enum class ControlType
     IF,
     ELSE,
     ELIF,
-    FOR,
     WHILE,
 };
 
@@ -120,7 +118,6 @@ static const std::string OPERATION[] = {
     "-",
     "*",
     "/",
-    ",",
     "=",
     "[]",
     "new",
@@ -131,7 +128,6 @@ static const std::string CONTROL[] = {
     "if",
     "else",
     "elif",
-    "for",
     "while",
 };
 

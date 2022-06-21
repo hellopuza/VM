@@ -71,7 +71,6 @@ astp bindNodes(astp lhs, astp rhs);
     <OperationType> SUB
     <OperationType> MUL
     <OperationType> DIV
-    <OperationType> COMMA
     <OperationType> ASSIGN
     <OperationType> NEW
     <OperationType> RETURN
@@ -79,7 +78,6 @@ astp bindNodes(astp lhs, astp rhs);
     <ControlType> IF
     <ControlType> ELSE
     <ControlType> ELIF
-    <ControlType> FOR
     <ControlType> WHILE
 
     <std::string> NUL
@@ -101,7 +99,7 @@ astp bindNodes(astp lhs, astp rhs);
     OSB
     CSB
     SCOLON
-    ERROR
+    COMMA
 ;
 
 %left '+' '-' '*' '/'
@@ -216,14 +214,9 @@ ACC: PUBLIC                                      { $$ = $1; }
    | PRIVATE                                     { $$ = $1; }
 ;
 
-TYPE: BOOLEAN                                    { $$ = $1; }
-    | BYTE                                       { $$ = $1; }
-    | CHAR                                       { $$ = $1; }
-    | SHORT                                      { $$ = $1; }
+TYPE: CHAR                                       { $$ = $1; }
     | INT                                        { $$ = $1; }
-    | LONG                                       { $$ = $1; }
     | FLOAT                                      { $$ = $1; }
-    | DOUBLE                                     { $$ = $1; }
 ;
 
 MTYPE: TYPE                                      { $$ = $1; }
@@ -236,13 +229,13 @@ MET: INSTANCE                                    { $$ = $1; }
 ;
 
 MPARAMS: ORB PARAMS CRB                          { $$ = std::move($2); }
+       | ORB CRB                                 { }
        | ORB error                               { maker->pushTextError("expected )", @2); YYABORT; }
 ;
 
 PARAMS: PARAM COMMA PARAMS                       { $3.push_front($1); $$ = std::move($3); }
       | PARAM                                    { $$ = std::list<astp>(); $$.push_back($1); }
       | PARAM error                              { maker->pushTextError("expected )", @2); YYABORT; }
-      | %empty                                   { }
 ;
 
 PARAM: TYPE WORD                                 { $$ = std::make_shared<AST>(std::make_shared<MethodParameterNode>(MethodParameterNode($2, $1))); }
@@ -330,10 +323,11 @@ OP_MUL: MUL CHECK_MUL OP_MUL                     { $$ = bindNodes($1, $2, $3); }
 CHECK_MUL: NOT_OBJ                               { $$ = $1; }
          | ADD NOT_OBJ                           { $$ = bindNodes($1, $2, nullptr); }
          | SUB NOT_OBJ                           { $$ = bindNodes($1, $2, nullptr); }
-         | SUB error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
          | ADD error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
+         | SUB error                             { maker->pushTextError("expected primary-expression", @2); YYABORT; }
          | ASSIGN error                          { maker->pushError("expected primary-expression before token '='" , @2); YYABORT; }
          | OR error                              { maker->pushError("expected primary-expression before token '||'", @2); YYABORT; }
+         | AND error                             { maker->pushError("expected primary-expression before token '&&'", @2); YYABORT; }
          | EQ error                              { maker->pushError("expected primary-expression before token '=='", @2); YYABORT; }
          | NEQ error                             { maker->pushError("expected primary-expression before token '!='", @2); YYABORT; }
          | LEQ error                             { maker->pushError("expected primary-expression before token '<='", @2); YYABORT; }
@@ -342,7 +336,6 @@ CHECK_MUL: NOT_OBJ                               { $$ = $1; }
          | STG error                             { maker->pushError("expected primary-expression before token '>'" , @2); YYABORT; }
          | MUL error                             { maker->pushError("expected primary-expression before token '*'" , @2); YYABORT; }
          | DIV error                             { maker->pushError("expected primary-expression before token '/'" , @2); YYABORT; }
-         | AND error                             { maker->pushError("expected primary-expression before token '&&'", @2); YYABORT; }
 ;
 
 NOT_OBJ: NOT OBJ                                 { $$ = std::make_shared<AST>(std::make_shared<OperationNode>(OperationNode($1))); pushBranch($$.get(), $2); }

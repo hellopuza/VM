@@ -113,9 +113,6 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::DIV:
         yylval->build<OperationType>() = OperationType::DIV;
         break;
-    case yy::parser::token_type::COMMA:
-        yylval->build<OperationType>() = OperationType::COMMA;
-        break;
     case yy::parser::token_type::ASSIGN:
         yylval->build<OperationType>() = OperationType::ASSIGN;
         break;
@@ -133,9 +130,6 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
         break;
     case yy::parser::token_type::ELIF:
         yylval->build<ControlType>() = ControlType::ELIF;
-        break;
-    case yy::parser::token_type::FOR:
-        yylval->build<ControlType>() = ControlType::FOR;
         break;
     case yy::parser::token_type::WHILE:
         yylval->build<ControlType>() = ControlType::WHILE;
@@ -175,7 +169,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::OSB:
     case yy::parser::token_type::CSB:
     case yy::parser::token_type::SCOLON:
-    case yy::parser::token_type::ERROR:
+    case yy::parser::token_type::COMMA:
     default:
         break;
     }
@@ -185,14 +179,13 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
 
 void ASTMaker::pushError(const std::string& error, const yy::location& location)
 {
-    std::string column{"\n"};
+    std::string column = "\n";
     const size_t offset = 9;
     column.insert(1, location.begin.column + offset, '~');
     column.push_back('^');
 
-    errors_.push_back("line: " + std::to_string(lexer_->lineno()) + " | error: " + error + "\n\t| " + \
-        program_[lexer_->lineno() - 1] + column
-    );
+    errstr_ = "line: " + std::to_string(lexer_->lineno()) + " | error: " + error + "\n\t| " + \
+        program_[lexer_->lineno() - 1] + column;
 }
 
 void ASTMaker::pushTextError(const std::string& error, const yy::location& location)
@@ -207,22 +200,22 @@ void ASTMaker::pushTextError(const std::string& error, const yy::location& locat
     }
 }
 
-std::vector<std::string>* ASTMaker::getErrors()
+std::string* ASTMaker::getError()
 {
-    return &errors_;
+    return &errstr_;
 }
 
 void ASTMaker::printErrors(std::ostream& os) const
 {
-    for (const auto& err: errors_)
+    if (err())
     {
-        os << err << "\n";
+        os << errstr_ << "\n";
     }
 }
 
 bool ASTMaker::err() const
 {
-    return !errors_.empty();
+    return !errstr_.empty();
 }
 
 int ASTMaker::lineno() const

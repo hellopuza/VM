@@ -12,9 +12,9 @@ int Compiler::compile(const std::string& input_name, const std::string& code_ext
         ASTMaker ast_maker(&file);
         ast_maker.make(&ast_);
 
-        if (ast_maker.err() || (ast_.branches_num() == 0) || !translate(code_ext))
+        if (ast_maker.err() || (ast_.branches_num() == 0))
         {
-            ast_errors_ = std::move(*ast_maker.getErrors());
+            errstr_ = std::move(*ast_maker.getError());
             return FILE_NOT_COMPILED;
         }
     }
@@ -23,10 +23,12 @@ int Compiler::compile(const std::string& input_name, const std::string& code_ext
         return FILE_NOT_FOUND;
     }
 
-    return OK;
+    int err = translate(code_ext);
+
+    return err;
 }
 
-bool Compiler::translate(const std::string& code_ext)
+int Compiler::translate(const std::string& code_ext)
 {
     for (size_t i = 0; i < ast_.branches_num(); i++)
     {
@@ -38,18 +40,19 @@ bool Compiler::translate(const std::string& code_ext)
         }
         else
         {
-            return false;
+            return FILE_NOT_COMPILED;
         }
+
         file.close();
     }
 
-    return true;
+    return OK;
 }
 
 void Compiler::printErrors(std::ostream& os) const
 {
-    for (const auto& err: ast_errors_)
+    if (!errstr_.empty())
     {
-        os << err << "\n";
+        os << errstr_ << "\n";
     }
 }
