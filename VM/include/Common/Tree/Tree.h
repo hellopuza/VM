@@ -18,6 +18,7 @@ public:
     Tree& operator=(const Tree& obj);
     Tree& operator=(Tree&& obj) noexcept;
     Tree& operator[](size_t branch_ind);
+    const Tree& operator[](size_t branch_ind) const;
 
     size_t size() const;
     size_t branches_num() const;

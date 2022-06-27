@@ -26,11 +26,8 @@ WORD_DOT     {W_DOT}+{WORD}
 
 %%
 
-"boolean"                   { return yy::parser::token_type::BOOLEAN;  }
-"byte"                      { return yy::parser::token_type::BYTE;     }
 "char"                      { return yy::parser::token_type::CHAR;     }
 "class"                     { return yy::parser::token_type::CLASS;    }
-"double"                    { return yy::parser::token_type::DOUBLE;   }
 "elif"                      { return yy::parser::token_type::ELIF;     }
 "else"                      { return yy::parser::token_type::ELSE;     }
 "false"                     { return yy::parser::token_type::FALSE;    }
@@ -38,14 +35,12 @@ WORD_DOT     {W_DOT}+{WORD}
 "if"                        { return yy::parser::token_type::IF;       }
 "int"                       { return yy::parser::token_type::INT;      }
 "instance"                  { return yy::parser::token_type::INSTANCE; }
-"long"                      { return yy::parser::token_type::LONG;     }
 "native"                    { return yy::parser::token_type::NATIVE;   }
 "new"                       { return yy::parser::token_type::NEW;      }
 "null"                      { return yy::parser::token_type::NUL;      }
 "private"                   { return yy::parser::token_type::PRIVATE;  }
 "public"                    { return yy::parser::token_type::PUBLIC;   }
 "return"                    { return yy::parser::token_type::RETURN;   }
-"short"                     { return yy::parser::token_type::SHORT;    }
 "static"                    { return yy::parser::token_type::STATIC;   }
 "this"                      { return yy::parser::token_type::THIS;     }
 "true"                      { return yy::parser::token_type::TRUE;     }

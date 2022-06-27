@@ -4,30 +4,37 @@
 #include <iostream>
 #include <vector>
 
-#define CHECK_ERROR(cond, message)      \
-    if (cond) {                         \
-        std::cout << (message) << "\n"; \
-        return -1;                      \
-    } //
-
 const char* const LANG_EXTENSION = ".pkm";
 const char* const CODE_EXTENSION = ".klass";
+const char* const LIB_FOLDER = "./pkm/lang";
 
 int main(int argc, const char* argv[])
 {
-    Compiler comp;
+    Compiler comp(LIB_FOLDER);
     for (int i = 1; i < argc; i++)
     {
         std::string filename(argv[i]);
         std::filesystem::path path(filename);
         std::string ext(path.extension());
-        CHECK_ERROR((ext != LANG_EXTENSION), "Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION);
+        if (ext != LANG_EXTENSION)
+        {
+            std::cout << "Wrong extension: " + filename + "\nRequired: " + LANG_EXTENSION + "\n";
+            return -1;
+        }
 
-        int err = comp.compile(filename, CODE_EXTENSION);
+        comp.load(filename);
+        if (comp.getError().type != CompilationError::Type::OK)
+        {
+            comp.printErrors(std::cout);
+            return -1;
+        }
+    }
+
+    comp.compile(CODE_EXTENSION);
+    if (comp.getError().type != CompilationError::Type::OK)
+    {
         comp.printErrors(std::cout);
-
-        CHECK_ERROR((err == Compiler::FILE_NOT_FOUND), "File not found: " + filename);
-        CHECK_ERROR((err == Compiler::FILE_NOT_COMPILED), "File not compiled: " + filename);
+        return -1;
     }
 
     return 0;

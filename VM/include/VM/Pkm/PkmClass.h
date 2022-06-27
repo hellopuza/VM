@@ -7,16 +7,17 @@
 
 #include <unordered_map>
 
-using ConstPool = std::vector<std::unique_ptr<AbstractType>>;
 using PkmFields = std::unordered_map<std::string, PkmField>;
 using PkmMethods = std::unordered_map<std::string, PkmMethod>;
 
 struct PkmClass
 {
-    ConstPool const_pool;
+    cp::ConstantPool const_pool;
     PkmFields fields;
     PkmMethods methods;
     std::string bytecode;
 };
+
+using PkmClasses = std::unordered_map<std::string, PkmClass>;
 
 #endif // VM_PKM_PKMCLASS_H

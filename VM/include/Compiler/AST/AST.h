@@ -4,6 +4,8 @@
 #include "Tree/Tree-impl.h"
 #include "Compiler/AST/ASNode.h"
 
+namespace ast {
+
 class AST : public Tree<std::shared_ptr<ASNode>>
 {
 public:
@@ -15,5 +17,7 @@ public:
 private:
     void dot_dump(std::ofstream& dump_file) const;
 };
+
+} // namespace ast
 
 #endif // COMPILER_AST_AST_H

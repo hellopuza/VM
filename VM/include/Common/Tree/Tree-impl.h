@@ -38,6 +38,12 @@ Tree<T>& Tree<T>::operator[](size_t branch_ind)
 }
 
 template<typename T>
+const Tree<T>& Tree<T>::operator[](size_t branch_ind) const
+{
+    return branches_[branch_ind];
+}
+
+template<typename T>
 size_t Tree<T>::size() const
 {
     size_t size = 1;

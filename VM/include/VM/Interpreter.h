@@ -4,7 +4,6 @@
 #include <string>
 #include <iostream>
 
-#include "VM/ClassLinker.h"
 #include "VM/PkmVM.h"
 
 class PNIEnv;

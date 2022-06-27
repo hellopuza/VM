@@ -1,5 +1,7 @@
 #include "Compiler/AST/AST.h"
 
+namespace ast {
+
 AST::AST(std::shared_ptr<ASNode> value) : Tree(std::move(value)) {}
 
 int AST::dot_dump(const char* dump_name) const
@@ -46,3 +48,5 @@ void AST::dot_dump(std::ofstream& dump_file) const
         static_cast<const AST*>(&node)->dot_dump(dump_file);
     }
 }
+
+} // namespace ast
