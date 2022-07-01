@@ -1,20 +1,12 @@
 #include "Compiler/AST/ASTMaker.h"
 
-#include <cstring>
-
 ASTMaker::ASTMaker(std::ifstream* file) : lexer_(new Lexer(file))
 {
-    while (*file)
-    {
-        std::string line;
-        std::getline(*file, line);
-        program_.push_back(line);
-    }
     file->clear();
     file->seekg(0);
 }
 
-void ASTMaker::make(AST* ast)
+void ASTMaker::make(ast::AST* ast)
 {
     ast_ = ast;
     yy::parser parser(this);
@@ -30,115 +22,103 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     switch (tt)
     {
     case yy::parser::token_type::CLASS:
-        yylval->build<ASTNodeType>() = ASTNodeType::CLASS;
+        yylval->build<pkm::ASTNodeType>() = pkm::ASTNodeType::CLASS;
         break;
     case yy::parser::token_type::PRIVATE:
-        yylval->build<AccessType>() = AccessType::PRIVATE;
+        yylval->build<pkm::AccessType>() = pkm::AccessType::PRIVATE;
         break;
     case yy::parser::token_type::PUBLIC:
-        yylval->build<AccessType>() = AccessType::PUBLIC;
+        yylval->build<pkm::AccessType>() = pkm::AccessType::PUBLIC;
         break;
     case yy::parser::token_type::INSTANCE:
-        yylval->build<MethodType>() = MethodType::INSTANCE;
+        yylval->build<pkm::MethodType>() = pkm::MethodType::INSTANCE;
         break;
     case yy::parser::token_type::STATIC:
-        yylval->build<MethodType>() = MethodType::STATIC;
+        yylval->build<pkm::MethodType>() = pkm::MethodType::STATIC;
         break;
     case yy::parser::token_type::NATIVE:
-        yylval->build<MethodType>() = MethodType::NATIVE;
+        yylval->build<pkm::MethodType>() = pkm::MethodType::NATIVE;
         break;
     case yy::parser::token_type::VOID:
-        yylval->build<VariableType>() = VariableType::VOID;
-        break;
-    case yy::parser::token_type::BOOLEAN:
-        yylval->build<VariableType>() = VariableType::BOOLEAN;
-        break;
-    case yy::parser::token_type::BYTE:
-        yylval->build<VariableType>() = VariableType::BYTE;
+        yylval->build<pkm::VariableType>() = pkm::VariableType::VOID;
         break;
     case yy::parser::token_type::CHAR:
-        yylval->build<VariableType>() = VariableType::CHAR;
-        break;
-    case yy::parser::token_type::SHORT:
-        yylval->build<VariableType>() = VariableType::SHORT;
+        yylval->build<pkm::VariableType>() = pkm::VariableType::CHAR;
         break;
     case yy::parser::token_type::INT:
-        yylval->build<VariableType>() = VariableType::INT;
-        break;
-    case yy::parser::token_type::LONG:
-        yylval->build<VariableType>() = VariableType::LONG;
+        yylval->build<pkm::VariableType>() = pkm::VariableType::INT;
         break;
     case yy::parser::token_type::FLOAT:
-        yylval->build<VariableType>() = VariableType::FLOAT;
-        break;
-    case yy::parser::token_type::DOUBLE:
-        yylval->build<VariableType>() = VariableType::DOUBLE;
-        break;
-    case yy::parser::token_type::NOT:
-        yylval->build<OperationType>() = OperationType::NOT;
-        break;
-    case yy::parser::token_type::OR:
-        yylval->build<OperationType>() = OperationType::OR;
-        break;
-    case yy::parser::token_type::AND:
-        yylval->build<OperationType>() = OperationType::AND;
-        break;
-    case yy::parser::token_type::EQ:
-        yylval->build<OperationType>() = OperationType::EQ;
-        break;
-    case yy::parser::token_type::NEQ:
-        yylval->build<OperationType>() = OperationType::NEQ;
-        break;
-    case yy::parser::token_type::LEQ:
-        yylval->build<OperationType>() = OperationType::LEQ;
-        break;
-    case yy::parser::token_type::GEQ:
-        yylval->build<OperationType>() = OperationType::GEQ;
-        break;
-    case yy::parser::token_type::STL:
-        yylval->build<OperationType>() = OperationType::STL;
-        break;
-    case yy::parser::token_type::STG:
-        yylval->build<OperationType>() = OperationType::STG;
-        break;
-    case yy::parser::token_type::ADD:
-        yylval->build<OperationType>() = OperationType::ADD;
-        break;
-    case yy::parser::token_type::SUB:
-        yylval->build<OperationType>() = OperationType::SUB;
-        break;
-    case yy::parser::token_type::MUL:
-        yylval->build<OperationType>() = OperationType::MUL;
-        break;
-    case yy::parser::token_type::DIV:
-        yylval->build<OperationType>() = OperationType::DIV;
-        break;
-    case yy::parser::token_type::COMMA:
-        yylval->build<OperationType>() = OperationType::COMMA;
-        break;
-    case yy::parser::token_type::ASSIGN:
-        yylval->build<OperationType>() = OperationType::ASSIGN;
-        break;
-    case yy::parser::token_type::NEW:
-        yylval->build<OperationType>() = OperationType::NEW;
+        yylval->build<pkm::VariableType>() = pkm::VariableType::FLOAT;
         break;
     case yy::parser::token_type::RETURN:
-        yylval->build<OperationType>() = OperationType::RETURN;
+        yylval->build<pkm::OperationType>() = pkm::OperationType::RETURN;
+        break;
+    case yy::parser::token_type::ASSIGN:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::ASSIGN;
+        break;
+    case yy::parser::token_type::OR:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::OR;
+        break;
+    case yy::parser::token_type::AND:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::AND;
+        break;
+    case yy::parser::token_type::EQ:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::EQ;
+        break;
+    case yy::parser::token_type::NEQ:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::NEQ;
+        break;
+    case yy::parser::token_type::LEQ:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::LEQ;
+        break;
+    case yy::parser::token_type::GEQ:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::GEQ;
+        break;
+    case yy::parser::token_type::STL:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::STL;
+        break;
+    case yy::parser::token_type::STG:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::STG;
+        break;
+    case yy::parser::token_type::SHL:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::SHL;
+        break;
+    case yy::parser::token_type::SHR:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::SHR;
+        break;
+    case yy::parser::token_type::ADD:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::ADD;
+        break;
+    case yy::parser::token_type::SUB:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::SUB;
+        break;
+    case yy::parser::token_type::MUL:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::MUL;
+        break;
+    case yy::parser::token_type::DIV:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::DIV;
+        break;
+    case yy::parser::token_type::REM:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::REM;
+        break;
+    case yy::parser::token_type::NOT:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::NOT;
+        break;
+    case yy::parser::token_type::NEW:
+        yylval->build<pkm::OperationType>() = pkm::OperationType::NEW;
         break;
     case yy::parser::token_type::IF:
-        yylval->build<ControlType>() = ControlType::IF;
+        yylval->build<pkm::ControlType>() = pkm::ControlType::IF;
         break;
     case yy::parser::token_type::ELSE:
-        yylval->build<ControlType>() = ControlType::ELSE;
+        yylval->build<pkm::ControlType>() = pkm::ControlType::ELSE;
         break;
     case yy::parser::token_type::ELIF:
-        yylval->build<ControlType>() = ControlType::ELIF;
-        break;
-    case yy::parser::token_type::FOR:
-        yylval->build<ControlType>() = ControlType::FOR;
+        yylval->build<pkm::ControlType>() = pkm::ControlType::ELIF;
         break;
     case yy::parser::token_type::WHILE:
-        yylval->build<ControlType>() = ControlType::WHILE;
+        yylval->build<pkm::ControlType>() = pkm::ControlType::WHILE;
         break;
     case yy::parser::token_type::NUL:
         yylval->build<std::string>() = "null";
@@ -175,7 +155,7 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     case yy::parser::token_type::OSB:
     case yy::parser::token_type::CSB:
     case yy::parser::token_type::SCOLON:
-    case yy::parser::token_type::ERROR:
+    case yy::parser::token_type::COMMA:
     default:
         break;
     }
@@ -183,54 +163,20 @@ yy::parser::token_type ASTMaker::yylex(yy::parser::semantic_type *yylval, yy::pa
     return tt;
 }
 
-void ASTMaker::pushError(const std::string& error, const yy::location& location)
+void ASTMaker::pushError(CompilationError::Type type, const yy::location& location)
 {
-    std::string column{"\n"};
-    const size_t offset = 9;
-    column.insert(1, location.begin.column + offset, '~');
-    column.push_back('^');
-
-    errors_.push_back("line: " + std::to_string(lexer_->lineno()) + " | error: " + error + "\n\t| " + \
-        program_[lexer_->lineno() - 1] + column
-    );
+    error_.type = type;
+    error_.location.begin = location.begin.column;
+    error_.location.end = location.end.column;
+    error_.location.line = location.begin.line;
 }
 
-void ASTMaker::pushTextError(const std::string& error, const yy::location& location)
+CompilationError ASTMaker::getError() const
 {
-    if (std::strlen(lexer_->YYText()))
-    {
-        pushError(error + " before \"" + lexer_->YYText() + "\"", location);
-    }
-    else
-    {
-        pushError(error + " at the end of input", location);
-    }
+    return error_;
 }
 
-std::vector<std::string>* ASTMaker::getErrors()
-{
-    return &errors_;
-}
-
-void ASTMaker::printErrors(std::ostream& os) const
-{
-    for (const auto& err: errors_)
-    {
-        os << err << "\n";
-    }
-}
-
-bool ASTMaker::err() const
-{
-    return !errors_.empty();
-}
-
-int ASTMaker::lineno() const
-{
-    return lexer_->lineno();
-}
-
-AST* ASTMaker::ast()
+ast::AST* ASTMaker::ast()
 {
     return ast_;
 }

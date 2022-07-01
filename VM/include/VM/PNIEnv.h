@@ -1,7 +1,6 @@
 #ifndef VM_PNIENV_H
 #define VM_PNIENV_H
 
-#include "VM/ClassLinker.h"
 #include "VM/PkmVM.h"
 
 class PNIEnv

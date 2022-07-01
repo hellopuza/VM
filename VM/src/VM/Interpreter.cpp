@@ -76,7 +76,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
         LDC:
         {
             auto*   index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
-            auto*   val_ptr   = static_cast<IntegerType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
+            auto*   val_ptr   = static_cast<cp::IntegerType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
             int32_t value     = val_ptr->value;
  
             current_frame->operand_stack.push(value);
@@ -523,7 +523,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
 
             auto index = *reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
 
-            auto* pmetd_ptr = static_cast<PointerType*>((current_frame->pmethod->cls->const_pool)[index].get());
+            auto* pmetd_ptr = static_cast<cp::PointerType*>((current_frame->pmethod->cls->const_pool)[index].get());
             auto* pmethod   = reinterpret_cast<pmethodID>(pmetd_ptr->value);
 
             if (run_system(pmethod, current_frame))

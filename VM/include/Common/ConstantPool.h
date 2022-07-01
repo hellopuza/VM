@@ -1,8 +1,12 @@
 #ifndef CONSTANTPOOL_H
 #define CONSTANTPOOL_H
 
+#include "PkmEnums.h"
+
 #include <memory>
-#include <unordered_map>
+#include <vector>
+
+namespace cp {
 
 struct AbstractType
 {
@@ -11,8 +15,11 @@ struct AbstractType
         INTEGER,
         FLOAT,
         STRING,
-        FUNCTION,
+        SYMBOL,
+        FIELD,
+        METHOD,
         POINTER,
+        DATA_TYPE,
     };
 
     virtual Type type() const = 0;
@@ -43,12 +50,30 @@ struct StringType : public AbstractType
     std::string value;
 };
 
-struct FunctionType : public AbstractType
+struct SymbolType : public AbstractType
 {
-    FunctionType(std::string value_);
+    SymbolType(char value_);
     Type type() const override;
 
-    std::string value;
+    char value;
+};
+
+struct FieldType : public AbstractType
+{
+    FieldType(std::string class_name_, std::string field_name_);
+    Type type() const override;
+
+    std::string class_name;
+    std::string field_name;
+};
+
+struct MethodType : public AbstractType
+{
+    MethodType(std::string class_name_, std::string method_name_);
+    Type type() const override;
+
+    std::string class_name;
+    std::string method_name;
 };
 
 struct PointerType : public AbstractType
@@ -59,22 +84,29 @@ struct PointerType : public AbstractType
     void* value;
 };
 
+struct DataType : public AbstractType
+{
+    DataType(pkm::DataType data_type_);
+    Type type() const override;
+
+    pkm::DataType data_type;
+};
+
+bool operator==(const std::unique_ptr<AbstractType>& lhs, const std::unique_ptr<AbstractType>& rhs);
+
+using ConstantPool = std::vector<std::unique_ptr<AbstractType>>;
+
+} // namespace cp
+
 namespace std {
 
 template <>
-struct hash<std::unique_ptr<AbstractType>>
+struct hash<std::unique_ptr<cp::AbstractType>>
 {
-    size_t operator()(const std::unique_ptr<AbstractType>& key) const;
+    size_t operator()(const std::unique_ptr<cp::AbstractType>& key) const;
 };
 
 } // namespace std
 
-bool operator==(const std::unique_ptr<AbstractType>& lhs, const std::unique_ptr<AbstractType>& rhs);
-
-class ConstantPool : public std::unordered_map<std::unique_ptr<AbstractType>, uint16_t>
-{
-public:
-    ConstantPool() = default;
-};
 
 #endif // CONSTANTPOOL_H

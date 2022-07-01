@@ -3,13 +3,30 @@
 
 #include <unordered_map>
 
+using ast::AST;
+
+template <typename T>
+static uint16_t getConstPoolSize(ConstantPool* cp, const T& key)
+{
+    auto cp_size = static_cast<uint16_t>(cp->size());
+    if (!cp->contains(std::make_unique<T>(key)))
+    {
+        (*cp)[std::make_unique<T>(key)] = cp_size;
+    }
+    else
+    {
+        cp_size = (*cp)[std::make_unique<T>(key)];
+    }
+    return cp_size;
+}
+
 Translator::Translator(AST* class_tree) : class_tree_(class_tree) {}
 
-void Translator::translate(std::ofstream* file)
+void Translator::translate(std::ofstream* output_file)
 {
     auto* class_node = class_tree_;
-    std::string class_name = static_cast<ClassNode*>(class_node->value().get())->name;
-    file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
+    std::string class_name = static_cast<ast::ClassNode*>(class_node->value().get())->name;
+    output_file->write(class_name.c_str(), static_cast<std::streamsize>(class_name.length() + 1));
 
     std::stringstream class_content;
     writeFields(class_node, &class_content);
@@ -17,17 +34,17 @@ void Translator::translate(std::ofstream* file)
     std::stringstream instructions;
     writeMethods(class_node, &class_content, &instructions);
 
-    writeConstantPool(file);
-    *file << class_content.str();
-    *file << instructions.str();
+    writeConstantPool(output_file);
+    *output_file << class_content.str();
+    *output_file << instructions.str();
 }
 
-void Translator::writeConstantPool(std::ofstream* file)
+void Translator::writeConstantPool(std::ofstream* output_file)
 {
     auto cp_size = static_cast<uint16_t>(const_pool_.size());
-    file->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+    output_file->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
 
-    std::vector<std::pair<AbstractType*, uint16_t>> elems;
+    std::vector<std::pair<cp::AbstractType*, uint16_t>> elems;
     for (const auto& [key, value] : const_pool_)
     {
         elems.emplace_back(std::make_pair(key.get(), value));
@@ -39,31 +56,62 @@ void Translator::writeConstantPool(std::ofstream* file)
     for (const auto& elem : elems)
     {
         auto type = static_cast<uint8_t>(elem.first->type());
-        file->write(reinterpret_cast<char*>(&type), sizeof(type));
+        output_file->write(reinterpret_cast<char*>(&type), sizeof(type));
         switch (type)
         {
-        case static_cast<uint8_t>(AbstractType::Type::INTEGER):
+        case static_cast<uint8_t>(cp::AbstractType::Type::INTEGER):
         {
-            auto value = static_cast<IntegerType*>(elem.first)->value;
-            file->write(reinterpret_cast<char*>(&value), sizeof(value));
+            auto value = static_cast<cp::IntegerType*>(elem.first)->value;
+            output_file->write(reinterpret_cast<char*>(&value), sizeof(value));
             break;
         }
-        case static_cast<uint8_t>(AbstractType::Type::FLOAT):
+        case static_cast<uint8_t>(cp::AbstractType::Type::FLOAT):
         {
-            auto value = static_cast<FloatType*>(elem.first)->value;
-            file->write(reinterpret_cast<char*>(&value), sizeof(value));
+            auto value = static_cast<cp::FloatType*>(elem.first)->value;
+            output_file->write(reinterpret_cast<char*>(&value), sizeof(value));
             break;
         }
-        case static_cast<uint8_t>(AbstractType::Type::STRING):
+        case static_cast<uint8_t>(cp::AbstractType::Type::STRING):
         {
-            auto value = static_cast<StringType*>(elem.first)->value;
-            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            auto value = static_cast<cp::StringType*>(elem.first)->value;
+            output_file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
             break;
         }
-        case static_cast<uint8_t>(AbstractType::Type::FUNCTION):
+        case static_cast<uint8_t>(cp::AbstractType::Type::SYMBOL):
         {
-            auto value = static_cast<FunctionType*>(elem.first)->value;
-            file->write(reinterpret_cast<const char*>(value.c_str()), static_cast<std::streamsize>(value.length() + 1));
+            auto value = static_cast<cp::SymbolType*>(elem.first)->value;
+            output_file->write(reinterpret_cast<char*>(&value), 1);
+            break;
+        }
+        case static_cast<uint8_t>(cp::AbstractType::Type::FIELD):
+        {
+            auto class_name = static_cast<cp::FieldType*>(elem.first)->class_name;
+            auto field_name = static_cast<cp::FieldType*>(elem.first)->field_name;
+            output_file->write(reinterpret_cast<const char*>(class_name.c_str()), static_cast<std::streamsize>(class_name.length() + 1));
+            output_file->write(reinterpret_cast<const char*>(field_name.c_str()), static_cast<std::streamsize>(field_name.length() + 1));
+            break;
+        }
+        case static_cast<uint8_t>(cp::AbstractType::Type::METHOD):
+        {
+            auto class_name = static_cast<cp::MethodType*>(elem.first)->class_name;
+            auto method_name = static_cast<cp::MethodType*>(elem.first)->method_name;
+            output_file->write(reinterpret_cast<const char*>(class_name.c_str()), static_cast<std::streamsize>(class_name.length() + 1));
+            output_file->write(reinterpret_cast<const char*>(method_name.c_str()), static_cast<std::streamsize>(method_name.length() + 1));
+            break;
+        }
+        case static_cast<uint8_t>(cp::AbstractType::Type::POINTER):
+            break;
+        case static_cast<uint8_t>(cp::AbstractType::Type::DATA_TYPE):
+        {
+            auto data_type = static_cast<cp::DataType*>(elem.first)->data_type.type;
+            output_file->write(reinterpret_cast<char*>(&data_type), 1);
+
+            if (data_type == pkm::VariableType::REFERENCE)
+            {
+                auto name = static_cast<cp::DataType*>(elem.first)->data_type.name;
+                output_file->write(reinterpret_cast<const char*>(name.c_str()), static_cast<std::streamsize>(name.length() + 1));
+                break;
+            }
             break;
         }
         }
@@ -75,24 +123,27 @@ void Translator::writeFields(AST* class_node, std::stringstream* class_content)
     uint8_t fields_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == ASTNodeType::FIELD)
+        auto* node = static_cast<AST*>(&(*class_node)[i]);
+        if (node->value()->type() == pkm::ASTNodeType::FIELD)
         {
             fields_num++;
         }
     }
-    class_content->write(reinterpret_cast<char*>(&fields_num), sizeof(fields_num));
+    class_content->write(reinterpret_cast<char*>(&fields_num), 1);
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == ASTNodeType::FIELD)
+        auto* node = static_cast<AST*>(&(*class_node)[i]);
+        if (node->value()->type() == pkm::ASTNodeType::FIELD)
         {
-            auto* field_node = static_cast<FieldNode*>((*class_node)[i].value().get());
+            auto* field_node = static_cast<ast::FieldNode*>(node->value().get());
             class_content->write(reinterpret_cast<char*>(&field_node->access_type), 1);
-            class_content->write(reinterpret_cast<char*>(&field_node->var_type), 1);
 
-            auto cp_size = static_cast<uint16_t>(const_pool_.size());
+            uint16_t cp_size = getConstPoolSize(&const_pool_, cp::DataType(field_node->var_type));
             class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
-            const_pool_[std::make_unique<StringType>(StringType(field_node->name))] = cp_size;
+
+            cp_size = getConstPoolSize(&const_pool_, cp::StringType(field_node->name));
+            class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
         }
     }
 }
@@ -102,70 +153,66 @@ void Translator::writeMethods(AST* class_node, std::stringstream* class_content,
     uint8_t methods_num = 0;
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == ASTNodeType::METHOD)
+        auto* node = static_cast<AST*>(&(*class_node)[i]);
+        if (node->value()->type() == pkm::ASTNodeType::METHOD)
         {
             methods_num++;
         }
     }
-    class_content->write(reinterpret_cast<char*>(&methods_num), sizeof(methods_num));
+    class_content->write(reinterpret_cast<char*>(&methods_num), 1);
 
     for (size_t i = 0; i < class_node->branches_num(); i++)
     {
-        if ((*class_node)[i].value()->type() == ASTNodeType::METHOD)
+        auto* node = static_cast<AST*>(&(*class_node)[i]);
+        if (node->value()->type() == pkm::ASTNodeType::METHOD)
         {
-            auto* method_node = static_cast<MethodNode*>((*class_node)[i].value().get());
+            auto* method_node = static_cast<ast::MethodNode*>(node->value().get());
             class_content->write(reinterpret_cast<char*>(&method_node->access_type), 1);
             class_content->write(reinterpret_cast<char*>(&method_node->modifier), 1);
-            class_content->write(reinterpret_cast<char*>(&method_node->ret_type), 1);
 
-            auto cp_size = static_cast<uint16_t>(const_pool_.size());
+            uint16_t cp_size = getConstPoolSize(&const_pool_, cp::DataType(method_node->ret_type));
             class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
-            const_pool_[std::make_unique<StringType>(StringType(method_node->name))] = cp_size;
+
+            cp_size = getConstPoolSize(&const_pool_, cp::StringType(method_node->name));
+            class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
 
             locals_.clear();
-            writeMethodParams(static_cast<AST*>(&((*class_node)[i])), class_content);
+            if (method_node->modifier == pkm::MethodType::INSTANCE)
+            {
+                locals_["this"] = std::make_pair(0, pkm::DataType(pkm::VariableType::REFERENCE,
+                    static_cast<ast::ClassNode*>(class_node->value().get())->name));
+            }
+            writeMethodParams(node, class_content);
 
-            auto* scope_node = static_cast<AST*>(&(*class_node)[i][(*class_node)[i].branches_num() - 1]);
+            auto* scope_node = static_cast<AST*>(&(*node)[node->branches_num() - 1]);
             uint32_t offset = writeInstructions(scope_node, instructions);
             class_content->write(reinterpret_cast<char*>(&offset), sizeof(offset));
 
             auto locals_num = static_cast<uint16_t>(locals_.size());
             class_content->write(reinterpret_cast<char*>(&locals_num), sizeof(locals_num));
-
-            uint32_t null = 0;
-            auto op_code = static_cast<uint8_t>(Opcode::RETURN);
-            instructions->write(reinterpret_cast<char*>(&op_code), 1);
-            instructions->write(reinterpret_cast<char*>(&null), 3);
         }
     }
 }
 
 void Translator::writeMethodParams(AST* method_node, std::stringstream* class_content)
 {
-    uint8_t mps_num = 0;
-    for (size_t i = 0; i < method_node->branches_num(); i++)
-    {
-        if ((*method_node)[i].value()->type() == ASTNodeType::MET_PAR)
-        {
-            mps_num++;
-        }
-    }
-    class_content->write(reinterpret_cast<char*>(&mps_num), sizeof(mps_num));
+    auto mps_num = static_cast<uint8_t>(method_node->branches_num() - 1);
+    class_content->write(reinterpret_cast<char*>(&mps_num), 1);
 
-    for (size_t i = 0; i < method_node->branches_num(); i++)
+    for (size_t i = 0; i < method_node->branches_num() - 1; i++)
     {
-        if ((*method_node)[i].value()->type() == ASTNodeType::MET_PAR)
-        {
-            auto* mp_node = static_cast<MethodParameterNode*>((*method_node)[i].value().get());
-            class_content->write(reinterpret_cast<char*>(&mp_node->var_type), 1);
+        auto* node = static_cast<AST*>(&(*method_node)[i]);
+        auto* mp_node = static_cast<ast::MethodParameterNode*>(node->value().get());
 
-            auto locals_size = static_cast<uint16_t>(locals_.size());
-            locals_[mp_node->name] = std::make_pair(locals_size, mp_node->var_type);
-        }
+        uint16_t cp_size = getConstPoolSize(&const_pool_, cp::DataType(mp_node->var_type));
+        class_content->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+
+        auto locals_size = static_cast<uint16_t>(locals_.size());
+        locals_[mp_node->name] = std::make_pair(locals_size, mp_node->var_type);
     }
 }
 
-void Translator::appendLocal(VariableDeclarationNode* var_decl_node)
+void Translator::appendLocal(ast::VariableDeclarationNode* var_decl_node)
 {
     if (!locals_.contains(var_decl_node->name))
     {
@@ -180,194 +227,86 @@ uint32_t Translator::writeInstructions(AST* scope_node, std::stringstream* instr
     auto offset = static_cast<uint32_t>(instructions->tellg());
     for (size_t i = 0; i < scope_node->branches_num(); i++)
     {
-        switch ((*scope_node)[i].value()->type())
+        auto* node = static_cast<AST*>(&(*scope_node)[i]);
+        switch (node->value()->type())
         {
-        case ASTNodeType::SCOPE:
-            writeInstructions(static_cast<AST*>(&(*scope_node)[i]), instructions);
+        case pkm::ASTNodeType::SCOPE:
+            writeInstructions(node, instructions);
             break;
-        case ASTNodeType::OPERATION:
-            writeOperation(static_cast<AST*>(&(*scope_node)[i]), instructions);
+        case pkm::ASTNodeType::CONTROL:
+            writeControl(node, instructions);
             break;
-        case ASTNodeType::CONTROL:
-            writeControl(static_cast<AST*>(&(*scope_node)[i]), instructions);
+        case pkm::ASTNodeType::VAR_DECL:
+            appendLocal(static_cast<ast::VariableDeclarationNode*>(node->value().get()));
             break;
-        case ASTNodeType::FUNCTION:
-            writeFunction(static_cast<AST*>(&(*scope_node)[i]), instructions);
+        case pkm::ASTNodeType::OPERATION:
+            writeOperation(node, instructions, true);
             break;
-        case ASTNodeType::VAR_DECL:
-            appendLocal(static_cast<VariableDeclarationNode*>((*scope_node)[i].value().get()));
+        case pkm::ASTNodeType::FUNCTION:
+            writeFunction(node, instructions, true);
             break;
         default:
+            writeObject(node, instructions);
             break;
         }
     }
     return offset;
 }
 
-VariableType Translator::writeObject(AST* obj_node, std::stringstream* instructions)
+void Translator::writeObject(AST* obj_node, std::stringstream* instructions)
 {
     switch (obj_node->value()->type())
     {
-    case ASTNodeType::OPERATION:
-        return writeOperation(obj_node, instructions);
-    case ASTNodeType::FUNCTION:
-        return writeFunction(obj_node, instructions);
-    case ASTNodeType::VARIABLE:
-        return writeLoad(static_cast<VariableNode*>(obj_node->value().get())->name, instructions);
-    case ASTNodeType::NUMBER:
-        return writeNumber(static_cast<NumberNode*>(obj_node->value().get()), instructions);
+    case pkm::ASTNodeType::OPERATION:
+        writeOperation(obj_node, instructions);
+        break;
+    case pkm::ASTNodeType::FUNCTION:
+        writeFunction(obj_node, instructions);
+        break;
+    case pkm::ASTNodeType::VARIABLE:
+        writeVariable(obj_node, instructions, true);
+        break;
+    case pkm::ASTNodeType::CONVERSION:
+        writeConversion(obj_node, instructions);
+        break;
+    case pkm::ASTNodeType::NUMBER:
+        writeNumber(static_cast<ast::NumberNode*>(obj_node->value().get()), instructions);
+        break;
+    case pkm::ASTNodeType::STRING:
+        writeString(static_cast<ast::StringNode*>(obj_node->value().get()), instructions);
+        break;
+    case pkm::ASTNodeType::SYMBOL:
+        writeSymbol(static_cast<ast::SymbolNode*>(obj_node->value().get()), instructions);
+        break;
     default:
         break;
     }
-    return VariableType::VOID;
 }
 
-VariableType Translator::writeOperation(AST* op_node, std::stringstream* instructions)
+void Translator::writeOperation(AST* op_node, std::stringstream* instructions, bool in_scope)
 {
-    switch (static_cast<OperationNode*>(op_node->value().get())->op_type)
+    pkm::DataType op_data_type = static_cast<ast::OperationNode*>(op_node->value().get())->var_type;
+    switch (static_cast<ast::OperationNode*>(op_node->value().get())->op_type)
     {
-    case OperationType::EQ:
-    case OperationType::NEQ:
-    case OperationType::LEQ:
-    case OperationType::GEQ:
-    case OperationType::STL:
-    case OperationType::STG:
-    {
-        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
-        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
-        VariableType ret_type = writeObject(rhs, instructions);
-        writeObject(lhs, instructions);
-
-        auto op_type = static_cast<uint32_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
-        op_type -= static_cast<uint32_t>(OperationType::EQ);
-
-        uint32_t null = 0;
-        uint32_t op_code = 0;
-        switch (ret_type)
-        {
-        case VariableType::INT:
-            op_code = static_cast<uint8_t>(Opcode::IEQ) + op_type;
-            break;
-        case VariableType::LONG:
-            op_code = static_cast<uint8_t>(Opcode::LEQ) + op_type;
-            break;
-        case VariableType::FLOAT:
-            op_code = static_cast<uint8_t>(Opcode::FEQ) + op_type;
-            break;
-        case VariableType::DOUBLE:
-            op_code = static_cast<uint8_t>(Opcode::DADD) + op_type;
-            break;
-        default:
-            break;
-        }
-
-        instructions->write(reinterpret_cast<char*>(&op_code), 1);
-        instructions->write(reinterpret_cast<char*>(&null), 3);
-        return VariableType::INT;
-    }
-    case OperationType::ADD:
-    case OperationType::SUB:
-    case OperationType::MUL:
-    case OperationType::DIV:
-    {
-        if (op_node->branches_num() == 1)
-        {
-            auto* arg = static_cast<AST*>(&(*op_node)[0]);
-            VariableType ret_type = writeObject(arg, instructions);
-            auto op_type = static_cast<uint32_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
-            if (op_type == static_cast<uint32_t>(OperationType::SUB))
-            {
-                uint32_t null = 0;
-                auto op_code = static_cast<uint32_t>(Opcode::INEG) + static_cast<uint32_t>(ret_type) -
-                    static_cast<uint32_t>(VariableType::INT);
-
-                instructions->write(reinterpret_cast<char*>(&op_code), 1);
-                instructions->write(reinterpret_cast<char*>(&null), 3);
-            }
-            return ret_type;
-        }
-
-        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
-        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
-        VariableType ret_type = writeObject(rhs, instructions);
-        writeObject(lhs, instructions);
-
-        auto op_type = static_cast<uint32_t>(static_cast<OperationNode*>(op_node->value().get())->op_type);
-        op_type -= static_cast<uint32_t>(OperationType::ADD);
-
-        uint32_t null = 0;
-        uint32_t op_code = 0;
-        switch (ret_type)
-        {
-        case VariableType::INT:
-            op_code = static_cast<uint8_t>(Opcode::IADD) + op_type;
-            break;
-        case VariableType::LONG:
-            op_code = static_cast<uint8_t>(Opcode::LADD) + op_type;
-            break;
-        case VariableType::FLOAT:
-            op_code = static_cast<uint8_t>(Opcode::FADD) + op_type;
-            break;
-        case VariableType::DOUBLE:
-            op_code = static_cast<uint8_t>(Opcode::DADD) + op_type;
-            break;
-        default:
-            break;
-        }
-
-        instructions->write(reinterpret_cast<char*>(&op_code), 1);
-        instructions->write(reinterpret_cast<char*>(&null), 3);
-        return ret_type;
-    }
-    case OperationType::ASSIGN:
-    {
-        auto* lhs = &(*op_node)[0];
-        auto* rhs = &(*op_node)[1];
-
-        VariableType ret_type = writeObject(static_cast<AST*>(rhs), instructions);
-
-        switch (lhs->value()->type())
-        {
-        case ASTNodeType::VAR_DECL:
-        {
-            auto* var_decl_node = static_cast<VariableDeclarationNode*>(lhs->value().get());
-            appendLocal(var_decl_node);
-            writeStore(var_decl_node->name, instructions);
-            return ret_type;
-        }
-        case ASTNodeType::VARIABLE:
-        {
-            auto* var_node = static_cast<VariableNode*>(lhs->value().get());
-            writeStore(var_node->name, instructions);
-            return ret_type;
-        }
-        default:
-            break;
-        }
-        return ret_type;
-    }
-    case OperationType::RETURN:
+    case pkm::OperationType::RETURN:
     {
         uint32_t null = 0;
         uint8_t op_code = 0;
-        VariableType ret_type = VariableType::VOID;
         if (op_node->branches_num() > 0)
         {
-            ret_type = writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
+            writeObject(static_cast<AST*>(&(*op_node)[0]), instructions);
 
-            switch (ret_type)
+            switch (op_data_type.type)
             {
-            case VariableType::INT:
+            case pkm::VariableType::CHAR:
+            case pkm::VariableType::INT:
                 op_code = static_cast<uint8_t>(Opcode::IRETURN);
                 break;
-            case VariableType::LONG:
-                op_code = static_cast<uint8_t>(Opcode::LRETURN);
-                break;
-            case VariableType::FLOAT:
+            case pkm::VariableType::FLOAT:
                 op_code = static_cast<uint8_t>(Opcode::FRETURN);
                 break;
-            case VariableType::DOUBLE:
-                op_code = static_cast<uint8_t>(Opcode::DRETURN);
+            case pkm::VariableType::REFERENCE:
+                op_code = static_cast<uint8_t>(Opcode::ARETURN);
                 break;
             default:
                 break;
@@ -380,76 +319,416 @@ VariableType Translator::writeOperation(AST* op_node, std::stringstream* instruc
 
         instructions->write(reinterpret_cast<char*>(&op_code), 1);
         instructions->write(reinterpret_cast<char*>(&null), 3);
-
-        return ret_type;
-    }
-    default:
         break;
     }
+    case pkm::OperationType::ASSIGN:
+    {
+        auto* lhs = &(*op_node)[0];
+        auto* rhs = &(*op_node)[1];
 
-    return VariableType::VOID;
+        writeObject(static_cast<AST*>(rhs), instructions);
+
+        switch (lhs->value()->type())
+        {
+        case pkm::ASTNodeType::VAR_DECL:
+        {
+            auto* var_decl_node = static_cast<ast::VariableDeclarationNode*>(lhs->value().get());
+            appendLocal(var_decl_node);
+            writeStore(var_decl_node->name, instructions);
+            break;
+        }
+        case pkm::ASTNodeType::VARIABLE:
+        {
+            writeVariable(static_cast<AST*>(lhs), instructions, false);
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case pkm::OperationType::OR:
+    case pkm::OperationType::AND:
+    {
+        AST ast(std::make_shared<ast::ControlNode>(ast::ControlNode(pkm::ControlType::IF)));
+        ast.emplace_branch(std::move(*op_node));
+        ast.emplace_branch(std::make_shared<ast::ScopeNode>(ast::ScopeNode()));
+        ast[1].emplace_branch(std::make_shared<ast::NumberNode>(ast::NumberNode(1)));
+        ast.emplace_branch(std::make_shared<ast::ControlNode>(ast::ControlNode(pkm::ControlType::ELSE)));
+        ast[2].emplace_branch(std::make_shared<ast::ScopeNode>(ast::ScopeNode()));
+        ast[2][0].emplace_branch(std::make_shared<ast::NumberNode>(ast::NumberNode(0)));
+
+        writeControl(&ast, instructions);
+
+        if (in_scope)
+        {
+            uint32_t null = 0;
+            uint32_t op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::EQ:
+    case pkm::OperationType::NEQ:
+    case pkm::OperationType::LEQ:
+    case pkm::OperationType::GEQ:
+    case pkm::OperationType::STL:
+    case pkm::OperationType::STG:
+    {
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
+
+        auto op_type = static_cast<uint32_t>(static_cast<ast::OperationNode*>(op_node->value().get())->op_type);
+        op_type -= static_cast<uint32_t>(pkm::OperationType::EQ);
+
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (op_data_type.type)
+        {
+        case pkm::VariableType::CHAR:
+        case pkm::VariableType::INT:
+            op_code = static_cast<uint8_t>(Opcode::IEQ) + op_type;
+            break;
+        case pkm::VariableType::FLOAT:
+            op_code = static_cast<uint8_t>(Opcode::FEQ) + op_type;
+            break;
+        default:
+            break;
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+
+        if (in_scope)
+        {
+            op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::SHL:
+    case pkm::OperationType::SHR:
+    {
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
+
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (static_cast<ast::OperationNode*>(op_node->value().get())->op_type)
+        {
+        case pkm::OperationType::SHL:
+            op_code = static_cast<uint8_t>(Opcode::ISHL);
+            break;
+        case pkm::OperationType::SHR:
+            op_code = static_cast<uint8_t>(Opcode::ISHR);
+            break;
+        default:
+            break;
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+
+        if (in_scope)
+        {
+            op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::ADD:
+    case pkm::OperationType::SUB:
+    case pkm::OperationType::MUL:
+    case pkm::OperationType::DIV:
+    {
+        if (op_node->branches_num() == 1)
+        {
+            auto* arg = static_cast<AST*>(&(*op_node)[0]);
+            writeObject(arg, instructions);
+
+            auto op_type = static_cast<uint32_t>(static_cast<ast::OperationNode*>(op_node->value().get())->op_type);
+            if (op_type == static_cast<uint32_t>(pkm::OperationType::SUB))
+            {
+                uint32_t null = 0;
+                uint32_t op_code = 0;
+                switch (op_data_type.type)
+                {
+                case pkm::VariableType::CHAR:
+                case pkm::VariableType::INT:
+                    op_code = static_cast<uint8_t>(Opcode::INEG);
+                    break;
+                case pkm::VariableType::FLOAT:
+                    op_code = static_cast<uint8_t>(Opcode::FNEG);
+                    break;
+                default:
+                    break;
+                }
+
+                instructions->write(reinterpret_cast<char*>(&op_code), 1);
+                instructions->write(reinterpret_cast<char*>(&null), 3);
+
+                if (in_scope)
+                {
+                    op_code = static_cast<uint8_t>(Opcode::POP);
+                    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+                    instructions->write(reinterpret_cast<char*>(&null), 3);
+                }
+            }
+            break;
+        }
+
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
+
+        auto op_type = static_cast<uint32_t>(static_cast<ast::OperationNode*>(op_node->value().get())->op_type);
+        op_type -= static_cast<uint32_t>(pkm::OperationType::ADD);
+
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (op_data_type.type)
+        {
+        case pkm::VariableType::CHAR:
+        case pkm::VariableType::INT:
+            op_code = static_cast<uint8_t>(Opcode::IADD) + op_type;
+            break;
+        case pkm::VariableType::FLOAT:
+            op_code = static_cast<uint8_t>(Opcode::FADD) + op_type;
+            break;
+        default:
+            break;
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+
+        if (in_scope)
+        {
+            op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::REM:
+    {
+        auto* lhs = static_cast<AST*>(&(*op_node)[0]);
+        auto* rhs = static_cast<AST*>(&(*op_node)[1]);
+        writeObject(rhs, instructions);
+        writeObject(lhs, instructions);
+
+        uint32_t null = 0;
+        uint32_t op_code = 0;
+        switch (op_data_type.type)
+        {
+        case pkm::VariableType::CHAR:
+        case pkm::VariableType::INT:
+            op_code = static_cast<uint8_t>(Opcode::IREM);
+            break;
+        case pkm::VariableType::FLOAT:
+            op_code = static_cast<uint8_t>(Opcode::FREM);
+            break;
+        default:
+            break;
+        }
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+
+        if (in_scope)
+        {
+            op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::NOT:
+    {
+        AST ast(std::make_shared<ast::ControlNode>(ast::ControlNode(pkm::ControlType::IF)));
+        ast.emplace_branch(std::move(*static_cast<AST*>(&(*op_node)[0])));
+        ast.emplace_branch(std::make_shared<ast::ScopeNode>(ast::ScopeNode()));
+        ast[1].emplace_branch(std::make_shared<ast::NumberNode>(ast::NumberNode(0)));
+        ast.emplace_branch(std::make_shared<ast::ControlNode>(ast::ControlNode(pkm::ControlType::ELSE)));
+        ast[2].emplace_branch(std::make_shared<ast::ScopeNode>(ast::ScopeNode()));
+        ast[2][0].emplace_branch(std::make_shared<ast::NumberNode>(ast::NumberNode(1)));
+
+        writeControl(&ast, instructions);
+
+        if (in_scope)
+        {
+            uint32_t null = 0;
+            uint32_t op_code = static_cast<uint8_t>(Opcode::POP);
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 3);
+        }
+        break;
+    }
+    case pkm::OperationType::SQR_BR:
+    {
+    }
+    case pkm::OperationType::NEW:
+    {
+        uint8_t null = 0;
+        auto op_code = static_cast<uint8_t>(Opcode::NEW);
+        uint16_t cp_size = getConstPoolSize(&const_pool_, cp::DataType(op_data_type));
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 1);
+        instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+        break;
+    }
+    }
 }
 
-VariableType Translator::writeFunction(AST* func_node, std::stringstream* instructions)
+void Translator::writeConversion(AST* conv_node, std::stringstream* instructions)
+{
+    auto* arg = static_cast<AST*>(&(*conv_node)[0]);
+    writeObject(arg, instructions);
+
+    auto from_type = static_cast<ast::ConversionNode*>(conv_node->value().get())->from;
+    auto to_type = static_cast<ast::ConversionNode*>(conv_node->value().get())->to;
+
+    uint32_t null = 0;
+    uint32_t op_code = 0;
+    if ((from_type.type == pkm::VariableType::INT) && (to_type.type == pkm::VariableType::CHAR))
+    {
+        op_code = static_cast<uint8_t>(Opcode::I2C);
+    }
+    else if ((from_type.type == pkm::VariableType::INT) && (to_type.type == pkm::VariableType::FLOAT))
+    {
+        op_code = static_cast<uint8_t>(Opcode::I2F);
+    }
+    else if ((from_type.type == pkm::VariableType::FLOAT) && (to_type.type == pkm::VariableType::INT))
+    {
+        op_code = static_cast<uint8_t>(Opcode::F2I);
+    }
+    else
+    {
+        return;
+    }
+
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 3);
+}
+
+void Translator::writeVariable(AST* var_node, std::stringstream* instructions, bool loading)
+{
+    auto* variable_node = static_cast<ast::VariableNode*>(var_node->value().get());
+
+    if (variable_node->name_parts.size() == 1)
+    {
+        if (loading)
+        {
+            writeLoad(variable_node->name, instructions);
+        }
+        else
+        {
+            writeStore(variable_node->name, instructions);
+        }
+    }
+    else
+    {
+        writeLoad(variable_node->name_parts[0].first, instructions);
+
+        for (size_t i = 1; i < variable_node->name_parts.size(); i++)
+        {
+            uint16_t cp_size = getConstPoolSize(&const_pool_,
+                cp::FieldType(variable_node->name_parts[i - 1].second.name, variable_node->name_parts[i].first));
+
+            uint8_t null = 0;
+            auto op_code = static_cast<uint8_t>(Opcode::GETFIELD);
+
+            if ((i == variable_node->name_parts.size() - 1) && !loading)
+            {
+                op_code = static_cast<uint8_t>(Opcode::PUTFIELD);
+            }
+
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 1);
+            instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+        }
+    }
+}
+
+void Translator::writeFunction(AST* func_node, std::stringstream* instructions, bool in_scope)
 {
     for (size_t i = 0; i < func_node->branches_num(); i++)
     {
         writeObject(static_cast<AST*>(&(*func_node)[i]), instructions);
     }
 
-    uint8_t null = 0;
-    auto op_code = static_cast<uint8_t>(Opcode::INVOKESTATIC);
+    auto* function_node = static_cast<ast::FunctionNode*>(func_node->value().get());
 
-    auto cp_size = static_cast<uint16_t>(const_pool_.size());
-    std::string func_name = static_cast<FunctionNode*>(func_node->value().get())->name;
-
-    if (!const_pool_.contains(std::make_unique<FunctionType>(FunctionType(func_name))))
+    if (function_node->modifier == pkm::MethodType::INSTANCE)
     {
-        const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))] = cp_size;
+        writeLoad(function_node->name_parts[0].first, instructions);
+
+        for (size_t i = 1; i < function_node->name_parts.size(); i++)
+        {
+            uint16_t cp_size = getConstPoolSize(&const_pool_,
+                cp::FieldType(function_node->name_parts[i - 1].second.name, function_node->name_parts[i].first));
+
+            uint8_t null = 0;
+            auto op_code = static_cast<uint8_t>(Opcode::GETFIELD);
+
+            if (i == function_node->name_parts.size() - 1)
+            {
+                op_code = static_cast<uint8_t>(Opcode::INVOKEINSTANCE);
+
+                cp_size = getConstPoolSize(&const_pool_,
+                    cp::MethodType(function_node->name_parts[i - 1].second.name, function_node->name_parts[i].first));
+            }
+
+            instructions->write(reinterpret_cast<char*>(&op_code), 1);
+            instructions->write(reinterpret_cast<char*>(&null), 1);
+            instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+        }
     }
     else
     {
-        cp_size = const_pool_[std::make_unique<FunctionType>(FunctionType(func_name))];
+        uint16_t cp_size = getConstPoolSize(&const_pool_,
+            cp::MethodType(function_node->name_parts[0].first, function_node->name_parts[1].first));
+
+        uint8_t null = 0;
+        auto op_code = static_cast<uint8_t>((function_node->modifier == pkm::MethodType::STATIC) ?
+            Opcode::INVOKESTATIC : Opcode::INVOKENATIVE);
+
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 1);
+        instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
     }
 
-    instructions->write(reinterpret_cast<char*>(&op_code), 1);
-    instructions->write(reinterpret_cast<char*>(&null), 1);
-    instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
-
-    return VariableType::INT;
+    if (in_scope && (function_node->ret_type.type != pkm::VariableType::VOID))
+    {
+        uint32_t null = 0;
+        auto op_code = static_cast<uint8_t>(Opcode::POP);
+        instructions->write(reinterpret_cast<char*>(&op_code), 1);
+        instructions->write(reinterpret_cast<char*>(&null), 3);
+    }
 }
 
-VariableType Translator::writeNumber(NumberNode* num_node, std::stringstream* instructions)
+void Translator::writeNumber(ast::NumberNode* num_node, std::stringstream* instructions)
 {
     uint8_t null = 0;
+    uint16_t cp_size = 0;
     auto op_code = static_cast<uint8_t>(Opcode::LDC);
-    auto cp_size = static_cast<uint16_t>(const_pool_.size());
-    VariableType ret_type = VariableType::VOID;
 
     switch (num_node->num_type)
     {
-    case VariableType::BOOLEAN:
-    case VariableType::INT:
-        if (!const_pool_.contains(std::make_unique<IntegerType>(IntegerType(num_node->number.i))))
-        {
-            const_pool_[std::make_unique<IntegerType>(IntegerType(num_node->number.i))] = cp_size;
-        }
-        else
-        {
-            cp_size = const_pool_[std::make_unique<IntegerType>(IntegerType(num_node->number.i))];
-        }
-        ret_type = VariableType::INT;
+    case pkm::VariableType::INT:
+        cp_size = getConstPoolSize(&const_pool_, cp::IntegerType(num_node->number.i));
         break;
-    case VariableType::FLOAT:
-        if (!const_pool_.contains(std::make_unique<FloatType>(FloatType(num_node->number.f))))
-        {
-            const_pool_[std::make_unique<FloatType>(FloatType(num_node->number.f))] = cp_size;
-        }
-        else
-        {
-            cp_size = const_pool_[std::make_unique<FloatType>(FloatType(num_node->number.f))];
-        }
-        ret_type = VariableType::FLOAT;
+    case pkm::VariableType::FLOAT:
+        cp_size = getConstPoolSize(&const_pool_, cp::FloatType(num_node->number.f));
         break;
     default:
         break;
@@ -458,38 +737,47 @@ VariableType Translator::writeNumber(NumberNode* num_node, std::stringstream* in
     instructions->write(reinterpret_cast<char*>(&op_code), 1);
     instructions->write(reinterpret_cast<char*>(&null), 1);
     instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
-
-    return ret_type;
 }
 
-VariableType Translator::writeLoad(const std::string& name, std::stringstream* instructions)
+void Translator::writeString(ast::StringNode* str_node, std::stringstream* instructions)
+{
+    uint8_t null = 0;
+    uint16_t cp_size = getConstPoolSize(&const_pool_, cp::StringType(str_node->value));
+    auto op_code = static_cast<uint8_t>(Opcode::LDC);
+
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 1);
+    instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+}
+
+void Translator::writeSymbol(ast::SymbolNode* sym_node, std::stringstream* instructions)
+{
+    uint8_t null = 0;
+    uint16_t cp_size = getConstPoolSize(&const_pool_, cp::SymbolType(sym_node->value));
+    auto op_code = static_cast<uint8_t>(Opcode::LDC);
+
+    instructions->write(reinterpret_cast<char*>(&op_code), 1);
+    instructions->write(reinterpret_cast<char*>(&null), 1);
+    instructions->write(reinterpret_cast<char*>(&cp_size), sizeof(cp_size));
+}
+
+void Translator::writeLoad(const std::string& name, std::stringstream* instructions)
 {
     uint8_t null = 0;
     uint8_t op_code = 0;
     uint16_t index = locals_[name].first;
-    VariableType ret_type = VariableType::VOID;
 
-    switch (locals_[name].second)
+    switch (locals_[name].second.type)
     {
-    case VariableType::BOOLEAN:
-    case VariableType::BYTE:
-    case VariableType::CHAR:
-    case VariableType::SHORT:
-    case VariableType::INT:
+    case pkm::VariableType::CHAR:
+    case pkm::VariableType::INT:
         op_code = static_cast<uint8_t>(Opcode::ILOAD);
-        ret_type = VariableType::INT;
         break;
-    case VariableType::LONG:
-        op_code = static_cast<uint8_t>(Opcode::LLOAD);
-        ret_type = VariableType::LONG;
-        break;
-    case VariableType::FLOAT:
+    case pkm::VariableType::FLOAT:
         op_code = static_cast<uint8_t>(Opcode::FLOAD);
-        ret_type = VariableType::FLOAT;
         break;
-    case VariableType::DOUBLE:
-        op_code = static_cast<uint8_t>(Opcode::DLOAD);
-        ret_type = VariableType::DOUBLE;
+    case pkm::VariableType::REFERENCE:
+        op_code = static_cast<uint8_t>(Opcode::ALOAD);
         break;
     default:
         break;
@@ -498,8 +786,6 @@ VariableType Translator::writeLoad(const std::string& name, std::stringstream* i
     instructions->write(reinterpret_cast<char*>(&op_code), 1);
     instructions->write(reinterpret_cast<char*>(&null), 1);
     instructions->write(reinterpret_cast<char*>(&index), sizeof(index));
-
-    return ret_type;
 }
 
 void Translator::writeStore(const std::string& name, std::stringstream* instructions)
@@ -508,23 +794,17 @@ void Translator::writeStore(const std::string& name, std::stringstream* instruct
     uint8_t op_code = 0;
     uint16_t index = locals_[name].first;
 
-    switch (locals_[name].second)
+    switch (locals_[name].second.type)
     {
-    case VariableType::BOOLEAN:
-    case VariableType::BYTE:
-    case VariableType::CHAR:
-    case VariableType::SHORT:
-    case VariableType::INT:
+    case pkm::VariableType::CHAR:
+    case pkm::VariableType::INT:
         op_code = static_cast<uint8_t>(Opcode::ISTORE);
         break;
-    case VariableType::LONG:
-        op_code = static_cast<uint8_t>(Opcode::LSTORE);
-        break;
-    case VariableType::FLOAT:
+    case pkm::VariableType::FLOAT:
         op_code = static_cast<uint8_t>(Opcode::FSTORE);
         break;
-    case VariableType::DOUBLE:
-        op_code = static_cast<uint8_t>(Opcode::DSTORE);
+    case pkm::VariableType::REFERENCE:
+        op_code = static_cast<uint8_t>(Opcode::ASTORE);
         break;
     default:
         break;
@@ -537,19 +817,16 @@ void Translator::writeStore(const std::string& name, std::stringstream* instruct
 
 void Translator::writeControl(AST* control_node, std::stringstream* instructions)
 {
-    switch (static_cast<ControlNode*>(control_node->value().get())->control_type)
+    switch (static_cast<ast::ControlNode*>(control_node->value().get())->control_type)
     {
-    case ControlType::IF:
+    case pkm::ControlType::IF:
         writeIfElifElse(control_node, instructions);
         break;
-    case ControlType::ELSE:
-    case ControlType::ELIF:
+    case pkm::ControlType::ELSE:
+    case pkm::ControlType::ELIF:
         break;
-    case ControlType::FOR:
-    case ControlType::WHILE:
+    case pkm::ControlType::WHILE:
         writeWhile(control_node, instructions);
-        break;
-    default:
         break;
     }
 }
@@ -569,11 +846,11 @@ struct Condition
 
 void makeConditionTree(Tree<Condition>* cond_tree, AST* cond_node)
 {
-    if ((cond_node->value()->type() == ASTNodeType::OPERATION) &&
-        ((static_cast<OperationNode*>(cond_node->value().get())->op_type == OperationType::OR) ||
-         (static_cast<OperationNode*>(cond_node->value().get())->op_type == OperationType::AND)))
+    if ((cond_node->value()->type() == pkm::ASTNodeType::OPERATION) &&
+        ((static_cast<ast::OperationNode*>(cond_node->value().get())->op_type == pkm::OperationType::OR) ||
+         (static_cast<ast::OperationNode*>(cond_node->value().get())->op_type == pkm::OperationType::AND)))
     {
-        bool is_or = (static_cast<OperationNode*>(cond_node->value().get())->op_type == OperationType::OR);
+        bool is_or = (static_cast<ast::OperationNode*>(cond_node->value().get())->op_type == pkm::OperationType::OR);
         Condition::Type cond_node_type = is_or ? Condition::OR : Condition::AND;
     
         if (cond_tree->value().type == Condition::OBJ)
@@ -652,8 +929,6 @@ size_t setCommands(std::vector<CondCommand>* command_array, Tree<Condition>* con
         cmd_num++;
         break;
     }
-    default:
-        break;
     }
     return cmd_num;
 }
@@ -749,8 +1024,6 @@ void updateJumpOffsets(instructions_table* inst_table, std::vector<CondCommand>*
                     offset += static_cast<size_t>((*inst_table)[&(*command_array)[i]].tellg());
                     break;
                 }
-                default:
-                    break;
                 }
             }
             command.jump = offset;
@@ -812,8 +1085,6 @@ void Translator::writeCommands(void* array, std::stringstream* instructions)
         case CondCommand::INST:
             writeInstructions(command.ast, instructions);
             break;
-        default:
-            break;
         }
     }
 }
@@ -862,7 +1133,7 @@ void makeCommandArrayIfElifElse(std::vector<CondCommand>* command_array, AST* co
         setOffsets(command_array, true_offset, true_offset + 2);
         command_array->emplace_back(CondCommand{CondCommand::GOTO, 0, nullptr});
 
-        if (static_cast<ControlNode*>(else_scope->value().get())->control_type == ControlType::ELIF)
+        if (static_cast<ast::ControlNode*>(else_scope->value().get())->control_type == pkm::ControlType::ELIF)
         {
             makeCommandArrayIfElifElse(command_array, else_scope);
         }

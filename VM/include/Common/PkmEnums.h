@@ -3,6 +3,8 @@
 
 #include <string>
 
+namespace pkm {
+
 enum class ASTNodeType
 {
     ROOT,
@@ -11,11 +13,12 @@ enum class ASTNodeType
     METHOD,
     MET_PAR,
     SCOPE,
-    OPERATION,
     CONTROL,
-    FUNCTION,
     VAR_DECL,
+    OPERATION,
+    FUNCTION,
     VARIABLE,
+    CONVERSION,
     NUMBER,
     STRING,
     SYMBOL,
@@ -38,20 +41,16 @@ enum class MethodType
 enum class VariableType
 {
     VOID,
-    BOOLEAN,
-    BYTE,
     CHAR,
-    SHORT,
     INT,
-    LONG,
     FLOAT,
-    DOUBLE,
     REFERENCE,
 };
 
 enum class OperationType
 {
-    NOT,
+    RETURN,
+    ASSIGN,
     OR,
     AND,
     EQ,
@@ -60,15 +59,16 @@ enum class OperationType
     GEQ,
     STL,
     STG,
+    SHL,
+    SHR,
     ADD,
     SUB,
     MUL,
     DIV,
-    COMMA,
-    ASSIGN,
+    REM,
+    NOT,
     SQR_BR,
     NEW,
-    RETURN,
 };
 
 enum class ControlType
@@ -76,11 +76,10 @@ enum class ControlType
     IF,
     ELSE,
     ELIF,
-    FOR,
     WHILE,
 };
 
-namespace pkm_str {
+namespace strings {
 
 static const std::string ACCESS[] = {
     "public",
@@ -95,19 +94,15 @@ static const std::string METHOD[] = {
 
 static const std::string TYPES[] = {
     "void",
-    "boolean",
-    "byte",
     "char",
-    "short",
     "int",
-    "long",
     "float",
-    "double",
-    "ref",
+    "$reference_type$",
 };
 
 static const std::string OPERATION[] = {
-    "!",
+    "return",
+    "=",
     "||",
     "&&",
     "==",
@@ -116,25 +111,54 @@ static const std::string OPERATION[] = {
     ">=",
     "<",
     ">",
+    "<<",
+    ">>",
     "+",
     "-",
     "*",
     "/",
-    ",",
-    "=",
+    "%",
+    "!",
     "[]",
     "new",
-    "return",
 };
 
 static const std::string CONTROL[] = {
     "if",
     "else",
     "elif",
-    "for",
     "while",
 };
 
-} // namespace pkm_str
+static const std::string RESERVED_NAMES[] = {
+    ACCESS[0],
+    ACCESS[1],
+    METHOD[0],
+    METHOD[1],
+    METHOD[2],
+    TYPES[0],
+    TYPES[1],
+    TYPES[2],
+    TYPES[3],
+    OPERATION[0],
+    OPERATION[19],
+    CONTROL[0],
+    CONTROL[1],
+    CONTROL[2],
+    CONTROL[3],
+};
+
+} // namespace strings
+
+struct DataType
+{
+    DataType(VariableType var_type = VariableType::VOID);
+    DataType(VariableType var_type, std::string name_);
+
+    VariableType type;
+    std::string name;
+};
+
+} // namespace pkm
 
 #endif // PKMENUMS_H

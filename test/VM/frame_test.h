@@ -6,24 +6,24 @@
 #include <gtest/gtest.h> // NOLINT
 
 PkmMethod met = {
-    AccessType::PRIVATE,
-    MethodType::INSTANCE,
-    VariableType::BOOLEAN,
-    0,
+    pkm::AccessType::PRIVATE,
+    pkm::MethodType::INSTANCE,
+    pkm::DataType(pkm::VariableType::INT),
+    "a",
+    std::vector<pkm::DataType>(),
     2,
     0,
-    std::vector<VariableType>(),
     nullptr
 };
 
 PkmMethod met1 = {
-    AccessType::PUBLIC,
-    MethodType::STATIC,
-    VariableType::VOID,
-    1,
+    pkm::AccessType::PUBLIC,
+    pkm::MethodType::STATIC,
+    pkm::DataType(pkm::VariableType::VOID),
+    "b",
+    std::vector<pkm::DataType>(),
     5,
     1,
-    std::vector<VariableType>(),
     nullptr
 };
 

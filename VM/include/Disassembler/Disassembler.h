@@ -1,6 +1,8 @@
 #ifndef DISASSEMBLER_DISASSEMBLER_H
 #define DISASSEMBLER_DISASSEMBLER_H
 
+#include "ConstantPool.h"
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -13,7 +15,6 @@ public:
     void print(std::ostream& os) const;
 
 private:
-    static std::string getString(const std::string& klass, size_t* pos);
     void getClassName(const std::string& klass, size_t* pos);
     void getConstantPool(const std::string& klass, size_t* pos);
     void getFields(const std::string& klass, size_t* pos);
@@ -21,6 +22,7 @@ private:
     void getInstructions(const std::string& klass, size_t* pos);
 
     std::stringstream text_;
+    cp::ConstantPool const_pool_;
 };
 
 #endif // DISASSEMBLER_DISASSEMBLER_H

@@ -3,13 +3,11 @@
 
 #include "PkmEnums.h"
 
-#include <cstdint>
-
 struct PkmField
 {
-    AccessType access_type;
-    VariableType var_type;
-    uint16_t name;
+    pkm::AccessType access_type;
+    pkm::DataType var_type;
+    std::string name;
 };
 
 #endif // VM_PKM_PKMFIELD_H

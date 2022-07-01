@@ -11,13 +11,13 @@ using pclass = PkmClass*;
 
 struct PkmMethod
 {
-    AccessType access_type;
-    MethodType modifier;
-    VariableType ret_type;
-    uint16_t name;
-    uint16_t locals_num;
+    pkm::AccessType access_type;
+    pkm::MethodType modifier;
+    pkm::DataType ret_type;
+    std::string name;
+    std::vector<pkm::DataType> met_params;
     uint32_t offset;
-    std::vector<VariableType> met_params;
+    uint16_t locals_num;
     pclass cls;
 };
 
