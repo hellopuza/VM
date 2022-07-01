@@ -1,3 +1,6 @@
+#ifndef FRAME_TEST_INCLUDED
+#define FRAME_TEST_INCLUDED
+
 #include "VM/Frame.h"
 
 #include <gtest/gtest.h> // NOLINT
@@ -86,3 +89,5 @@ TEST(FrameTest, MoveOp) // NOLINT
     EXPECT_FALSE(frame.local_variables == nullptr);
     EXPECT_TRUE(frame.operand_stack.size() == 0);
 }
+
+#endif //FRAME_TEST_INCLUDED

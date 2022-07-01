@@ -78,7 +78,7 @@ void Interpreter::start_interpreting(pclass cls, pmethodID mid)
             auto*   index_ptr = reinterpret_cast<uint16_t*>(&((*bytecode)[pc - 2]));
             auto*   val_ptr   = static_cast<IntegerType*>((current_frame->pmethod->cls->const_pool)[*index_ptr].get());
             int32_t value     = val_ptr->value;
-
+ 
             current_frame->operand_stack.push(value);
             DISPATCH();
         }
