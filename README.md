@@ -37,7 +37,22 @@ make run_vm_test
 
 Main targets to run:
 * vm
-* make format
-* make run_vm_test
+* compiler
+* run_vm_test
 
 ### Using
+To build this project do
+```
+make -j compiler
+make -j vm
+```
+
+Write program with .pkm file extension and run compiler to build class files
+```
+./VM/compiler location/to/program1.pkm ...
+```
+
+Then run vm with all required class files
+```
+./VM/vm Main.klass MyClass.klass ...
+```
