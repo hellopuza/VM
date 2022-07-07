@@ -9,50 +9,31 @@
 
 #include <gtest/gtest.h> // NOLINT
 
-class TestInterpreter
+struct TestInterpreter
 {
-public:
-    TestInterpreter(PkmClass test_class);
+    TestInterpreter();
 
-    void fillInClass(PkmClasses& classes);
+    void fillInClass();
     void fillInBytecode();
 
-private:
-    std::unique_ptr<Interpreter> interpreter_ptr_;
-    std::unique_ptr<ClassLinker> class_linker_ptr_;
-    std::unique_ptr<PkmClass> test_class_ptr_;
-
-    std::unique_ptr<PkmVM> pvm_;
-    std::string bytecode_ = "test_bytecode.klass";
+    std::unique_ptr<PkmVM> vm;
+    std::unique_ptr<Interpreter> interpreter;
+    std::unique_ptr<PkmClasses> classes; // using PkmClasses = std::unordered_map<std::string, PkmClass>;
 };
 
-TestInterpreter::TestInterpreter(PkmClass test_class)
+TestInterpreter::TestInterpreter()
 {
-    pvm_ = std::make_unique<PkmVM>();
-
-    interpreter_ptr_  = std::make_unique<Interpreter>(pvm_.get(), classes_.get());
-    class_linker_ptr_ = std::make_unique<ClassLinker>();
-    test_class_ptr_   = std::make_unique<PkmClass>();
-
-    std::ofstream {bytecode_};
-}
-
-void TestInterpreter::fillInClass(PkmClass& class)
-{
-    
-}
-
-void TestInterpreter::fillInBytecode()
-{
-
+    vm          = std::make_unique<PkmVM>();
+    classes     = std::make_unique<PkmClasses>();
+    interpreter = std::make_unique<Interpreter>(vm.get(), classes.get());
 }
 
 TEST(InterpreterTests, TestLDC) // NOLINT
 {
+    TestInterpreter test;
     PkmClass test_class;
-    fill_in_class(&test_class);
 
-    TestInterpreter(test_class);
+    test.classes.get()->emplace(std::make_pair("test_class", test_class));
 }
 
 #endif // INTERPRETER_TEST_INCLUDED
