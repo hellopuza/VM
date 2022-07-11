@@ -1,42 +1,133 @@
 #include "../include/Manager.h"
 
-NativeThread ThreadManager::create_native_thread(){
+/**
+ * @brief Создает native thread с указанными параметрами.
+ * 
+ * @tparam Function 
+ * @tparam Args 
+ * @param func 
+ * @param args 
+ * @return NativeThread 
+ */
+template<typename Function, typename ... Args>
+NativeThread ThreadManager::create_native_thread(Function&& func, Args&&... args){
 
     std::lock_guard native_lock(native_threads);
 
-    threads.emplace_back();
+    threads.emplace_back(func, std::forward<Args>(args));
     std::thread::id tmp_id = threads.back().get_id();
+    num_of_threads++;
 
     return NativeThread(tmp_id);
 }
 
-void ThreadManager::join_native_thread(NativeThread thread){
+/**
+ * @brief Ожидание окончания нативного треда.
+ *        В это время нельзя вызвать GC и create_native_thread().
+ * 
+ * @param thread 
+ */
+Errors ThreadManager::join_native_thread(NativeThread thread){
+
+    std::lock_guard native_lock(native_threads);
 
     auto&& thread_it =  std::find(threads.begin(), threads.end(), thread);
+
+    if (thread_it == threads.end())
+        return Errors::Invalid_native_thread;
+
     thread_it->join();
+
+    auto&& last_elem = std::prev(threads.end());
+    std::swap(*thread_it, *last_elem);
+    threads.pop_back();
+    num_of_threads--;
 } 
 
+/**
+ * @brief Проверка необходимости остановки.
+ * 
+ */
 void ThreadManager::save_point(){
     
     if (stop_world){ //вроде на атомарность пофиг
         
-        deactivate_thread();
+        num_of_active_threads--;
 
         std::unique_lock cond_var_guard(cond_var);
         resume_time.wait(cond_var_guard);           //надо вставить лямбду для проверки!!!
 
-        activate_thread(); //возможна проблема с двумя близкими вызовами остановки времени тк треды могут не успеть выйти 
+        num_of_active_threads++;
     }    
 }
 
-/*
-Общий принцип:
+/**
+ * @brief Остановка всех потоков. 
+ *        Возвращает ошибку, если производятся действия с native threads (join/create).
+ *        Использование native_threads mutex обусловлено тем, что при введении дополнительной
+ *        переменной для учета действий join/create native threads приведет к дедлоку из-за 
+ *        невозможности одновременного изменения ее и mutex.
+ */
+Errors ThreadManager::ZA_WARUDO(){
 
-    при остановке времени меняется состояние stop_world
-    треды, которые проходят поинты, проверяют это состояние и при необходимости останавливаются на resume_time
-    до этого они атомарно(через мьютекс) уменьшают количество активных тредов. Если количество активных тредов равно 0,
-    то ОДИН тред посылает сообщение на everything_stoped (тут кстати вилы тк тред может не дойти до cond_var_guard а ГК уже пошлет сигнал)
+    std::thread::id cur_id = std::this_thread::get_id();
 
-    После завершения работы GC посылается сигнал на resume_time и все треды восстанавливают количество активных тредов
+    if (cur_id != GC.get_id())
+        return Errors::Permision_denied;
 
-*/
+    stop_world = true;
+
+    while (num_of_active_threads != 0){
+
+        if (!native_threads.try_lock()){
+            
+            native_threads.unlock();
+            resume_time_flow();
+            return Errors::Native_block;
+        }
+
+        native_threads.unlock();
+    }
+}
+
+/**
+ * @brief Посылание сигналов, пока native threads не дойдут до resume_time 
+ *        и не получат там сигнал продолжения.
+ * 
+ */
+void ThreadManager::wait_activation(){
+
+    while (num_of_active_threads != num_of_threads){
+
+        //micro_sleep();
+        resume_time.notify_all();
+    }
+}
+
+/**
+ * @brief Активация потоков.
+ *        GC ожидант активации всех потоков.
+ */
+void ThreadManager::resume_time_flow(){
+
+    stop_world = false;
+    resume_time.notify_all();
+    wait_activation();
+}
+
+/**
+ * @brief Создание GC.
+ * 
+ * @tparam Function 
+ * @tparam Args 
+ * @param func 
+ * @param args 
+ * @return GCThread 
+ */
+template<typename Function, typename ... Args>
+GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
+
+    std::thread tmp(func, std::forward<Args>(args));
+    std::swap(tmp, GC);
+}
+
