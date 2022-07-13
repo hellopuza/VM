@@ -1,24 +1,16 @@
 #include "../include/Manager.h"
 
 /**
- * @brief Создает native thread с указанными параметрами.
+ * @brief Оператор сравнения для использования в std::find()
  * 
- * @tparam Function 
- * @tparam Args 
- * @param func 
- * @param args 
- * @return NativeThread 
+ * @param lhs 
+ * @param rhs 
+ * @return true 
+ * @return false 
  */
-template<typename Function, typename ... Args>
-NativeThread ThreadManager::create_native_thread(Function&& func, Args&&... args){
+bool operator ==(const NativeThread lhs, const NativeThread rhs){
 
-    std::lock_guard native_lock(native_threads);
-
-    threads.emplace_back(func, std::forward<Args>(args));
-    std::thread::id tmp_id = threads.back().get_id();
-    num_of_threads++;
-
-    return NativeThread(tmp_id);
+    return static_cast<std::thread::id>(lhs) == static_cast<std::thread::id>(rhs);
 }
 
 /**
@@ -31,7 +23,7 @@ Errors ThreadManager::join_native_thread(NativeThread thread){
 
     std::lock_guard native_lock(native_threads);
 
-    auto&& thread_it =  std::find(threads.begin(), threads.end(), thread);
+    auto&& thread_it = std::find(threads.begin(), threads.end(), thread);
 
     if (thread_it == threads.end())
         return Errors::Invalid_native_thread;
@@ -42,6 +34,8 @@ Errors ThreadManager::join_native_thread(NativeThread thread){
     std::swap(*thread_it, *last_elem);
     threads.pop_back();
     num_of_threads--;
+
+    return Errors::OK;
 } 
 
 /**
@@ -88,6 +82,8 @@ Errors ThreadManager::ZA_WARUDO(){
 
         native_threads.unlock();
     }
+
+    return Errors::OK;
 }
 
 /**
@@ -116,18 +112,23 @@ void ThreadManager::resume_time_flow(){
 }
 
 /**
- * @brief Создание GC.
+ * @brief Ожидание работы GC
  * 
- * @tparam Function 
- * @tparam Args 
- * @param func 
- * @param args 
- * @return GCThread 
+ * @return Errors 
  */
-template<typename Function, typename ... Args>
-GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
+Errors ThreadManager::join_GC(){
 
-    std::thread tmp(func, std::forward<Args>(args));
-    std::swap(tmp, GC);
+    std::thread::id cur_id = std::this_thread::get_id();
+
+    if (cur_id != GC.get_id())
+        return Errors::Permision_denied;
+
+    if (!GC_exists)
+        return Errors::Invalid_GC;
+
+    GC_exists = false;
+    GC.join();
+
+    return Errors::OK;
 }
 

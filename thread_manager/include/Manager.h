@@ -8,6 +8,12 @@
 class GCThread{
 
     std::thread::id thread_id;
+
+public: 
+
+    GCThread(std::thread::id id): thread_id{id}{}
+
+    operator std::thread::id(){ return thread_id; }
 };
 
 class NativeThread{
@@ -16,9 +22,10 @@ class NativeThread{
 
 public:
 
+    NativeThread(const std::thread& thread): thread_id{thread.get_id()}{}
     NativeThread(std::thread::id id): thread_id{id}{}
 
-    operator std::thread::id(){ return thread_id; }
+    operator std::thread::id() const{ return thread_id; }
 };
 
 
@@ -27,7 +34,8 @@ enum class Errors{
     OK,
     Native_block,
     Permision_denied,
-    Invalid_native_thread
+    Invalid_native_thread,
+    Invalid_GC
 };
 
 
@@ -44,12 +52,11 @@ class ThreadManager{
     std::mutex cond_var;
 
     std::thread GC;
+    bool GC_exists = false;
 
     void wait_activation();
 
 public: 
-    
-    Errors join_native_thread(NativeThread thread);
 
     void save_point(); 
     Errors ZA_WARUDO();                        
@@ -57,7 +64,54 @@ public:
 
     template<typename Function, typename ... Args>
     GCThread create_GC(Function&& func, Args&&... args);
+    Errors join_GC();
 
     template<typename Function, typename ... Args>
     NativeThread create_native_thread(Function&& func, Args&&... args);
+    Errors join_native_thread(NativeThread thread);
 };
+
+//-------------------
+
+/**
+ * @brief Создание GC. Если GC уже существует возвращает его.
+ * 
+ * @tparam Function 
+ * @tparam Args 
+ * @param func 
+ * @param args 
+ * @return GCThread 
+ */
+template<typename Function, typename ... Args>
+GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
+
+    if (GC_exists)
+        return GCThread{GC.get_id()};
+
+    GC_exists = true;
+    std::thread tmp(func, (std::forward<Args>(args), ...) );
+    std::swap(tmp, GC);
+
+    return GCThread{GC.get_id()};
+}
+
+/**
+ * @brief Создает native thread с указанными параметрами.
+ * 
+ * @tparam Function 
+ * @tparam Args 
+ * @param func 
+ * @param args 
+ * @return NativeThread 
+ */
+template<typename Function, typename ... Args>
+NativeThread ThreadManager::create_native_thread(Function&& func, Args&&... args){
+
+    std::lock_guard native_lock(native_threads);
+
+    threads.emplace_back(func, (std::forward<Args>(args), ...) );
+    std::thread::id tmp_id = threads.back().get_id();
+    num_of_threads++;
+
+    return NativeThread(tmp_id);
+}
