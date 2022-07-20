@@ -19,14 +19,14 @@ bool operator ==(const NativeThread lhs, const NativeThread rhs){
  * 
  * @param thread 
  */
-Errors ThreadManager::join_native_thread(NativeThread thread){
+ThreadManager::Errors ThreadManager::join_native_thread(NativeThread thread){
 
     std::lock_guard native_lock(native_threads);
 
     auto&& thread_it = std::find(threads.begin(), threads.end(), thread);
 
     if (thread_it == threads.end())
-        return Errors::Invalid_native_thread;
+        return ThreadManager::Errors::Invalid_native_thread;
 
     thread_it->join();
 
@@ -35,7 +35,7 @@ Errors ThreadManager::join_native_thread(NativeThread thread){
     threads.pop_back();
     num_of_threads--;
 
-    return Errors::OK;
+    return ThreadManager::Errors::OK;
 } 
 
 /**
@@ -62,12 +62,12 @@ void ThreadManager::save_point(){
  *        переменной для учета действий join/create native threads приведет к дедлоку из-за 
  *        невозможности одновременного изменения ее и mutex.
  */
-Errors ThreadManager::ZA_WARUDO(){
+ThreadManager::Errors ThreadManager::ZA_WARUDO(){
 
     std::thread::id cur_id = std::this_thread::get_id();
 
     if (cur_id != GC.get_id())
-        return Errors::Permision_denied;
+        return ThreadManager::Errors::Permision_denied;
 
     stop_world = true;
 
@@ -77,13 +77,13 @@ Errors ThreadManager::ZA_WARUDO(){
             
             native_threads.unlock();
             resume_time_flow();
-            return Errors::Native_block;
+            return ThreadManager::Errors::Native_block;
         }
 
         native_threads.unlock();
     }
 
-    return Errors::OK;
+    return ThreadManager::Errors::OK;
 }
 
 /**
@@ -116,19 +116,18 @@ void ThreadManager::resume_time_flow(){
  * 
  * @return Errors 
  */
-Errors ThreadManager::join_GC(){
+ThreadManager::Errors ThreadManager::join_GC(){
 
     std::thread::id cur_id = std::this_thread::get_id();
 
     if (cur_id != GC.get_id())
-        return Errors::Permision_denied;
+        return ThreadManager::Errors::Permision_denied;
 
     if (!GC_exists)
-        return Errors::Invalid_GC;
+        return ThreadManager::Errors::Invalid_GC;
 
     GC_exists = false;
     GC.join();
 
-    return Errors::OK;
+    return ThreadManager::Errors::OK;
 }
-

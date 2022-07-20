@@ -29,16 +29,6 @@ public:
 };
 
 
-enum class Errors{
-
-    OK,
-    Native_block,
-    Permision_denied,
-    Invalid_native_thread,
-    Invalid_GC
-};
-
-
 class ThreadManager{
 
     std::vector<std::thread> threads;
@@ -58,6 +48,15 @@ class ThreadManager{
 
 public: 
 
+    enum class Errors{
+
+        OK,
+        Native_block,
+        Permision_denied,
+        Invalid_native_thread,
+        Invalid_GC
+    };
+
     void save_point(); 
     Errors ZA_WARUDO();                        
     void resume_time_flow();
@@ -70,6 +69,8 @@ public:
     NativeThread create_native_thread(Function&& func, Args&&... args);
     Errors join_native_thread(NativeThread thread);
 };
+
+using SharedThreadManager = std::shared_ptr<ThreadManager>;
 
 //-------------------
 
@@ -89,7 +90,7 @@ GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
         return GCThread{GC.get_id()};
 
     GC_exists = true;
-    std::thread tmp(func, (std::forward<Args>(args), ...) );
+    std::thread tmp(func, std::forward<Args>(args) ... );
     std::swap(tmp, GC);
 
     return GCThread{GC.get_id()};
@@ -109,7 +110,7 @@ NativeThread ThreadManager::create_native_thread(Function&& func, Args&&... args
 
     std::lock_guard native_lock(native_threads);
 
-    threads.emplace_back(func, (std::forward<Args>(args), ...) );
+    threads.emplace_back(func, std::forward<Args>(args) ... );
     std::thread::id tmp_id = threads.back().get_id();
     num_of_threads++;
 
