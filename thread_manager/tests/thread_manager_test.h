@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <chrono>
 
 #include "../include/Manager.h"
 
@@ -6,6 +7,9 @@ struct Environment{
 
     std::atomic_int check_point = 0;
     std::atomic_int num_of_errors = 0;
+
+    std::atomic_bool terminate_native = false;
+    std::atomic_bool native_is_terminated = false;
 };
 
 //-------------------
@@ -55,42 +59,134 @@ TEST(Thread_manager, native_threads){
 
 
 //-------------------
-void GC_body(std::atomic_bool& terminate_native, SharedThreadManager manager){
+void GC_body(Environment& env, SharedThreadManager manager){
 
-    manager->ZA_WARUDO();
-    terminate_native = true;
+    if (manager->ZA_WARUDO() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+
+    env.native_is_terminated = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    env.terminate_native = true;
+    
     manager->resume_time_flow();
 }
 
-void native_body(std::atomic_bool& terminate_native){
+void native_body(Environment& env, SharedThreadManager manager){
 
-    while (!terminate_native){}
+    while (!env.terminate_native){
+
+        manager->save_point();
+
+        if (env.native_is_terminated != env.terminate_native)
+            env.num_of_errors++;
+    }
 }
-
-void test(SharedThreadManager var){}
 
 TEST(Thread_manager, save_points){
 
-    int num_of_errors = 0;
     SharedThreadManager manager_ptr = std::make_shared<ThreadManager>();
     std::vector<NativeThread> threads;
-    std::atomic_bool terminate_native = false;
+    Environment env;
 
     for (int i = 0; i < NUM_OF_THREADS; i++){
                      
-        NativeThread tmp = manager_ptr->create_native_thread(native_body, std::ref(terminate_native)); 
+        NativeThread tmp = manager_ptr->create_native_thread(native_body, std::ref(env), manager_ptr); 
         threads.push_back(tmp);             
     }
 
-    manager_ptr->create_GC(GC_body, std::ref(terminate_native), manager_ptr);
+    manager_ptr->create_GC(GC_body, std::ref(env), manager_ptr);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     for (int i = 0; i < NUM_OF_THREADS; i++){
 
         NativeThread cur_thread = threads[i];
 
         if (manager_ptr->join_native_thread(cur_thread) != ThreadManager::Errors::OK)
-            num_of_errors++;
+            env.num_of_errors++;
     }
 
-    ASSERT_EQ(num_of_errors, 0);
+    manager_ptr->join_GC();
+
+    ASSERT_EQ(env.num_of_errors, 0);
 }
+//-------------------
+
+
+//-------------------
+void GC_double_body(){
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+TEST(Thread_manager, double_GC){
+
+    ThreadManager manager;
+    Environment env;
+
+    GCThread fir_GC = manager.create_GC(GC_double_body);
+    GCThread sec_GC = manager.create_GC(GC_double_body);
+
+    manager.join_GC();
+
+    ASSERT_EQ(static_cast<std::thread::id>(fir_GC), static_cast<std::thread::id>(sec_GC));
+}
+//-------------------
+
+
+//-------------------
+void native_native_body(){
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+}
+
+void native_body_with_block(Environment& env, SharedThreadManager manager){
+    
+    ThreadManager::Errors ret;
+    NativeThread nat_nat_thread = manager->create_native_thread(native_native_body);
+    
+    if ((ret = manager->join_native_thread(nat_nat_thread)) != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+}
+
+void negative_GC_body(Environment& env, SharedThreadManager manager){
+    
+    NativeThread nat_thread = manager->create_native_thread(native_body_with_block, std::ref(env), manager);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    
+    if (manager->ZA_WARUDO() != ThreadManager::Errors::Native_block)
+        env.num_of_errors++;
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    if (manager->join_native_thread(nat_thread) != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+}
+
+TEST(Thread_manager, native_block_negative){
+
+    SharedThreadManager manager_ptr = std::make_shared<ThreadManager>();
+    Environment env;
+    
+    manager_ptr->create_GC(negative_GC_body, std::ref(env), manager_ptr);
+
+    if (manager_ptr->join_GC() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+    
+    ASSERT_EQ(env.num_of_errors, 0);
+}
+//-------------------
+
+
+//-------------------
+TEST(Thread_manager, double_ZA_WARUDO){}
+//-------------------
+
+
+//-------------------
+TEST(Thread_manager, fast_ZA_WARUDO){}
+//-------------------
+
+
+//-------------------
+TEST(Thread_manager, multiple_native){}
+//-------------------

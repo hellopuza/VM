@@ -34,6 +34,7 @@ ThreadManager::Errors ThreadManager::join_native_thread(NativeThread thread){
     std::swap(*thread_it, *last_elem);
     threads.pop_back();
     num_of_threads--;
+    num_of_active_threads--;
 
     return ThreadManager::Errors::OK;
 } 
@@ -44,7 +45,7 @@ ThreadManager::Errors ThreadManager::join_native_thread(NativeThread thread){
  */
 void ThreadManager::save_point(){
     
-    if (stop_world){ //вроде на атомарность пофиг
+    if (stop_world){
         
         num_of_active_threads--;
 
@@ -72,10 +73,9 @@ ThreadManager::Errors ThreadManager::ZA_WARUDO(){
     stop_world = true;
 
     while (num_of_active_threads != 0){
-
+        
         if (!native_threads.try_lock()){
-            
-            native_threads.unlock();
+
             resume_time_flow();
             return ThreadManager::Errors::Native_block;
         }
@@ -118,10 +118,7 @@ void ThreadManager::resume_time_flow(){
  */
 ThreadManager::Errors ThreadManager::join_GC(){
 
-    std::thread::id cur_id = std::this_thread::get_id();
-
-    if (cur_id != GC.get_id())
-        return ThreadManager::Errors::Permision_denied;
+    std::lock_guard GC_lock(GC_mutex);
 
     if (!GC_exists)
         return ThreadManager::Errors::Invalid_GC;

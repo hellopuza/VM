@@ -38,6 +38,7 @@ class ThreadManager{
     std::atomic_bool stop_world;
     std::condition_variable resume_time;
 
+    std::mutex GC_mutex;
     std::mutex native_threads;
     std::mutex cond_var;
 
@@ -86,7 +87,9 @@ using SharedThreadManager = std::shared_ptr<ThreadManager>;
 template<typename Function, typename ... Args>
 GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
 
-    if (GC_exists)
+    std::lock_guard GC_lock(GC_mutex);
+
+    if (GC_exists)                      //вилы. два последовательных вызова все портят
         return GCThread{GC.get_id()};
 
     GC_exists = true;
@@ -113,6 +116,7 @@ NativeThread ThreadManager::create_native_thread(Function&& func, Args&&... args
     threads.emplace_back(func, std::forward<Args>(args) ... );
     std::thread::id tmp_id = threads.back().get_id();
     num_of_threads++;
+    num_of_active_threads++;
 
     return NativeThread(tmp_id);
 }
