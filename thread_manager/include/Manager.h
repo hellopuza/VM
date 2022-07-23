@@ -72,7 +72,6 @@ public:
 };
 
 using SharedThreadManager = std::shared_ptr<ThreadManager>;
-
 //-------------------
 
 /**
@@ -89,7 +88,7 @@ GCThread ThreadManager::create_GC(Function&& func, Args&&... args){
 
     std::lock_guard GC_lock(GC_mutex);
 
-    if (GC_exists)                      //вилы. два последовательных вызова все портят
+    if (GC_exists) 
         return GCThread{GC.get_id()};
 
     GC_exists = true;

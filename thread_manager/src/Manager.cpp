@@ -50,7 +50,7 @@ void ThreadManager::save_point(){
         num_of_active_threads--;
 
         std::unique_lock cond_var_guard(cond_var);
-        resume_time.wait(cond_var_guard);           //надо вставить лямбду для проверки!!!
+        resume_time.wait(cond_var_guard, [&]{ return !stop_world; });
 
         num_of_active_threads++;
     }    

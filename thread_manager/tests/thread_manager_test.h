@@ -178,15 +178,50 @@ TEST(Thread_manager, native_block_negative){
 
 
 //-------------------
-TEST(Thread_manager, double_ZA_WARUDO){}
-//-------------------
+void multi_stop_GC_body(Environment& env, SharedThreadManager manager_ptr){
 
+    std::vector<NativeThread> threads;
 
-//-------------------
-TEST(Thread_manager, fast_ZA_WARUDO){}
-//-------------------
+    for (int i = 0; i < NUM_OF_THREADS; i++){
 
+        NativeThread tmp = manager_ptr->create_native_thread(native_body, std::ref(env), manager_ptr); 
+        threads.push_back(tmp);
+    }
 
-//-------------------
-TEST(Thread_manager, multiple_native){}
+    if (manager_ptr->ZA_WARUDO() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+
+    if (manager_ptr->ZA_WARUDO() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+
+    env.native_is_terminated = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    env.terminate_native = true;
+
+    if (manager_ptr->ZA_WARUDO() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+    
+    manager_ptr->resume_time_flow();
+
+    for (int i = 0; i < NUM_OF_THREADS; i++){
+
+        NativeThread cur_thread = threads[i];
+
+        if (manager_ptr->join_native_thread(cur_thread) != ThreadManager::Errors::OK)
+            env.num_of_errors++;
+    }
+}
+
+TEST(Thread_manager, double_ZA_WARUDO){
+
+    SharedThreadManager manager_ptr = std::make_shared<ThreadManager>();
+    Environment env;
+
+    manager_ptr->create_GC(multi_stop_GC_body, std::ref(env), manager_ptr);
+
+    if (manager_ptr->join_GC() != ThreadManager::Errors::OK)
+        env.num_of_errors++;
+    
+    ASSERT_EQ(env.num_of_errors, 0);
+}
 //-------------------
